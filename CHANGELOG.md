@@ -1,3 +1,10 @@
+## [2.3.6](https://github.com/MarkShawn2020/claude-code-manager/compare/v2.3.5...v2.3.6) (2025-07-27)
+
+
+### Bug Fixes
+
+* test trigger ([a3e3b18](https://github.com/MarkShawn2020/claude-code-manager/commit/a3e3b189a80b2e29259f0361fddd7d0b56458006))
+
 ## [2.3.5](https://github.com/MarkShawn2020/claude-code-manager/compare/v2.3.4...v2.3.5) (2025-07-27)
 
 
