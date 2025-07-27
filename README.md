@@ -194,3 +194,4 @@ ccm track                  # Internal tracking (auto-used)
 **Requirements:** Node.js >= 18.0.0 + Claude Code
 最终同步和修复完成
 现在可以正确发布到最新版本了
+触发 v2.3.4 测试
