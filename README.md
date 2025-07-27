@@ -195,3 +195,4 @@ ccm track                  # Internal tracking (auto-used)
 最终同步和修复完成
 现在可以正确发布到最新版本了
 触发 v2.3.4 测试
+完善发布自动化流程
