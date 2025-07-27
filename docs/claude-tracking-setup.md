@@ -57,7 +57,7 @@ You need to add the tracking hook to your Claude Code settings. You can either:
 3. Leave matcher empty (to track all tools)
 4. Add this command:
    ```bash
-   npx ccm track
+   npx claude-code-manager track
    ```
 5. Save to User settings (applies to all projects)
 
@@ -73,7 +73,7 @@ Add this configuration to your `~/.claude/settings.json`:
         "hooks": [
           {
             "type": "command",
-            "command": "npx ccm track",
+            "command": "npx claude-code-manager track",
             "timeout": 5
           }
         ]
@@ -168,7 +168,7 @@ The timeline visualization provides:
 ### Database issues
 - Ensure SQLite3 is installed and accessible
 - Check file permissions on `~/.claude/` directory
-- Manually test the tracking: `echo '{"tool_name":"test","session_id":"test123"}' | npx ccm track`
+- Manually test the tracking: `echo '{"tool_name":"test","session_id":"test123"}' | npx claude-code-manager track`
 
 ### Timeline not showing data
 - Verify executions are being recorded in the database

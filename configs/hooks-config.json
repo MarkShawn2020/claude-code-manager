@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "npx ccm track",
+            "command": "npx claude-code-manager track",
             "timeout": 5
           }
         ]

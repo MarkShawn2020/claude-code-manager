@@ -32,7 +32,7 @@ function setupAutoTracking() {
     
     // Check if our tracking hook already exists
     const hooksExist = settings.hooks?.PostToolUse?.some(hook => 
-      hook.hooks?.some(h => h.command === 'npx ccm track')
+      hook.hooks?.some(h => h.command === 'npx claude-code-manager track')
     );
     
     if (hooksExist) {
@@ -54,7 +54,7 @@ function setupAutoTracking() {
       hooks: [
         {
           type: 'command',
-          command: 'npx ccm track',
+          command: 'npx claude-code-manager track',
           timeout: 5
         }
       ]

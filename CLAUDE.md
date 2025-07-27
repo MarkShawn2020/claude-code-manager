@@ -69,7 +69,7 @@ pnpm install
 
 ### Hook Integration
 - PostToolUse hook automatically installed during npm install
-- Command: `npx ccm track`
+- Command: `npx claude-code-manager track`
 - Configuration stored in `~/.claude/settings.json`
 
 ## Key File Locations

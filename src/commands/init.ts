@@ -98,7 +98,7 @@ function setupHooks(): void {
   
   // Check if our tracking hook already exists
   const existingHook = settings.hooks.PostToolUse.find(hook => 
-    hook.hooks?.some(h => h.command === 'npx ccm track')
+    hook.hooks?.some(h => h.command === 'npx claude-code-manager track')
   );
   
   if (existingHook) {
@@ -112,7 +112,7 @@ function setupHooks(): void {
     hooks: [
       {
         type: 'command',
-        command: 'npx ccm track',
+        command: 'npx claude-code-manager track',
         timeout: 5
       }
     ]
@@ -137,7 +137,7 @@ function checkSetup(): { database: boolean; hooks: boolean } {
     try {
       const settings = JSON.parse(fs.readFileSync(CLAUDE_SETTINGS_PATH, 'utf8'));
       hooksConfigured = settings.hooks?.PostToolUse?.some((hook: any) =>
-        hook.hooks?.some((h: any) => h.command === 'npx ccm track')
+        hook.hooks?.some((h: any) => h.command === 'npx claude-code-manager track')
       ) || false;
     } catch {
       hooksConfigured = false;
