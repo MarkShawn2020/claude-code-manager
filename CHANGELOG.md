@@ -1,3 +1,10 @@
+## [2.3.5](https://github.com/MarkShawn2020/claude-code-manager/compare/v2.3.4...v2.3.5) (2025-07-27)
+
+
+### Bug Fixes
+
+* improve release automation workflow ([652ba45](https://github.com/MarkShawn2020/claude-code-manager/commit/652ba45b7f1a13ef020f377bb92e649358b64f6b))
+
 ## [2.3.4](https://github.com/MarkShawn2020/claude-code-manager/compare/v2.3.3...v2.3.4) (2025-07-27)
 
 
