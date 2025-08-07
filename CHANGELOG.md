@@ -1,3 +1,10 @@
+## [2.3.7](https://github.com/MarkShawn2020/claude-code-manager/compare/v2.3.6...v2.3.7) (2025-08-07)
+
+
+### Bug Fixes
+
+* unnecessary dir ([bc9f2b0](https://github.com/MarkShawn2020/claude-code-manager/commit/bc9f2b0cd4e4606eba87f3ed4b0b9f85bde6730b))
+
 ## [2.3.6](https://github.com/MarkShawn2020/claude-code-manager/compare/v2.3.5...v2.3.6) (2025-07-27)
 
 
