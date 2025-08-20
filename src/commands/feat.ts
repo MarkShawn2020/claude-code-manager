@@ -146,8 +146,12 @@ function featAddCommand(name: string, options: { path?: string; parent?: boolean
       }
     }
     
-    // Fetch latest from origin
-    execSync(`git fetch origin ${mainBranch}`, { stdio: 'inherit' });
+    // Try to fetch latest from origin (optional, don't fail if no remote)
+    try {
+      execSync(`git fetch origin ${mainBranch}`, { stdio: 'pipe' });
+    } catch {
+      // No remote or fetch failed, continue with local branch
+    }
     
     console.log(chalk.cyan(`Creating worktree for feature: ${name}`));
     console.log(chalk.dim(`  Branch: ${branchName}`));
@@ -159,7 +163,17 @@ function featAddCommand(name: string, options: { path?: string; parent?: boolean
       execSync(`git worktree add "${worktreePath}" ${branchName}`, { stdio: 'inherit' });
     } else {
       // Create new branch and worktree
-      execSync(`git worktree add -b ${branchName} "${worktreePath}" origin/${mainBranch}`, { stdio: 'inherit' });
+      // Check if origin exists
+      let baseRef = mainBranch;
+      try {
+        execSync(`git show-ref --verify --quiet refs/remotes/origin/${mainBranch}`, { stdio: 'pipe' });
+        baseRef = `origin/${mainBranch}`;
+      } catch {
+        // No origin, use local main branch
+        baseRef = mainBranch;
+      }
+      
+      execSync(`git worktree add -b ${branchName} "${worktreePath}" ${baseRef}`, { stdio: 'inherit' });
     }
     
     console.log(chalk.green(`✓ Worktree created successfully\n`));
