@@ -152,6 +152,8 @@ async function featListCommand(options: { all?: boolean; simple?: boolean }) {
     return;
   }
   
+  try {
+  
   // Interactive mode
   const mainWorktree = worktrees.find(w => !w.branch.includes('feat/'));
   const featureWorktrees = worktrees.filter(w => w.branch.includes('feat/'));
@@ -182,7 +184,7 @@ async function featListCommand(options: { all?: boolean; simple?: boolean }) {
   });
   
   // Add separator and action options
-  choices.push({ type: 'separator', line: chalk.dim('─'.repeat(40)) });
+  choices.push(new inquirer.Separator(chalk.dim('─'.repeat(40))));
   choices.push({
     name: chalk.gray('← Exit'),
     value: null,
@@ -212,7 +214,7 @@ async function featListCommand(options: { all?: boolean; simple?: boolean }) {
     { name: '📁 Enter worktree', value: 'enter' },
     { name: '🚀 Enter and launch Claude Code', value: 'claude' },
     { name: '🗑️  Remove worktree', value: 'remove' },
-    { type: 'separator', line: chalk.dim('─'.repeat(40)) },
+    new inquirer.Separator(chalk.dim('─'.repeat(40))),
     { name: '← Back', value: 'back' }
   ];
   
@@ -285,6 +287,16 @@ async function featListCommand(options: { all?: boolean; simple?: boolean }) {
       // Recursively call the list command
       await featListCommand(options);
       break;
+  }
+  
+  } catch (error: any) {
+    // Handle user cancellation gracefully
+    if (error.name === 'ExitPromptError' || error.message?.includes('SIGINT')) {
+      console.log(chalk.dim('\nExited'));
+      process.exit(0);
+    }
+    // Re-throw other errors
+    throw error;
   }
 }
 
