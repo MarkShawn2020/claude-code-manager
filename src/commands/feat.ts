@@ -59,6 +59,15 @@ function getWorktrees(): WorktreeInfo[] {
 }
 
 function getMainBranch(): string {
+  // First, try to get the current branch if we're on it
+  try {
+    const currentBranch = execSync('git branch --show-current', { encoding: 'utf8' }).trim();
+    if (currentBranch && !currentBranch.includes('feat/')) {
+      return currentBranch;
+    }
+  } catch {}
+  
+  // Try to get remote HEAD
   try {
     const remoteHead = execSync('git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null', { encoding: 'utf8' }).trim();
     if (remoteHead) {
@@ -66,10 +75,21 @@ function getMainBranch(): string {
     }
   } catch {}
   
+  // Check for common main branch names
   try {
-    const branches = execSync('git branch -a', { encoding: 'utf8' });
+    const branches = execSync('git branch', { encoding: 'utf8' });
     if (branches.includes('main')) return 'main';
     if (branches.includes('master')) return 'master';
+    if (branches.includes('develop')) return 'develop';
+  } catch {}
+  
+  // Last resort: get the first available branch
+  try {
+    const firstBranch = execSync('git branch --format="%(refname:short)" | head -1', { 
+      encoding: 'utf8', 
+      shell: '/bin/bash' 
+    }).trim();
+    if (firstBranch) return firstBranch;
   } catch {}
   
   return 'main';
@@ -163,14 +183,22 @@ function featAddCommand(name: string, options: { path?: string; parent?: boolean
       execSync(`git worktree add "${worktreePath}" ${branchName}`, { stdio: 'inherit' });
     } else {
       // Create new branch and worktree
-      // Check if origin exists
-      let baseRef = mainBranch;
+      // Determine the base reference to branch from
+      let baseRef = 'HEAD';
+      
+      // Try origin/mainBranch first
       try {
         execSync(`git show-ref --verify --quiet refs/remotes/origin/${mainBranch}`, { stdio: 'pipe' });
         baseRef = `origin/${mainBranch}`;
       } catch {
-        // No origin, use local main branch
-        baseRef = mainBranch;
+        // Try local mainBranch
+        try {
+          execSync(`git show-ref --verify --quiet refs/heads/${mainBranch}`, { stdio: 'pipe' });
+          baseRef = mainBranch;
+        } catch {
+          // Use HEAD as fallback (current commit)
+          baseRef = 'HEAD';
+        }
       }
       
       execSync(`git worktree add -b ${branchName} "${worktreePath}" ${baseRef}`, { stdio: 'inherit' });
