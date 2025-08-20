@@ -127,6 +127,15 @@ function featAddCommand(name: string, options: { path?: string; parent?: boolean
   }
   
   try {
+    // Check if repository has any commits
+    try {
+      execSync('git rev-parse HEAD', { stdio: 'pipe' });
+    } catch {
+      console.error(chalk.red('Error: Repository has no commits yet'));
+      console.log(chalk.yellow('Please make an initial commit before creating worktrees'));
+      process.exit(1);
+    }
+    
     // Check if branch exists
     let branchExists = false;
     try {
