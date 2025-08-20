@@ -211,30 +211,26 @@ async function featListCommand(options: { all?: boolean; simple?: boolean }) {
   
   // Show action menu for the selected worktree
   const actions: any[] = [
-    { name: '📁 Enter worktree', value: 'enter' },
-    { name: '🚀 Enter and launch Claude Code', value: 'claude' },
+    { name: '🚀 Launch Claude Code', value: 'claude' },
     { name: '🗑️  Remove worktree', value: 'remove' },
     new inquirer.Separator(chalk.dim('─'.repeat(40))),
     { name: '← Back', value: 'back' }
   ];
   
+  const branchDisplay = selectedWorktree.branch.includes('feat/') 
+    ? selectedWorktree.branch.replace('feat/', '') 
+    : selectedWorktree.branch;
+    
   const { action } = await inquirer.prompt([
     {
       type: 'list',
       name: 'action',
-      message: `Selected: ${selectedWorktree.branch}`,
+      message: `Selected: ${chalk.bold.cyan(branchDisplay)}`,
       choices: actions
     }
   ]);
   
   switch (action) {
-    case 'enter':
-      console.log(chalk.cyan(`\n📁 Switching to: ${selectedWorktree.path}`));
-      process.chdir(selectedWorktree.path);
-      console.log(chalk.green('✓ Directory changed'));
-      console.log(chalk.dim('Run "claude" to start Claude Code'));
-      break;
-      
     case 'claude':
       console.log(chalk.cyan(`\n📁 Switching to: ${selectedWorktree.path}`));
       process.chdir(selectedWorktree.path);
