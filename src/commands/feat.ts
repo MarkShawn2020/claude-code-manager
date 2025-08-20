@@ -90,7 +90,7 @@ function featAddCommand(name: string) {
   
   const mainBranch = getMainBranch();
   const branchName = `feat/${name}`;
-  const worktreePath = path.join(process.cwd(), '..', name);
+  const worktreePath = path.join(process.cwd(), '.feats', name);
   
   try {
     execSync(`git fetch origin ${mainBranch}`, { stdio: 'inherit' });
@@ -103,15 +103,23 @@ function featAddCommand(name: string) {
     
     console.log(chalk.green(`✓ Worktree created successfully`));
     
-    const ccCommand = os.platform() === 'darwin' 
-      ? `open -a "Claude Code" "${worktreePath}"`
-      : `cc "${worktreePath}"`;
-    
     console.log(chalk.cyan(`Opening in Claude Code...`));
-    exec(ccCommand, (error) => {
+    
+    // Try using cc command directly first
+    exec(`cc "${worktreePath}"`, (error) => {
       if (error) {
-        console.log(chalk.yellow(`Could not open Claude Code automatically`));
-        console.log(chalk.dim(`  You can manually run: cc "${worktreePath}"`));
+        // If cc command fails, try macOS specific open command
+        if (os.platform() === 'darwin') {
+          exec(`open -a "Claude Code" "${worktreePath}"`, (openError) => {
+            if (openError) {
+              console.log(chalk.yellow(`Could not open Claude Code automatically`));
+              console.log(chalk.dim(`  You can manually run: cc "${worktreePath}"`));
+            }
+          });
+        } else {
+          console.log(chalk.yellow(`Could not open Claude Code automatically`));
+          console.log(chalk.dim(`  You can manually run: cc "${worktreePath}"`));
+        }
       }
     });
     
