@@ -158,16 +158,25 @@ async function featListCommand(options: { all?: boolean; simple?: boolean }) {
   const mainWorktree = worktrees.find(w => !w.branch.includes('feat/'));
   const featureWorktrees = worktrees.filter(w => w.branch.includes('feat/'));
   
-  // Filter based on --all flag
-  const displayWorktrees = options.all 
-    ? worktrees 
-    : worktrees.filter(w => w.isActive !== false);
+  // Only show feature worktrees, not main
+  let displayWorktrees = featureWorktrees;
+  
+  // Filter based on --all flag (only apply to feature worktrees)
+  if (!options.all) {
+    displayWorktrees = displayWorktrees.filter(w => w.isActive !== false);
+  }
+  
+  // If no feature worktrees exist
+  if (displayWorktrees.length === 0) {
+    console.log(chalk.yellow('\nNo feature worktrees found'));
+    console.log(chalk.dim('Use "ccm feat add <name>" to create one'));
+    return;
+  }
   
   // Create choices for inquirer
   const choices: any[] = displayWorktrees.map(wt => {
     const isCurrent = path.resolve(wt.path) === path.resolve(currentPath);
-    const isFeature = wt.branch.includes('feat/');
-    const name = isFeature ? wt.branch.replace('feat/', '') : 'main';
+    const name = wt.branch.replace('feat/', ''); // All should be features now
     
     let status = '';
     if (isCurrent) status += chalk.green(' ●');
