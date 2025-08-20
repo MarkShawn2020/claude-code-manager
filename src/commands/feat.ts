@@ -82,7 +82,7 @@ function getCurrentBranch(): string {
   }
 }
 
-function featAddCommand(name: string) {
+function featAddCommand(name: string, options: { path?: string; parent?: boolean }) {
   if (!name) {
     console.error(chalk.red('Error: Feature name is required'));
     process.exit(1);
@@ -90,7 +90,20 @@ function featAddCommand(name: string) {
   
   const mainBranch = getMainBranch();
   const branchName = `feat/${name}`;
-  const worktreePath = path.join(process.cwd(), '.feats', name);
+  
+  // Determine worktree path based on options
+  let worktreePath: string;
+  if (options.path) {
+    // Use custom path
+    worktreePath = path.resolve(options.path);
+  } else if (options.parent) {
+    // Use parent directory (following official docs)
+    const projectName = path.basename(process.cwd());
+    worktreePath = path.join(process.cwd(), '..', `${projectName}-${name}`);
+  } else {
+    // Default: use .feats directory inside project
+    worktreePath = path.join(process.cwd(), '.feats', name);
+  }
   
   try {
     execSync(`git fetch origin ${mainBranch}`, { stdio: 'inherit' });
@@ -103,17 +116,30 @@ function featAddCommand(name: string) {
     
     console.log(chalk.green(`✓ Worktree created successfully`));
     
+    // Environment initialization reminder
+    console.log(chalk.yellow('\n⚠️  Remember to initialize your development environment:'));
+    console.log(chalk.dim(`  For Node.js: cd "${worktreePath}" && npm install`));
+    console.log(chalk.dim(`  For Python: cd "${worktreePath}" && pip install -r requirements.txt`));
+    console.log(chalk.dim(`  Or follow your project's standard setup process\n`));
+    
     console.log(chalk.cyan(`Opening in Claude Code...`));
     
-    // Try using claude command with spawn for non-blocking execution
+    // Use spawn with proper configuration for non-blocking execution
     const child = spawn('claude', [worktreePath], { 
       detached: true, 
-      stdio: 'ignore'
+      stdio: 'ignore',
+      shell: true,
+      windowsHide: true
     });
-    child.unref(); // Allow the parent process to exit independently
     
-    console.log(chalk.green(`✓ Claude Code should open shortly`));
-    console.log(chalk.dim(`  If not, run: claude "${worktreePath}"`));
+    // Immediately unref to prevent parent from waiting
+    child.unref();
+    
+    // Don't wait for the child process
+    process.nextTick(() => {
+      console.log(chalk.green(`✓ Claude Code launched`));
+      console.log(chalk.dim(`  If Claude doesn't open, run: claude "${worktreePath}"`));
+    });
     
   } catch (error) {
     console.error(chalk.red(`Error creating worktree: ${error instanceof Error ? error.message : String(error)}`));
@@ -268,15 +294,22 @@ export function featCommand() {
     .description('Manage feature development with git worktrees')
     .addHelpText('after', `
 Examples:
-  $ ccm feat add payment-api    Create new feature worktree
-  $ ccm feat list               List active worktrees
-  $ ccm feat list -a            List all worktrees
-  $ ccm feat merge              Merge completed features
+  $ ccm feat add payment-api              Create worktree in .feats/payment-api
+  $ ccm feat add test --parent            Create worktree in ../project-test  
+  $ ccm feat add fix --path ~/work/fix    Create worktree at custom path
+  $ ccm feat list                         List active worktrees
+  $ ccm feat list -a                      List all worktrees
+  $ ccm feat merge                        Merge completed features
+
+Note: By default, worktrees are created in .feats directory inside the project.
+Use --parent to create in parent directory (Claude docs style), or --path for custom location.
     `);
   
   program
     .command('add <name>')
     .description('Create a new feature worktree and open in Claude Code')
+    .option('--path <path>', 'Custom path for the worktree')
+    .option('--parent', 'Create worktree in parent directory (Claude docs style)')
     .action(featAddCommand);
   
   program
