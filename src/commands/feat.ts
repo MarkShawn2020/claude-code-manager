@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { execSync, exec } from 'child_process';
+import { execSync, spawn } from 'child_process';
 import chalk from 'chalk';
 import fs from 'fs';
 import path from 'path';
@@ -105,23 +105,15 @@ function featAddCommand(name: string) {
     
     console.log(chalk.cyan(`Opening in Claude Code...`));
     
-    // Try using cc command directly first
-    exec(`cc "${worktreePath}"`, (error) => {
-      if (error) {
-        // If cc command fails, try macOS specific open command
-        if (os.platform() === 'darwin') {
-          exec(`open -a "Claude Code" "${worktreePath}"`, (openError) => {
-            if (openError) {
-              console.log(chalk.yellow(`Could not open Claude Code automatically`));
-              console.log(chalk.dim(`  You can manually run: cc "${worktreePath}"`));
-            }
-          });
-        } else {
-          console.log(chalk.yellow(`Could not open Claude Code automatically`));
-          console.log(chalk.dim(`  You can manually run: cc "${worktreePath}"`));
-        }
-      }
+    // Try using claude command with spawn for non-blocking execution
+    const child = spawn('claude', [worktreePath], { 
+      detached: true, 
+      stdio: 'ignore'
     });
+    child.unref(); // Allow the parent process to exit independently
+    
+    console.log(chalk.green(`✓ Claude Code should open shortly`));
+    console.log(chalk.dim(`  If not, run: claude "${worktreePath}"`));
     
   } catch (error) {
     console.error(chalk.red(`Error creating worktree: ${error instanceof Error ? error.message : String(error)}`));
