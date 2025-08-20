@@ -4,6 +4,7 @@ import chalk from 'chalk';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import inquirer from 'inquirer';
 
 interface WorktreeInfo {
   path: string;
@@ -136,7 +137,7 @@ function featAddCommand(name: string, options: { path?: string; parent?: boolean
   }
 }
 
-function featListCommand(options: { all?: boolean }) {
+async function featListCommand(options: { all?: boolean; simple?: boolean }) {
   const worktrees = getWorktrees();
   const currentPath = process.cwd();
   
@@ -145,6 +146,132 @@ function featListCommand(options: { all?: boolean }) {
     return;
   }
   
+  // If --simple flag is used, show the old static list
+  if (options.simple) {
+    showStaticList(worktrees, currentPath, options.all);
+    return;
+  }
+  
+  // Interactive mode
+  const mainWorktree = worktrees.find(w => !w.branch.includes('feat/'));
+  const featureWorktrees = worktrees.filter(w => w.branch.includes('feat/'));
+  
+  // Filter based on --all flag
+  const displayWorktrees = options.all 
+    ? worktrees 
+    : worktrees.filter(w => w.isActive !== false);
+  
+  // Create choices for inquirer
+  const choices: any[] = displayWorktrees.map(wt => {
+    const isCurrent = path.resolve(wt.path) === path.resolve(currentPath);
+    const isFeature = wt.branch.includes('feat/');
+    const name = isFeature ? wt.branch.replace('feat/', '') : 'main';
+    
+    let status = '';
+    if (isCurrent) status += chalk.green(' ●');
+    if (!wt.isActive) status += chalk.gray(' ◌');
+    if (wt.isLocked) status += chalk.yellow(' 🔒');
+    
+    const label = `${chalk.bold(name)}${status} ${chalk.dim(`(${wt.commit.substring(0, 8)})`)}`;
+    
+    return {
+      name: label,
+      value: wt,
+      short: name
+    };
+  });
+  
+  // Add separator and action options
+  choices.push({ type: 'separator', line: chalk.dim('─'.repeat(40)) });
+  choices.push({
+    name: chalk.gray('← Exit'),
+    value: null,
+    short: 'Exit'
+  });
+  
+  console.log(chalk.cyan.bold('\n📂 Git Worktrees\n'));
+  
+  const { selectedWorktree } = await inquirer.prompt([
+    {
+      type: 'list',
+      name: 'selectedWorktree',
+      message: 'Select a worktree to enter:',
+      choices,
+      pageSize: 15,
+      loop: false
+    }
+  ]);
+  
+  if (!selectedWorktree) {
+    console.log(chalk.dim('Exited'));
+    return;
+  }
+  
+  // Show action menu for the selected worktree
+  const actions: any[] = [
+    { name: '📁 Enter worktree', value: 'enter' },
+    { name: '🚀 Enter and launch Claude Code', value: 'claude' },
+    { name: '🗑️  Remove worktree', value: 'remove' },
+    { type: 'separator', line: chalk.dim('─'.repeat(40)) },
+    { name: '← Back', value: 'back' }
+  ];
+  
+  const { action } = await inquirer.prompt([
+    {
+      type: 'list',
+      name: 'action',
+      message: `Selected: ${selectedWorktree.branch}`,
+      choices: actions
+    }
+  ]);
+  
+  switch (action) {
+    case 'enter':
+      console.log(chalk.cyan(`\n📁 Switching to: ${selectedWorktree.path}`));
+      process.chdir(selectedWorktree.path);
+      console.log(chalk.green('✓ Directory changed'));
+      console.log(chalk.dim('Run "claude" to start Claude Code'));
+      break;
+      
+    case 'claude':
+      console.log(chalk.cyan(`\n📁 Switching to: ${selectedWorktree.path}`));
+      process.chdir(selectedWorktree.path);
+      console.log(chalk.cyan('🚀 Launching Claude Code...'));
+      spawn('claude', [], { 
+        stdio: 'inherit',
+        shell: true
+      });
+      break;
+      
+    case 'remove':
+      const { confirm } = await inquirer.prompt([
+        {
+          type: 'confirm',
+          name: 'confirm',
+          message: `Are you sure you want to remove ${selectedWorktree.branch}?`,
+          default: false
+        }
+      ]);
+      
+      if (confirm) {
+        try {
+          execSync(`git worktree remove "${selectedWorktree.path}" --force`, { stdio: 'inherit' });
+          console.log(chalk.green(`✓ Removed worktree: ${selectedWorktree.branch}`));
+        } catch (error) {
+          console.error(chalk.red(`Failed to remove worktree: ${error}`));
+        }
+      }
+      break;
+      
+    case 'back':
+      // Recursively call the list command
+      await featListCommand(options);
+      break;
+  }
+}
+
+// Helper function to show static list (old behavior)
+function showStaticList(worktrees: WorktreeInfo[], currentPath: string, showAll?: boolean) {
   const mainWorktree = worktrees.find(w => !w.branch.includes('feat/'));
   const featureWorktrees = worktrees.filter(w => w.branch.includes('feat/'));
   
@@ -164,7 +291,7 @@ function featListCommand(options: { all?: boolean }) {
     console.log(chalk.dim('\n─ Features ─'));
     
     featureWorktrees.forEach(wt => {
-      if (!options.all && !wt.isActive) {
+      if (!showAll && !wt.isActive) {
         return;
       }
       
@@ -193,7 +320,7 @@ function featListCommand(options: { all?: boolean }) {
     });
   }
   
-  if (!options.all) {
+  if (!showAll) {
     const inactiveCount = featureWorktrees.filter(w => !w.isActive).length;
     if (inactiveCount > 0) {
       console.log(chalk.dim(`\n${inactiveCount} inactive worktree(s) hidden. Use -a to show all.`));
@@ -303,8 +430,9 @@ Use --parent to create in parent directory (Claude docs style), or --path for cu
   
   program
     .command('list')
-    .description('List worktrees (default: active only)')
+    .description('List worktrees interactively (default: active only)')
     .option('-a, --all', 'Show all worktrees including inactive')
+    .option('-s, --simple', 'Show simple non-interactive list')
     .action(featListCommand);
   
   program
