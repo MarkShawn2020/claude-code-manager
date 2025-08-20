@@ -255,12 +255,30 @@ async function featListCommand(options: { all?: boolean; simple?: boolean }) {
       
       if (confirm) {
         try {
-          execSync(`git worktree remove "${selectedWorktree.path}" --force`, { stdio: 'inherit' });
-          console.log(chalk.green(`✓ Removed worktree: ${selectedWorktree.branch}`));
+          // Remove the worktree
+          console.log(chalk.cyan('Removing worktree...'));
+          execSync(`git worktree remove "${selectedWorktree.path}" --force`, { stdio: 'pipe' });
+          console.log(chalk.green(`✓ Removed worktree: ${selectedWorktree.path}`));
+          
+          // Also remove the branch
+          try {
+            execSync(`git branch -D ${selectedWorktree.branch}`, { stdio: 'pipe' });
+            console.log(chalk.green(`✓ Deleted branch: ${selectedWorktree.branch}`));
+          } catch {
+            // Branch might not exist or might have unmerged changes
+            console.log(chalk.yellow(`⚠ Could not delete branch ${selectedWorktree.branch} (may have unmerged changes)`));
+          }
+          
+          console.log(''); // Add blank line for clarity
         } catch (error) {
           console.error(chalk.red(`Failed to remove worktree: ${error}`));
         }
+      } else {
+        console.log(chalk.dim('Cancelled'));
       }
+      
+      // Always return to the list after removal attempt
+      await featListCommand(options);
       break;
       
     case 'back':
