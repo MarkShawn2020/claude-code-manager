@@ -83,7 +83,7 @@ function getCurrentBranch(): string {
   }
 }
 
-function featAddCommand(name: string, options: { path?: string; parent?: boolean }) {
+function featAddCommand(name: string, options: { path?: string; parent?: boolean; force?: boolean }) {
   if (!name) {
     console.error(chalk.red('Error: Feature name is required'));
     process.exit(1);
@@ -107,13 +107,60 @@ function featAddCommand(name: string, options: { path?: string; parent?: boolean
   }
   
   try {
+    // Check if branch exists
+    let branchExists = false;
+    try {
+      execSync(`git show-ref --verify --quiet refs/heads/${branchName}`, { stdio: 'pipe' });
+      branchExists = true;
+    } catch {
+      // Branch doesn't exist locally
+    }
+    
+    // Check if worktree already exists
+    const worktrees = getWorktrees();
+    const existingWorktree = worktrees.find(w => w.branch === branchName || w.path === worktreePath);
+    
+    if (existingWorktree && !options.force) {
+      // Worktree already exists and not forcing
+      console.log(chalk.yellow(`⚠️  Worktree for ${branchName} already exists`));
+      console.log(chalk.dim(`  Path: ${existingWorktree.path}`));
+      console.log(chalk.cyan(`\n📁 Switching to existing worktree...`));
+      
+      process.chdir(existingWorktree.path);
+      console.log(chalk.cyan(`🚀 Launching Claude Code...`));
+      spawn('claude', [], { 
+        stdio: 'inherit',
+        shell: true
+      });
+      return;
+    }
+    
+    if (existingWorktree && options.force) {
+      // Force recreate: remove existing worktree
+      console.log(chalk.yellow(`⚠️  Removing existing worktree for ${branchName}...`));
+      try {
+        execSync(`git worktree remove "${existingWorktree.path}" --force`, { stdio: 'pipe' });
+        console.log(chalk.green(`✓ Removed existing worktree`));
+      } catch (error) {
+        console.error(chalk.red(`Failed to remove existing worktree: ${error}`));
+      }
+    }
+    
+    // Fetch latest from origin
     execSync(`git fetch origin ${mainBranch}`, { stdio: 'inherit' });
     
     console.log(chalk.cyan(`Creating worktree for feature: ${name}`));
     console.log(chalk.dim(`  Branch: ${branchName}`));
     console.log(chalk.dim(`  Path: ${worktreePath}`));
     
-    execSync(`git worktree add -b ${branchName} "${worktreePath}" origin/${mainBranch}`, { stdio: 'inherit' });
+    if (branchExists) {
+      // Branch exists, create worktree from existing branch
+      console.log(chalk.yellow(`⚠️  Using existing branch ${branchName}`));
+      execSync(`git worktree add "${worktreePath}" ${branchName}`, { stdio: 'inherit' });
+    } else {
+      // Create new branch and worktree
+      execSync(`git worktree add -b ${branchName} "${worktreePath}" origin/${mainBranch}`, { stdio: 'inherit' });
+    }
     
     console.log(chalk.green(`✓ Worktree created successfully\n`));
     
@@ -461,6 +508,7 @@ Use --parent to create in parent directory (Claude docs style), or --path for cu
     .description('Create a new feature worktree and open in Claude Code')
     .option('--path <path>', 'Custom path for the worktree')
     .option('--parent', 'Create worktree in parent directory (Claude docs style)')
+    .option('-f, --force', 'Force recreate worktree if it already exists')
     .action(featAddCommand);
   
   program
