@@ -13,6 +13,7 @@ import { initCommand } from './commands/init';
 import { monitorCommand } from './commands/monitor';
 import { memoryCommand } from './commands/memory';
 import { dashboardCommand } from './commands/dashboard';
+import { featCommand } from './commands/feat';
 
 const packageJsonPath = path.join(__dirname, '../package.json');
 const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
@@ -100,5 +101,7 @@ program
   .option('--format <format>', 'Export format: json, csv (requires --export)', 'json')
   .option('--refresh', 'Force refresh usage data from ccusage before showing dashboard')
   .action(dashboardCommand);
+
+program.addCommand(featCommand());
 
 program.parse();
