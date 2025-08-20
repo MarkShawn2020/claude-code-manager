@@ -114,32 +114,21 @@ function featAddCommand(name: string, options: { path?: string; parent?: boolean
     
     execSync(`git worktree add -b ${branchName} "${worktreePath}" origin/${mainBranch}`, { stdio: 'inherit' });
     
-    console.log(chalk.green(`✓ Worktree created successfully`));
+    console.log(chalk.green(`✓ Worktree created successfully\n`));
     
-    // Environment initialization reminder
-    console.log(chalk.yellow('\n⚠️  Remember to initialize your development environment:'));
-    console.log(chalk.dim(`  For Node.js: cd "${worktreePath}" && npm install`));
-    console.log(chalk.dim(`  For Python: cd "${worktreePath}" && pip install -r requirements.txt`));
-    console.log(chalk.dim(`  Or follow your project's standard setup process\n`));
+    // Change to the worktree directory
+    process.chdir(worktreePath);
+    console.log(chalk.cyan(`📁 Switched to: ${worktreePath}`));
     
-    console.log(chalk.cyan(`Opening in Claude Code...`));
-    
-    // Use spawn with proper configuration for non-blocking execution
-    const child = spawn('claude', [worktreePath], { 
-      detached: true, 
-      stdio: 'ignore',
-      shell: true,
-      windowsHide: true
+    // Launch Claude Code in the current directory
+    console.log(chalk.cyan(`🚀 Launching Claude Code...`));
+    const child = spawn('claude', [], { 
+      stdio: 'inherit',
+      shell: true
     });
     
-    // Immediately unref to prevent parent from waiting
-    child.unref();
-    
-    // Don't wait for the child process
-    process.nextTick(() => {
-      console.log(chalk.green(`✓ Claude Code launched`));
-      console.log(chalk.dim(`  If Claude doesn't open, run: claude "${worktreePath}"`));
-    });
+    // The parent process will stay in the worktree directory
+    // So when claude exits, the user is already in the right place
     
   } catch (error) {
     console.error(chalk.red(`Error creating worktree: ${error instanceof Error ? error.message : String(error)}`));
