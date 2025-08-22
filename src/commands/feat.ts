@@ -524,7 +524,8 @@ function featMergeCommand() {
       console.log(chalk.green(`✓ Archived worktree at ${wt.path}`));
       
       console.log(chalk.dim(`Deleting branch...`));
-      execSync(`git branch -d ${wt.branch}`, { stdio: 'inherit' });
+      // Use -D to force delete since we've already merged the branch
+      execSync(`git branch -D ${wt.branch}`, { stdio: 'inherit' });
       console.log(chalk.green(`✓ Deleted branch ${wt.branch}`));
       
     } catch (error) {

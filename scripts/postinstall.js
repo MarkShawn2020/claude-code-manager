@@ -30,9 +30,12 @@ function setupAutoTracking() {
       }
     }
     
-    // Check if our tracking hook already exists
+    // Check if our tracking hook already exists (check for both old and new formats)
     const hooksExist = settings.hooks?.PostToolUse?.some(hook => 
-      hook.hooks?.some(h => h.command === 'npx claude-code-manager track')
+      hook.hooks?.some(h => 
+        h.command === 'npx claude-code-manager track' || 
+        h.command.includes('npx claude-code-manager track')
+      )
     );
     
     if (hooksExist) {
