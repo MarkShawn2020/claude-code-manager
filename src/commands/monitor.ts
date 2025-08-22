@@ -418,6 +418,82 @@ Projects: {bold}${projectCount}{/bold} | Sessions: {bold}${sessionCount}{/bold} 
     return path.basename(projectPath);
   }
 
+  private getLastUserRequest(sessionId: string, projectPath?: string): string | null {
+    try {
+      if (!projectPath) {
+        return null;
+      }
+
+      // Construct session file path
+      const encodedPath = projectPath.replace(/\//g, '-').replace(/\./g, '-');
+      const sessionDir = path.join(os.homedir(), '.claude', 'projects', encodedPath);
+      
+      if (!fs.existsSync(sessionDir)) {
+        return null;
+      }
+
+      // Find session files for this session
+      const sessionFiles = fs.readdirSync(sessionDir)
+        .filter(file => file.startsWith(sessionId) && file.endsWith('.jsonl'))
+        .map(file => path.join(sessionDir, file));
+
+      if (sessionFiles.length === 0) {
+        return null;
+      }
+
+      // Read and parse all messages from all session files for this session
+      let allMessages: any[] = [];
+      for (const filePath of sessionFiles) {
+        try {
+          const content = fs.readFileSync(filePath, 'utf8');
+          const lines = content.trim().split('\n');
+          
+          const messages = lines
+            .map(line => {
+              try {
+                return JSON.parse(line);
+              } catch {
+                return null;
+              }
+            })
+            .filter(msg => msg !== null);
+          
+          allMessages.push(...messages);
+        } catch (error) {
+          continue;
+        }
+      }
+
+      // Sort by timestamp to get chronological order
+      allMessages.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+      // Find the last user message
+      for (let i = allMessages.length - 1; i >= 0; i--) {
+        const message = allMessages[i];
+        if (message.type === 'user' && message.message?.role === 'user') {
+          const content = message.message.content;
+          let textContent: string | undefined;
+          
+          if (typeof content === 'string') {
+            textContent = content;
+          } else if (Array.isArray(content) && content.length > 0) {
+            textContent = content.find((c: any) => c.type === 'text')?.text;
+          }
+          
+          if (textContent) {
+            // Clean and truncate the request
+            const cleanText = textContent.replace(/\s+/g, ' ').trim();
+            return cleanText.length > 50 ? cleanText.substring(0, 50) + '...' : cleanText;
+          }
+        }
+      }
+
+      return null;
+    } catch (error) {
+      return null;
+    }
+  }
+
   private refreshData() {
     this.loadSessionData();
     this.buildTreeStructure();
@@ -459,10 +535,16 @@ Projects: {bold}${projectCount}{/bold} | Sessions: {bold}${sessionCount}{/bold} 
 
       // Add sessions under each project
       for (const [sessionId, sessions] of projectInfo.sessions) {
+        // Get the last user request for better session identification
+        const lastRequest = this.getLastUserRequest(sessionId, projectPath);
+        const sessionLabel = lastRequest 
+          ? `💬 "${lastRequest}" (${sessions.length} agents)`
+          : `💬 Session: ${sessionId.substring(0, 8)}... (${sessions.length} agents)`;
+
         const sessionNode: TreeNode = {
           id: `${projectPath}-${sessionId}`,
           type: 'session',
-          label: `💬 Session: ${sessionId.substring(0, 8)}... (${sessions.length} agents)`,
+          label: sessionLabel,
           level: 2,
           expanded: true,
           children: [],
@@ -557,10 +639,16 @@ Projects: {bold}${projectCount}{/bold} | Sessions: {bold}${sessionCount}{/bold} 
       }
 
       for (const [sessionId, sessions] of orphanedSessionGroups) {
+        // Try to get last user request for orphaned sessions too
+        const lastRequest = this.getLastUserRequest(sessionId);
+        const sessionLabel = lastRequest 
+          ? `💬 "${lastRequest}" (${sessions.length} agents)`
+          : `💬 Session: ${sessionId.substring(0, 8)}... (${sessions.length} agents)`;
+
         const sessionNode: TreeNode = {
           id: `orphaned-${sessionId}`,
           type: 'session',
-          label: `💬 Session: ${sessionId.substring(0, 8)}... (${sessions.length} agents)`,
+          label: sessionLabel,
           level: 2,
           expanded: true,
           children: [],
@@ -1243,9 +1331,18 @@ Press [Escape] to close`;
       });
     });
 
+    const sessionData = sessionNode.data;
+    const sessionId = sessionData.sessionId;
+    const sessions = sessionData.sessions;
+    
+    // Get the last user request for this session
+    const projectPath = sessions[0]?.projectPath;
+    const lastRequest = this.getLastUserRequest(sessionId, projectPath);
+
     const content = `{bold}Session Overview{/bold}
 
-{bold}Session ID:{/bold} ${sessionNode.id}
+{bold}Session ID:{/bold} ${sessionId}
+{bold}Last Request:{/bold} ${lastRequest || 'No request found'}
 {bold}Agent Count:{/bold} ${agentCount}
 {bold}Total Tasks:{/bold} ${totalTasks}
 
