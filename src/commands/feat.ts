@@ -13,6 +13,10 @@ interface WorktreeInfo {
   isActive: boolean;
   isLocked: boolean;
   reason?: string;
+  hasUncommittedChanges?: boolean;
+  aheadCount?: number;
+  behindCount?: number;
+  isFullyMerged?: boolean;
 }
 
 function getWorktrees(): WorktreeInfo[] {
@@ -56,6 +60,45 @@ function getWorktrees(): WorktreeInfo[] {
     console.error(chalk.red('Error: Not in a git repository'));
     process.exit(1);
   }
+}
+
+function getFeatureStatus(worktree: WorktreeInfo, mainBranch: string): WorktreeInfo {
+  const enrichedWT = { ...worktree };
+  
+  try {
+    // Check for uncommitted changes in the worktree
+    const statusOutput = execSync(`git -C "${worktree.path}" status --porcelain`, { encoding: 'utf8' });
+    enrichedWT.hasUncommittedChanges = statusOutput.trim().length > 0;
+    
+    // Get ahead/behind count relative to main branch
+    try {
+      const aheadBehind = execSync(
+        `git rev-list --left-right --count ${mainBranch}...${worktree.branch}`, 
+        { encoding: 'utf8' }
+      ).trim();
+      const [behind, ahead] = aheadBehind.split('\t').map(Number);
+      enrichedWT.aheadCount = ahead;
+      enrichedWT.behindCount = behind;
+    } catch {
+      enrichedWT.aheadCount = 0;
+      enrichedWT.behindCount = 0;
+    }
+    
+    // Check if branch is fully merged into main
+    try {
+      execSync(
+        `git merge-base --is-ancestor ${worktree.branch} ${mainBranch}`,
+        { stdio: 'pipe' }
+      );
+      enrichedWT.isFullyMerged = true;
+    } catch {
+      enrichedWT.isFullyMerged = false;
+    }
+  } catch (error) {
+    // If we can't get status, leave the fields undefined
+  }
+  
+  return enrichedWT;
 }
 
 function getMainBranch(): string {
@@ -238,6 +281,7 @@ function featAddCommand(name: string, options: { path?: string; parent?: boolean
 async function featListCommand(options: { all?: boolean; simple?: boolean }) {
   const worktrees = getWorktrees();
   const currentPath = process.cwd();
+  const mainBranch = getMainBranch();
   
   if (worktrees.length === 0) {
     console.log(chalk.yellow('No worktrees found'));
@@ -254,7 +298,9 @@ async function featListCommand(options: { all?: boolean; simple?: boolean }) {
   
   // Interactive mode
   const mainWorktree = worktrees.find(w => !w.branch.includes('feat/'));
-  const featureWorktrees = worktrees.filter(w => w.branch.includes('feat/'));
+  const featureWorktrees = worktrees
+    .filter(w => w.branch.includes('feat/'))
+    .map(w => getFeatureStatus(w, mainBranch));
   
   // Only show feature worktrees, not main
   let displayWorktrees = featureWorktrees;
@@ -281,7 +327,21 @@ async function featListCommand(options: { all?: boolean; simple?: boolean }) {
     if (!wt.isActive) status += chalk.gray(' ◌');
     if (wt.isLocked) status += chalk.yellow(' 🔒');
     
-    const label = `${chalk.bold(name)}${status} ${chalk.dim(`(${wt.commit.substring(0, 8)})`)}`;
+    // Add git status indicators
+    let gitStatus = '';
+    if (wt.hasUncommittedChanges) {
+      gitStatus += chalk.yellow(' ✎'); // Has uncommitted changes
+    }
+    if (wt.isFullyMerged) {
+      gitStatus += chalk.blue(' ✓'); // Fully merged
+    } else if (wt.aheadCount && wt.aheadCount > 0) {
+      gitStatus += chalk.green(` ↑${wt.aheadCount}`); // Commits ahead
+    }
+    if (wt.behindCount && wt.behindCount > 0) {
+      gitStatus += chalk.red(` ↓${wt.behindCount}`); // Commits behind
+    }
+    
+    const label = `${chalk.bold(name)}${status}${gitStatus} ${chalk.dim(`(${wt.commit.substring(0, 8)})`)}`;
     
     return {
       name: label,
@@ -319,10 +379,18 @@ async function featListCommand(options: { all?: boolean; simple?: boolean }) {
   // Show action menu for the selected worktree
   const actions: any[] = [
     { name: '🚀 Launch Claude Code', value: 'claude' },
+  ];
+  
+  // Add merge option if feature has commits and isn't fully merged
+  if (selectedWorktree.aheadCount && selectedWorktree.aheadCount > 0 && !selectedWorktree.isFullyMerged) {
+    actions.push({ name: '🔀 Merge to ' + mainBranch, value: 'merge' });
+  }
+  
+  actions.push(
     { name: '🗑️  Remove worktree', value: 'remove' },
     new inquirer.Separator(chalk.dim('─'.repeat(40))),
     { name: '← Back', value: 'back' }
-  ];
+  );
   
   const branchDisplay = selectedWorktree.branch.includes('feat/') 
     ? selectedWorktree.branch.replace('feat/', '') 
@@ -383,6 +451,85 @@ async function featListCommand(options: { all?: boolean; simple?: boolean }) {
       }
       
       // Always return to the list after removal attempt
+      await featListCommand(options);
+      break;
+      
+    case 'merge':
+      const { confirmMerge } = await inquirer.prompt([
+        {
+          type: 'confirm',
+          name: 'confirmMerge',
+          message: `Merge ${selectedWorktree.branch} into ${mainBranch}?`,
+          default: false
+        }
+      ]);
+      
+      if (confirmMerge) {
+        try {
+          // First, switch to main branch worktree
+          const mainWorktree = worktrees.find(w => w.branch === mainBranch || (!w.branch.includes('feat/') && w.branch !== '(detached)'));
+          if (!mainWorktree) {
+            console.error(chalk.red(`Cannot find main branch worktree for ${mainBranch}`));
+            break;
+          }
+          
+          console.log(chalk.cyan(`Switching to ${mainBranch} branch...`));
+          process.chdir(mainWorktree.path);
+          
+          // Pull latest changes
+          console.log(chalk.cyan('Pulling latest changes...'));
+          try {
+            execSync('git pull', { stdio: 'inherit' });
+          } catch {
+            console.log(chalk.yellow('Could not pull (no remote or offline)'));
+          }
+          
+          // Perform the merge
+          console.log(chalk.cyan(`Merging ${selectedWorktree.branch}...`));
+          const featName = selectedWorktree.branch.replace('feat/', '');
+          execSync(`git merge ${selectedWorktree.branch} --no-ff -m "feat: merge ${featName}"`, { stdio: 'inherit' });
+          console.log(chalk.green(`✓ Successfully merged ${selectedWorktree.branch}`));
+          
+          // Ask if user wants to push
+          const { pushChanges } = await inquirer.prompt([
+            {
+              type: 'confirm',
+              name: 'pushChanges',
+              message: `Push changes to origin/${mainBranch}?`,
+              default: true
+            }
+          ]);
+          
+          if (pushChanges) {
+            console.log(chalk.cyan('Pushing changes...'));
+            execSync(`git push origin ${mainBranch}`, { stdio: 'inherit' });
+            console.log(chalk.green('✓ Pushed successfully'));
+          }
+          
+          // Ask if user wants to remove the worktree
+          const { removeWorktree } = await inquirer.prompt([
+            {
+              type: 'confirm',
+              name: 'removeWorktree',
+              message: `Remove the merged worktree?`,
+              default: true
+            }
+          ]);
+          
+          if (removeWorktree) {
+            console.log(chalk.cyan('Removing worktree...'));
+            execSync(`git worktree remove "${selectedWorktree.path}" --force`, { stdio: 'pipe' });
+            execSync(`git branch -D ${selectedWorktree.branch}`, { stdio: 'pipe' });
+            console.log(chalk.green('✓ Worktree and branch removed'));
+          }
+        } catch (error) {
+          console.error(chalk.red(`Merge failed: ${error}`));
+        }
+      } else {
+        console.log(chalk.dim('Merge cancelled'));
+      }
+      
+      // Return to list
       await featListCommand(options);
       break;
       
@@ -461,7 +608,7 @@ function showStaticList(worktrees: WorktreeInfo[], currentPath: string, showAll?
   }
   
   console.log(chalk.dim('\n─'.repeat(60)));
-  console.log(chalk.dim('Legend: ● current | ◌ inactive | 🔒 locked'));
+  console.log(chalk.dim('Legend: ● current | ◌ inactive | 🔒 locked | ✎ uncommitted | ↑ ahead | ↓ behind | ✓ merged'));
 }
 
 function featMergeCommand() {
