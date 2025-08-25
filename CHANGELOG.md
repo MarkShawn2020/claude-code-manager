@@ -1,3 +1,10 @@
+# [2.5.0](https://github.com/MarkShawn2020/claude-code-manager/compare/v2.4.2...v2.5.0) (2025-08-25)
+
+
+### Features
+
+* add fix-semantic-release script ([1044672](https://github.com/MarkShawn2020/claude-code-manager/commit/1044672d3364566b3cd066c58e25f6cdc3da21ca))
+
 # [2.4.0](https://github.com/MarkShawn2020/claude-code-manager/compare/v2.3.7...v2.4.0) (2025-08-25)
 
 
