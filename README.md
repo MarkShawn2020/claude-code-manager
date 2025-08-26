@@ -7,10 +7,11 @@
 Professional CLI toolkit for Claude Code power users. Automatic execution tracking, real-time monitoring, and advanced analytics with zero configuration.
 
 
-<figure align="center">
+<div align="center">
   <img src="./assets/demo-2.7.0.png" alt="Claude Code Manager Dashboard Demo">
-  <figcaption><code>ccm dashboard</code> - Interactive analytics dashboard with real-time metrics</figcaption>
-</figure>
+  <br>
+  <em><code>ccm dashboard</code> - Interactive analytics dashboard with real-time metrics</em>
+</div>
 
 ## ✨ Features
 
