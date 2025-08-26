@@ -3,20 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Claude Code Manager - Unified Dashboard</title>
+    <title>Claude Code Manager - Dashboard</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&display=swap');
+        
         :root {
-            --primary-color: #646CFF;
-            --secondary-color: #535BF2;
-            --background: #0f0f0f;
-            --card-bg: #1a1a1a;
-            --text-primary: rgba(255, 255, 255, 0.9);
-            --text-secondary: rgba(255, 255, 255, 0.6);
-            --border-color: #2a2a2a;
-            --success: #4ade80;
-            --warning: #fb923c;
-            --error: #ef4444;
-            --hover-bg: rgba(100, 108, 255, 0.1);
+            /* Colors from design palette */
+            --primary: #D97757;
+            --text-main: #181818;
+            --text-faded: #87867F;
+            --background-main: #F9F9F7;
+            --background-dark: #141413;
+            --background-ivory-medium: #F0EEE6;
+            --background-oat: #F7F4EC;
+            --background-clay: #CC785C;
+            --background-faded: #3D3D3A;
+            --border-default: #87867F;
+            --slate-light: #87867F;
+            --cloud-light: #E8E6DC;
+            --fig: #B49FD8;
+            --olive: #C2C07D;
+            --cactus: #629A90;
+            --sky: #97B5D5;
+            --heather: #D2BEDF;
+            
+            /* Spacing */
+            --spacing-s: 1rem;
+            --spacing-m: 1.5rem;
+            --spacing-l: 3rem;
+            --spacing-xl: 4rem;
+            --spacing-xxl: 6rem;
+            
+            /* Border Radius */
+            --radius-md: 0.75rem;
+            --radius-lg: 1.5rem;
+            --radius-full: 9999px;
+            
+            /* Box Shadow */
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         }
 
         * {
@@ -26,9 +50,9 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
-            color: var(--text-primary);
+            font-family: 'Fira Code', ui-monospace, monospace;
+            background: var(--background-main);
+            color: var(--text-main);
             line-height: 1.6;
             min-height: 100vh;
         }
@@ -36,24 +60,24 @@
         /* Tab Navigation */
         .tabs {
             display: flex;
-            background: var(--card-bg);
-            border-bottom: 2px solid var(--border-color);
+            background: var(--background-oat);
+            border-bottom: 1px solid var(--cloud-light);
             position: sticky;
             top: 0;
             z-index: 100;
-            backdrop-filter: blur(10px);
-            background: rgba(26, 26, 26, 0.95);
+            box-shadow: var(--shadow-md);
         }
 
         .tab-button {
             flex: 1;
-            padding: 1.25rem 2rem;
+            padding: var(--spacing-s) var(--spacing-m);
             background: transparent;
             border: none;
-            color: var(--text-secondary);
+            color: var(--text-faded);
             cursor: pointer;
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: 500;
+            font-family: inherit;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             display: flex;
@@ -63,23 +87,23 @@
         }
 
         .tab-button:hover {
-            color: var(--text-primary);
-            background: var(--hover-bg);
+            color: var(--text-main);
+            background: var(--background-ivory-medium);
         }
 
         .tab-button.active {
-            color: var(--primary-color);
-            background: rgba(100, 108, 255, 0.05);
+            color: var(--primary);
+            background: var(--background-main);
         }
 
         .tab-button.active::after {
             content: '';
             position: absolute;
-            bottom: 0;
+            bottom: -1px;
             left: 0;
             right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            height: 2px;
+            background: var(--primary);
             animation: slideIn 0.3s ease;
         }
 
@@ -112,41 +136,40 @@
         .container {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 2rem;
+            padding: var(--spacing-m) var(--spacing-l);
         }
 
         .header {
-            margin-bottom: 2rem;
+            margin-bottom: var(--spacing-l);
         }
 
         .title {
-            font-size: 2.5rem;
+            font-size: 2rem;
             font-weight: 700;
-            background: linear-gradient(120deg, var(--primary-color), var(--secondary-color));
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: var(--primary);
             margin-bottom: 0.5rem;
+            letter-spacing: -0.5px;
         }
 
         .subtitle {
-            color: var(--text-secondary);
-            font-size: 1.1rem;
+            color: var(--text-faded);
+            font-size: 0.95rem;
+            font-weight: 400;
         }
 
         /* Stats Grid */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 1.25rem;
-            margin-bottom: 2rem;
+            gap: var(--spacing-s);
+            margin-bottom: var(--spacing-l);
         }
 
         .stat-card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 1.5rem;
-            border: 1px solid var(--border-color);
+            background: var(--background-oat);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-m);
+            border: 1px solid var(--cloud-light);
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
@@ -157,79 +180,85 @@
             position: absolute;
             top: 0;
             left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            width: 4px;
+            height: 100%;
+            background: var(--primary);
             opacity: 0;
             transition: opacity 0.3s ease;
         }
 
         .stat-card:hover {
             transform: translateY(-2px);
-            border-color: var(--primary-color);
-            box-shadow: 0 8px 20px rgba(100, 108, 255, 0.15);
+            box-shadow: var(--shadow-md);
+            border-color: var(--primary);
         }
 
         .stat-card:hover::before {
             opacity: 1;
         }
 
+        .stat-card:nth-child(2) .stat-value { color: var(--cactus); }
+        .stat-card:nth-child(3) .stat-value { color: var(--sky); }
+        .stat-card:nth-child(4) .stat-value { color: var(--olive); }
+
         .stat-label {
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-            margin-bottom: 0.75rem;
+            color: var(--text-faded);
+            font-size: 0.8rem;
+            margin-bottom: 0.5rem;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 1px;
+            font-weight: 500;
         }
 
         .stat-value {
             font-size: 1.75rem;
             font-weight: 700;
-            color: var(--primary-color);
+            color: var(--primary);
+            line-height: 1.2;
         }
 
         .stat-subtitle {
-            color: var(--text-secondary);
-            font-size: 0.875rem;
+            color: var(--text-faded);
+            font-size: 0.85rem;
             margin-top: 0.5rem;
         }
 
         /* Cards */
         .card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 1.75rem;
-            margin-bottom: 1.5rem;
-            border: 1px solid var(--border-color);
+            background: var(--background-oat);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-m);
+            margin-bottom: var(--spacing-m);
+            border: 1px solid var(--cloud-light);
             transition: all 0.3s ease;
         }
 
         .card:hover {
-            border-color: rgba(100, 108, 255, 0.3);
+            box-shadow: var(--shadow-md);
         }
 
         .card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1.5rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid var(--border-color);
+            margin-bottom: var(--spacing-s);
+            padding-bottom: var(--spacing-s);
+            border-bottom: 1px solid var(--cloud-light);
         }
 
         .card-title {
-            font-size: 1.5rem;
+            font-size: 1.25rem;
             font-weight: 600;
-            color: var(--text-primary);
+            color: var(--text-main);
         }
 
         /* Charts */
         .chart-container {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 1.75rem;
-            margin-bottom: 1.5rem;
-            border: 1px solid var(--border-color);
+            background: var(--background-oat);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-m);
+            margin-bottom: var(--spacing-m);
+            border: 1px solid var(--cloud-light);
             min-height: 400px;
         }
 
@@ -237,57 +266,58 @@
         .project-list {
             max-height: 600px;
             overflow-y: auto;
-            padding: 1rem;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 8px;
+            padding: var(--spacing-s);
+            background: var(--background-main);
+            border-radius: var(--radius-md);
         }
 
         .project-item {
-            padding: 1rem;
+            padding: var(--spacing-s);
             margin-bottom: 0.75rem;
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
+            background: var(--background-oat);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--cloud-light);
             transition: all 0.2s ease;
             cursor: pointer;
         }
 
         .project-item:hover {
-            background: rgba(100, 108, 255, 0.05);
-            border-color: var(--primary-color);
+            background: var(--background-ivory-medium);
+            border-color: var(--primary);
             transform: translateX(4px);
+            box-shadow: var(--shadow-md);
         }
 
         .project-path {
-            color: var(--primary-color);
+            color: var(--primary);
             font-weight: 500;
             margin-bottom: 0.5rem;
-            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
         }
 
         .project-stats {
             display: flex;
-            gap: 1.5rem;
-            color: var(--text-secondary);
-            font-size: 0.9rem;
+            gap: var(--spacing-m);
+            color: var(--text-faded);
+            font-size: 0.85rem;
         }
 
         /* Loading */
         .loading {
             text-align: center;
-            padding: 4rem;
-            color: var(--text-secondary);
+            padding: var(--spacing-xl);
+            color: var(--text-faded);
         }
 
         .loading-spinner {
             display: inline-block;
             width: 48px;
             height: 48px;
-            border: 3px solid var(--border-color);
-            border-top-color: var(--primary-color);
+            border: 3px solid var(--cloud-light);
+            border-top-color: var(--primary);
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin-bottom: 1rem;
+            margin-bottom: var(--spacing-s);
         }
 
         @keyframes spin {
@@ -297,42 +327,53 @@
         /* Timeline */
         .timeline-container {
             position: relative;
-            padding: 1rem;
+            padding: var(--spacing-s);
+            background: var(--background-main);
+            border-radius: var(--radius-md);
         }
 
         .timeline-item {
             display: flex;
             align-items: center;
-            padding: 1rem;
+            padding: var(--spacing-s);
             margin-bottom: 0.5rem;
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 8px;
+            background: var(--background-oat);
+            border-radius: var(--radius-md);
             transition: all 0.2s ease;
+            border: 1px solid transparent;
         }
 
         .timeline-item:hover {
-            background: rgba(100, 108, 255, 0.05);
+            background: var(--background-ivory-medium);
+            border-color: var(--primary);
+            transform: translateX(2px);
         }
 
         .timeline-time {
-            color: var(--text-secondary);
-            font-size: 0.875rem;
+            color: var(--text-faded);
+            font-size: 0.8rem;
             min-width: 150px;
         }
 
         .timeline-tool {
-            background: rgba(100, 108, 255, 0.1);
-            color: var(--primary-color);
+            background: var(--primary);
+            color: var(--background-main);
             padding: 0.25rem 0.75rem;
-            border-radius: 20px;
-            font-size: 0.875rem;
-            margin: 0 1rem;
+            border-radius: var(--radius-full);
+            font-size: 0.8rem;
+            margin: 0 var(--spacing-s);
+            font-weight: 500;
         }
 
         .timeline-description {
             flex: 1;
-            color: var(--text-primary);
+            color: var(--text-main);
+            font-size: 0.9rem;
         }
+
+        /* Status indicators */
+        .status-success { color: var(--cactus); }
+        .status-error { color: var(--primary); }
 
         /* Scrollbar */
         ::-webkit-scrollbar {
@@ -341,27 +382,27 @@
         }
 
         ::-webkit-scrollbar-track {
-            background: var(--card-bg);
-            border-radius: 10px;
+            background: var(--background-main);
+            border-radius: var(--radius-md);
         }
 
         ::-webkit-scrollbar-thumb {
-            background: var(--border-color);
-            border-radius: 10px;
+            background: var(--cloud-light);
+            border-radius: var(--radius-md);
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: var(--primary-color);
+            background: var(--slate-light);
         }
 
         /* Responsive */
         @media (max-width: 768px) {
             .container {
-                padding: 1rem;
+                padding: var(--spacing-s);
             }
 
             .title {
-                font-size: 1.75rem;
+                font-size: 1.5rem;
             }
 
             .stats-grid {
@@ -369,7 +410,7 @@
             }
 
             .tab-button {
-                padding: 1rem;
+                padding: var(--spacing-s);
                 font-size: 0.875rem;
             }
         }
@@ -444,10 +485,10 @@
             document.querySelectorAll('.loading').forEach(el => {
                 el.innerHTML = `
                     <div class="card">
-                        <p style="color: var(--error); text-align: center;">
+                        <p style="color: var(--primary); text-align: center;">
                             Failed to load data. Please refresh the page or regenerate the dashboard.
                         </p>
-                        <p style="color: var(--text-secondary); text-align: center; margin-top: 1rem;">
+                        <p style="color: var(--text-faded); text-align: center; margin-top: 1rem;">
                             Error: ${error.message}
                         </p>
                     </div>
@@ -517,7 +558,7 @@
             if (!dashboardData || !dashboardData.projects) {
                 container.innerHTML = `
                     <div class="card">
-                        <p style="color: var(--text-secondary); text-align: center;">No project data available</p>
+                        <p style="color: var(--text-faded); text-align: center;">No project data available</p>
                     </div>
                 `;
                 return;
@@ -585,7 +626,7 @@
             if (!dashboardData || !dashboardData.usage) {
                 container.innerHTML = `
                     <div class="card">
-                        <p style="color: var(--text-secondary); text-align: center;">No usage data available. Run 'ccm usage' first to fetch data.</p>
+                        <p style="color: var(--text-faded); text-align: center;">No usage data available. Run 'ccm usage' first to fetch data.</p>
                     </div>
                 `;
                 return;
@@ -638,7 +679,7 @@
             if (!dashboardData || !dashboardData.executions || dashboardData.executions.length === 0) {
                 container.innerHTML = `
                     <div class="card">
-                        <p style="color: var(--text-secondary); text-align: center;">No execution data available</p>
+                        <p style="color: var(--text-faded); text-align: center;">No execution data available</p>
                     </div>
                 `;
                 return;
@@ -678,7 +719,10 @@
                     <div class="stat-card">
                         <div class="stat-label">${tool}</div>
                         <div class="stat-value">${formatNumber(stats.count)}</div>
-                        <div class="stat-subtitle">✅ ${stats.success} | ❌ ${stats.failed}</div>
+                        <div class="stat-subtitle">
+                            <span class="status-success">✅ ${stats.success}</span> | 
+                            <span class="status-error">❌ ${stats.failed}</span>
+                        </div>
                     </div>
                 `;
             });
@@ -698,13 +742,17 @@
             const recentExecutions = executions.slice(0, 50);
             recentExecutions.forEach(exec => {
                 const time = new Date(exec.timestamp).toLocaleString();
-                const status = exec.success ? '✅' : '❌';
+                const statusIcon = exec.success ? '✅' : '❌';
+                const statusClass = exec.success ? 'status-success' : 'status-error';
                 
                 html += `
                     <div class="timeline-item">
                         <span class="timeline-time">${time}</span>
                         <span class="timeline-tool">${exec.tool_name}</span>
-                        <span class="timeline-description">${status} ${exec.project_path || 'Unknown project'}</span>
+                        <span class="timeline-description">
+                            <span class="${statusClass}">${statusIcon}</span> 
+                            ${exec.project_path || 'Unknown project'}
+                        </span>
                     </div>
                 `;
             });
@@ -721,6 +769,10 @@
             const ctx = document.getElementById('usage-chart');
             if (!ctx || !daily) return;
 
+            // Use colors from design palette
+            const primaryColor = '#D97757';
+            const secondaryColor = '#629A90';
+            
             new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -728,10 +780,16 @@
                     datasets: [{
                         label: 'Daily Cost ($)',
                         data: daily.map(d => d.totalCost),
-                        borderColor: '#646CFF',
-                        backgroundColor: 'rgba(100, 108, 255, 0.1)',
+                        borderColor: primaryColor,
+                        backgroundColor: `${primaryColor}20`,
                         tension: 0.4,
-                        fill: true
+                        fill: true,
+                        borderWidth: 2,
+                        pointBackgroundColor: primaryColor,
+                        pointBorderColor: '#F9F9F7',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
                     }]
                 },
                 options: {
@@ -740,16 +798,27 @@
                     plugins: {
                         legend: {
                             labels: { 
-                                color: 'rgba(255, 255, 255, 0.9)',
-                                font: { size: 14 }
+                                color: '#181818',
+                                font: { 
+                                    size: 12,
+                                    family: "'Fira Code', monospace"
+                                }
                             }
                         },
                         tooltip: {
-                            backgroundColor: 'rgba(26, 26, 26, 0.95)',
-                            titleColor: 'rgba(255, 255, 255, 0.9)',
-                            bodyColor: 'rgba(255, 255, 255, 0.9)',
-                            borderColor: '#646CFF',
+                            backgroundColor: '#F7F4EC',
+                            titleColor: '#181818',
+                            bodyColor: '#181818',
+                            borderColor: primaryColor,
                             borderWidth: 1,
+                            titleFont: {
+                                family: "'Fira Code', monospace",
+                                size: 12
+                            },
+                            bodyFont: {
+                                family: "'Fira Code', monospace",
+                                size: 11
+                            },
                             callbacks: {
                                 label: function(context) {
                                     return 'Cost: $' + context.parsed.y.toFixed(2);
@@ -760,21 +829,29 @@
                     scales: {
                         x: {
                             grid: { 
-                                color: 'rgba(255, 255, 255, 0.05)',
-                                borderColor: 'rgba(255, 255, 255, 0.1)'
+                                color: '#E8E6DC',
+                                borderColor: '#87867F'
                             },
                             ticks: { 
-                                color: 'rgba(255, 255, 255, 0.6)',
+                                color: '#87867F',
+                                font: {
+                                    family: "'Fira Code', monospace",
+                                    size: 10
+                                },
                                 maxTicksLimit: 10
                             }
                         },
                         y: {
                             grid: { 
-                                color: 'rgba(255, 255, 255, 0.05)',
-                                borderColor: 'rgba(255, 255, 255, 0.1)'
+                                color: '#E8E6DC',
+                                borderColor: '#87867F'
                             },
                             ticks: { 
-                                color: 'rgba(255, 255, 255, 0.6)',
+                                color: '#87867F',
+                                font: {
+                                    family: "'Fira Code', monospace",
+                                    size: 10
+                                },
                                 callback: function(value) {
                                     return '$' + value.toFixed(0);
                                 }
@@ -798,7 +875,7 @@
                 if (container) {
                     container.innerHTML = `
                         <div class="card">
-                            <p style="color: var(--error); text-align: center;">
+                            <p style="color: var(--primary); text-align: center;">
                                 Failed to initialize dashboard: ${error.message}
                             </p>
                         </div>
