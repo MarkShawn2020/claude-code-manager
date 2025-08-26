@@ -317,7 +317,7 @@
             font-weight: 600;
         }
 
-        /* Top Repositories List */
+        /* Top Projects List */
         .top-repos-list {
             display: flex;
             flex-direction: column;
@@ -556,7 +556,7 @@
             opacity: 0.8;
         }
 
-        /* Repository Activity Heatmap */
+        /* Project Activity Heatmap */
         .activity-container {
             display: flex;
             flex-direction: column;
@@ -1209,38 +1209,27 @@
 
         <!-- Bento Grid Layout -->
         <div class="bento-grid">
-            <!-- Hero Metric: Total Cost -->
-            <div class="bento-card hero-metric">
+            <!-- Hero Metric: Total Cost (2 columns) -->
+            <div class="bento-card hero-metric span-2">
                 <div class="metric-label">TOTAL COST</div>
                 <div class="metric-value" id="totalCost">--</div>
                 <span class="metric-change" id="costTrend">Calculating...</span>
             </div>
 
-            <!-- Projects Count -->
+            <!-- Total Tokens -->
             <div class="bento-card stat-card">
                 <div>
-                    <div class="card-label">Projects</div>
-                    <div class="stat-value" id="projectCount">--</div>
+                    <div class="card-label">Total Tokens</div>
+                    <div class="stat-value" id="totalTokens">--</div>
                 </div>
-                <div class="stat-trend" id="projectTrend">
+                <div class="stat-trend" id="tokenTrend">
                     <span>Loading...</span>
                 </div>
             </div>
 
-            <!-- Active Sessions -->
-            <div class="bento-card stat-card">
-                <div>
-                    <div class="card-label">Sessions</div>
-                    <div class="stat-value" id="sessionCount">--</div>
-                </div>
-                <div class="stat-trend" id="sessionTrend">
-                    <span>Loading...</span>
-                </div>
-            </div>
-
-            <!-- Top 5 Repositories -->
+            <!-- Top 5 Projects -->
             <div class="bento-card">
-                <div class="card-label">Top Repositories</div>
+                <div class="card-label" id="topReposLabel">Top Projects</div>
                 <div class="top-repos-list" id="topReposList">
                     <!-- Will be populated dynamically -->
                 </div>
@@ -1263,10 +1252,10 @@
                         </div>
                     </div>
                     
-                    <!-- Repository Activity Section -->
+                    <!-- Project Activity Section -->
                     <div class="repo-activity-section">
                         <div class="section-label">
-                            Repository Activity
+                            Project Activity
                             <span class="scope-indicator">• Local machine data</span>
                         </div>
                         <!-- Activity Legend (positioned top-right) -->
@@ -1283,7 +1272,7 @@
                         </div>
                         <div class="repo-heatmap-wrapper">
                             <div class="repo-labels" id="repoLabels">
-                                <!-- Repository names will be added dynamically -->
+                                <!-- Project names will be added dynamically -->
                             </div>
                             <div class="repo-heatmap-content">
                                 <div class="repo-heatmap-grid" id="activityHeatmap"></div>
@@ -1502,19 +1491,17 @@
                 document.getElementById('costTrend').textContent = 'Usage data not loaded';
             }
 
-            // Update project count
-            const projectCount = DATA?.projects?.metadata?.totalProjects || 0;
-            document.getElementById('projectCount').textContent = projectCount;
-            document.getElementById('projectTrend').innerHTML = projectCount > 0 
-                ? '<span style="color: var(--cactus)">Active</span>' 
-                : '<span style="color: var(--text-faded)">No projects</span>';
-
-            // Update session count  
-            const sessionCount = DATA?.projects?.metadata?.totalExecutions || 0;
-            document.getElementById('sessionCount').textContent = sessionCount;
-            document.getElementById('sessionTrend').innerHTML = sessionCount > 0 
-                ? '<span style="color: var(--cactus)">Tracked</span>' 
-                : '<span style="color: var(--text-faded)">No sessions</span>';
+            // Update total tokens
+            if (appData && appData.totals) {
+                const totalTokens = appData.totals.totalTokens || 0;
+                document.getElementById('totalTokens').textContent = formatNumber(totalTokens);
+                document.getElementById('tokenTrend').innerHTML = totalTokens > 0 
+                    ? '<span style="color: var(--cactus)">Processed</span>' 
+                    : '<span style="color: var(--text-faded)">No tokens</span>';
+            } else {
+                document.getElementById('totalTokens').textContent = '--';
+                document.getElementById('tokenTrend').innerHTML = '<span style="color: var(--text-faded)">No data</span>';
+            }
 
             // Initialize Tool Usage
             initToolUsage();
@@ -1522,8 +1509,8 @@
             // Initialize Top Features
             initTopFeatures();
             
-            // Initialize Top Repositories
-            initTopRepositories();
+            // Initialize Top Projects
+            initTopProjects();
             
             // Initialize Charts (only if data available)
             if (appData && appData.daily) {
@@ -1710,23 +1697,27 @@
             ).join('');
         }
 
-        // Initialize Top Repositories
-        function initTopRepositories() {
+        // Initialize Top Projects
+        function initTopProjects() {
             const container = document.getElementById('topReposList');
+            const labelElement = document.getElementById('topReposLabel');
             const executions = DATA?.executions || [];
             
             if (executions.length === 0) {
-                container.innerHTML = '<div style="text-align: center; color: var(--text-faded); padding: 1rem;">No repository data available</div>';
+                container.innerHTML = '<div style="text-align: center; color: var(--text-faded); padding: 1rem;">No project data available</div>';
+                if (labelElement) {
+                    labelElement.textContent = 'Top Projects (0/0)';
+                }
                 return;
             }
             
-            // Count repository executions
+            // Count project executions
             const repoCounts = new Map();
             let totalCount = 0;
             
             executions.forEach(exec => {
                 if (exec.project_path) {
-                    // Extract repository name (same logic as heatmap)
+                    // Extract project name (same logic as heatmap)
                     let repoName = exec.project_path;
                     
                     if (repoName.startsWith('-Applications-')) {
@@ -1757,12 +1748,19 @@
             });
             
             // Sort and get top 5
-            const topRepos = Array.from(repoCounts.entries())
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 5);
+            const allRepos = Array.from(repoCounts.entries())
+                .sort((a, b) => b[1] - a[1]);
+            const topRepos = allRepos.slice(0, 5);
+            
+            // Update label with (5/N) format
+            const totalRepoCount = repoCounts.size;
+            if (labelElement) {
+                const displayCount = Math.min(5, totalRepoCount);
+                labelElement.textContent = `Top Projects (${displayCount}/${totalRepoCount})`;
+            }
             
             if (topRepos.length === 0) {
-                container.innerHTML = '<div style="text-align: center; color: var(--text-faded); padding: 1rem;">No repositories found</div>';
+                container.innerHTML = '<div style="text-align: center; color: var(--text-faded); padding: 1rem;">No projects found</div>';
                 return;
             }
             
@@ -1884,7 +1882,7 @@
             });
         }
 
-        // Generate Repository Activity Heatmap
+        // Generate Project Activity Heatmap
         function generateHeatmap() {
             const heatmap = document.getElementById('activityHeatmap');
             const repoLabels = document.getElementById('repoLabels');
@@ -1914,20 +1912,20 @@
             const numDays = 30; // Fixed 30 days
             
             // Debug info
-            console.log('Repository Activity (Last 30 Days):', {
+            console.log('Project Activity (Last 30 Days):', {
                 localTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                 localDateRange: `${minDate.toLocaleDateString()} to ${maxDate.toLocaleDateString()}`,
                 totalExecutions: executions.length,
                 days: numDays
             });
             
-            // Aggregate all repositories with activity
+            // Aggregate all projects with activity
             const repoTotalCounts = new Map();
             const repoDailyActivity = new Map(); // repo -> date -> count
             
             executions.forEach(exec => {
                 if (exec.project_path) {
-                    // Extract repository name from path
+                    // Extract project name from path
                     let repoName = exec.project_path;
                     
                     // Handle different path formats
@@ -1976,14 +1974,14 @@
                 }
             });
             
-            // Sort repositories by total count and select top 9
+            // Sort projects by total count and select top 9
             const sortedRepos = Array.from(repoTotalCounts.entries())
                 .sort((a, b) => b[1] - a[1]);
             
             const top9Repos = sortedRepos.slice(0, 9).map(([name]) => name);
             const othersRepos = sortedRepos.slice(9).map(([name]) => name);
             
-            // Prepare final repository list (top 9 + "Others")
+            // Prepare final project list (top 9 + "Others")
             const finalRepos = [...top9Repos];
             if (othersRepos.length > 0) {
                 finalRepos.push('Others');
@@ -2001,7 +1999,7 @@
                 repoDailyActivity.set('Others', othersDailyMap);
             }
             
-            console.log('Repository Analysis (30 days):', {
+            console.log('Project Analysis (30 days):', {
                 totalRepos: repoTotalCounts.size,
                 top9: top9Repos.map(r => `${r}: ${repoTotalCounts.get(r)}`),
                 othersCount: othersRepos.length,
@@ -2009,7 +2007,7 @@
             });
             
             if (finalRepos.length === 0) {
-                heatmap.innerHTML = '<div style="text-align: center; color: var(--text-faded); padding: 2rem;">No repository data available</div>';
+                heatmap.innerHTML = '<div style="text-align: center; color: var(--text-faded); padding: 2rem;">No project data available</div>';
                 return;
             }
             
@@ -2058,7 +2056,7 @@
             // Calculate total executions for percentage
             const totalExecutions = Array.from(repoTotalCounts.values()).reduce((sum, count) => sum + count, 0);
             
-            // Add repository percentage labels only
+            // Add project percentage labels only
             finalRepos.forEach((repoName, idx) => {
                 const label = document.createElement('div');
                 label.className = 'repo-label';
@@ -2067,7 +2065,7 @@
                 if (repoName === 'Others') {
                     count = othersRepos.reduce((sum, r) => sum + (repoTotalCounts.get(r) || 0), 0);
                     percentage = totalExecutions > 0 ? ((count / totalExecutions) * 100).toFixed(0) : '0';
-                    label.title = `Others: ${othersRepos.length} repositories, ${count} executions (${percentage}%)`;
+                    label.title = `Others: ${othersRepos.length} projects, ${count} executions (${percentage}%)`;
                 } else {
                     count = repoTotalCounts.get(repoName) || 0;
                     percentage = totalExecutions > 0 ? ((count / totalExecutions) * 100).toFixed(0) : '0';
@@ -2244,8 +2242,9 @@
             if (appData && appData.totals) {
                 animateValue('totalCost', 0, appData.totals.totalCost, 1000);
             }
-            animateValue('projectCount', 0, DATA?.projects?.metadata?.totalProjects || 0, 1000);
-            animateValue('sessionCount', 0, DATA?.projects?.metadata?.totalExecutions || 0, 1000);
+            if (appData && appData.totals) {
+                animateValue('totalTokens', 0, appData.totals.totalTokens || 0, 1000);
+            }
         });
     </script>
 </body>

@@ -57,7 +57,7 @@ function getWorktrees(): WorktreeInfo[] {
     
     return worktrees;
   } catch (error) {
-    console.error(chalk.red('Error: Not in a git repository'));
+    console.error(chalk.red('Error: Not in a git project'));
     process.exit(1);
   }
 }
@@ -170,11 +170,11 @@ function featAddCommand(name: string, options: { path?: string; parent?: boolean
   }
   
   try {
-    // Check if repository has any commits
+    // Check if project has any commits
     try {
       execSync('git rev-parse HEAD', { stdio: 'pipe' });
     } catch {
-      console.error(chalk.red('Error: Repository has no commits yet'));
+      console.error(chalk.red('Error: Project has no commits yet'));
       console.log(chalk.yellow('Please make an initial commit before creating worktrees'));
       process.exit(1);
     }

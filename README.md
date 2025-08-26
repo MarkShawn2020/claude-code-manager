@@ -136,7 +136,7 @@ ccm memory --full       # Full content display
 ## Development
 
 ```bash
-# Clone repository
+# Clone project
 git clone https://github.com/markshawn2020/claude-code-manager
 cd claude-code-manager
 
@@ -160,7 +160,7 @@ ISC License - see [LICENSE](LICENSE) file for details.
 
 ## Links
 
-- [GitHub Repository](https://github.com/markshawn2020/claude-code-manager)
+- [GitHub Project](https://github.com/markshawn2020/claude-code-manager)
 - [NPM Package](https://www.npmjs.com/package/claude-code-manager)
 - [Issue Tracker](https://github.com/markshawn2020/claude-code-manager/issues)
 

@@ -12,7 +12,7 @@ echo "- Remote latest tag: $(git ls-remote --tags origin | grep -v '{}' | tail -
 echo ""
 
 echo "🎯 Solution: Push local tags to remote"
-echo "This will sync v2.4.1 and v2.4.2 tags with remote repository"
+echo "This will sync v2.4.1 and v2.4.2 tags with remote project"
 echo ""
 
 read -p "Continue? (y/n): " -n 1 -r

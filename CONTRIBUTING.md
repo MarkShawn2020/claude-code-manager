@@ -12,7 +12,7 @@ Thank you for your interest in contributing to CCM! This document provides guide
 
 ### Local Development
 
-1. **Clone the repository**
+1. **Clone the project**
    ```bash
    git clone https://github.com/markshawn2020/claude-code-manager
    cd claude-code-manager
@@ -110,7 +110,7 @@ Currently, testing is manual. When adding new features:
 
 ## Submitting Changes
 
-1. **Fork the repository**
+1. **Fork the project**
 2. **Create a feature branch**
    ```bash
    git checkout -b feature/your-feature-name

@@ -1,6 +1,6 @@
 {
   "branches": ["main"],
-  "repositoryUrl": "https://github.com/MarkShawn2020/claude-code-manager.git",
+  "projectUrl": "https://github.com/MarkShawn2020/claude-code-manager.git",
   "plugins": [
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
