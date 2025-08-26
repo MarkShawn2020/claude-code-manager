@@ -259,18 +259,19 @@
             grid-row: span 2;
         }
         
-        /* Heatmap months row */
-        .heatmap-months {
+        /* Heatmap date labels row */
+        .repo-heatmap-dates {
             position: relative;
             height: 20px;
             font-size: 0.625rem;
             color: var(--text-faded);
             margin-top: 0.5rem;
+            display: flex;
+            justify-content: space-between;
         }
         
-        .heatmap-months span {
-            position: absolute;
-            transform: translateX(-50%);
+        .repo-heatmap-dates span {
+            text-align: center;
         }
 
         /* Hero Metric Card */
@@ -357,7 +358,7 @@
             height: 100%;
         }
 
-        /* Activity Heatmap */
+        /* Repository Activity Heatmap */
         .activity-container {
             display: flex;
             flex-direction: column;
@@ -365,42 +366,48 @@
             position: relative;
         }
 
-        .heatmap-wrapper {
+        .repo-heatmap-wrapper {
             flex: 1;
             display: flex;
             flex-direction: row;
-            gap: 0.5rem;
+            gap: 0.75rem;
             padding: 0;
+            min-height: 200px;
         }
 
-        .heatmap-days {
+        .repo-labels {
             display: flex;
             flex-direction: column;
             justify-content: space-around;
-            font-size: 0.65rem;
+            font-size: 0.75rem;
             color: var(--text-faded);
             padding: 0;
-            width: 25px;
+            min-width: 120px;
+            max-width: 180px;
+            overflow: hidden;
         }
 
-        .day-label {
-            height: calc(100% / 7);
+        .repo-label {
+            flex: 1;
             display: flex;
             align-items: center;
             justify-content: flex-end;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+            padding-right: 0.5rem;
+            min-height: 18px;
         }
 
-        .heatmap-content {
+        .repo-heatmap-content {
             flex: 1;
             display: flex;
             flex-direction: column;
             position: relative;
         }
 
-        .heatmap-grid {
+        .repo-heatmap-grid, #activityHeatmap {
             display: grid;
-            grid-template-columns: repeat(52, 1fr);
-            grid-template-rows: repeat(7, 1fr);
             gap: 1.5px;
             width: 100%;
             flex: 1;
@@ -697,13 +704,14 @@
             
             .span-2, .span-3, .span-4 { grid-column: span 1; }
             
-            .timeline-card {
-                min-height: 350px;
+            .repo-labels {
+                min-width: 80px;
+                max-width: 120px;
+                font-size: 0.65rem;
             }
             
-            .timeline-card .cost-curve-container {
-                height: 140px;
-                max-height: 140px;
+            .repo-heatmap-dates {
+                font-size: 0.55rem;
             }
             
             .header-title {
@@ -838,23 +846,17 @@
                 </div>
             </div>
 
-            <!-- Activity Heatmap (Full Width) -->
+            <!-- Repository Activity Heatmap (Full Width) -->
             <div class="bento-card span-4">
-                <div class="card-label">Contribution Activity (52 Weeks)</div>
+                <div class="card-label">Repository Activity Timeline</div>
                 <div class="activity-container">
-                    <div class="heatmap-wrapper">
-                        <div class="heatmap-days">
-                            <div class="day-label">Sun</div>
-                            <div class="day-label">Mon</div>
-                            <div class="day-label">Tue</div>
-                            <div class="day-label">Wed</div>
-                            <div class="day-label">Thu</div>
-                            <div class="day-label">Fri</div>
-                            <div class="day-label">Sat</div>
+                    <div class="repo-heatmap-wrapper">
+                        <div class="repo-labels" id="repoLabels">
+                            <!-- Repository names will be added dynamically -->
                         </div>
-                        <div class="heatmap-content">
-                            <div class="heatmap-grid" id="activityHeatmap"></div>
-                            <div class="heatmap-months" id="heatmapMonths"></div>
+                        <div class="repo-heatmap-content">
+                            <div class="repo-heatmap-grid" id="activityHeatmap"></div>
+                            <div class="repo-heatmap-dates" id="heatmapDates"></div>
                         </div>
                     </div>
                     <div class="heatmap-legend">
@@ -1200,139 +1202,267 @@
             });
         }
 
-        // Generate Activity Heatmap
+        // Generate Repository Activity Heatmap
         function generateHeatmap() {
             const heatmap = document.getElementById('activityHeatmap');
-            const monthsContainer = document.getElementById('heatmapMonths');
+            const repoLabels = document.getElementById('repoLabels');
+            const dateLabels = document.getElementById('heatmapDates');
+            
             heatmap.innerHTML = '';
+            repoLabels.innerHTML = '';
+            dateLabels.innerHTML = '';
             
-            // Use execution stats for activity (more accurate than tokens)
-            const executionStats = DATA?.executionStats?.dailyStats || [];
-            const activityMap = new Map();
+            // Get all executions
+            const executions = DATA?.executions || [];
             
-            // Create activity map from execution stats
-            executionStats.forEach(stat => {
-                const date = new Date(stat.day + ' 00:00:00');
-                const dateKey = date.toDateString();
-                activityMap.set(dateKey, stat.count);
+            if (executions.length === 0) {
+                heatmap.innerHTML = '<div style="text-align: center; color: var(--text-faded); padding: 2rem;">No execution data available</div>';
+                return;
+            }
+            
+            // Get date range from database
+            const dates = executions.map(e => new Date(e.timestamp));
+            const dataMinDate = new Date(Math.min(...dates));
+            const dataMaxDate = new Date(Math.max(...dates));
+            
+            // Calculate the display range: last 3 months or all data, whichever is larger
+            const today = new Date();
+            const threeMonthsAgo = new Date(today);
+            threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+            
+            // Use the larger range between (data range) and (last 3 months)
+            const minDate = new Date(Math.min(dataMinDate.getTime(), threeMonthsAgo.getTime()));
+            const maxDate = today; // Always extend to today
+            
+            // Debug info
+            console.log('Repository Activity Timeline Date Range:', {
+                dataMinDate: dataMinDate.toISOString().split('T')[0],
+                dataMaxDate: dataMaxDate.toISOString().split('T')[0],
+                displayMinDate: minDate.toISOString().split('T')[0],
+                displayMaxDate: maxDate.toISOString().split('T')[0],
+                executions: executions.length
             });
             
-            // Also add token data as fallback
-            if (appData && appData.daily) {
-                appData.daily.forEach(d => {
-                    const date = new Date(d.date);
-                    const dateKey = date.toDateString();
-                    if (!activityMap.has(dateKey) && d.totalTokens > 0) {
-                        // Use a normalized count based on tokens (rough estimate)
-                        activityMap.set(dateKey, Math.ceil(d.totalTokens / 100000));
+            // Calculate time span in days
+            const daySpan = Math.ceil((maxDate - minDate) / (1000 * 60 * 60 * 24)) + 1;
+            
+            // Determine appropriate time buckets based on span
+            let bucketSize = 1; // days per bucket
+            let maxBuckets = 60; // increased max buckets for better granularity
+            
+            if (daySpan > 90) {
+                // More than 3 months: use weekly buckets
+                bucketSize = 7;
+            } else if (daySpan > maxBuckets) {
+                // Between maxBuckets and 90 days: use 2-day buckets
+                bucketSize = 2;
+            }
+            // Otherwise use daily buckets
+            
+            const numBuckets = Math.ceil(daySpan / bucketSize);
+            
+            // Get all repositories with activity
+            const repoActivity = new Map();
+            const repoLastActivity = new Map();
+            const repoExecutionCount = new Map();
+            
+            executions.forEach(exec => {
+                if (exec.project_path) {
+                    // Extract repository name from path
+                    // The database stores paths with dashes instead of slashes
+                    let repoName = exec.project_path;
+                    
+                    // Handle different path formats
+                    if (repoName.startsWith('-Applications-')) {
+                        // Application paths: -Applications-WeChat-app -> WeChat-app
+                        repoName = repoName.replace(/^-Applications-/, '');
+                    } else if (repoName === '-Users-mark--claude') {
+                        // Special home directory case
+                        repoName = '.claude';
+                    } else if (repoName.startsWith('-Users-mark-')) {
+                        // Standard user paths
+                        // Remove the prefix for paths like "-Users-mark-projects-xxx" or "-Users-mark-repos-xxx"
+                        repoName = repoName.replace(/^-Users-mark-(projects-|repos-)?/, '');
+                        
+                        // Handle feature branches with double dashes
+                        // Consolidate feature branches into main repository
+                        if (repoName.includes('--')) {
+                            // Remove feature branch suffix to consolidate
+                            // e.g., "video2ppt--feats-support-mac-extension" -> "video2ppt"
+                            repoName = repoName.split('--')[0];
+                        }
+                    }
+                    
+                    // Handle paths with triple dashes
+                    if (repoName.includes('---')) {
+                        repoName = repoName.split('---').pop().replace(/^-+/, '');
+                    }
+                    
+                    // Clean up remaining artifacts
+                    repoName = repoName.replace(/^-+|-+$/g, ''); // Remove leading/trailing dashes
+                    
+                    // Ensure we have a valid name
+                    if (!repoName) {
+                        repoName = 'Unknown';
+                    }
+                    
+                    const timestamp = new Date(exec.timestamp);
+                    
+                    if (!repoActivity.has(repoName)) {
+                        repoActivity.set(repoName, []);
+                        repoLastActivity.set(repoName, timestamp);
+                        repoExecutionCount.set(repoName, 0);
+                    } else {
+                        const lastTime = repoLastActivity.get(repoName);
+                        if (timestamp > lastTime) {
+                            repoLastActivity.set(repoName, timestamp);
+                        }
+                    }
+                    
+                    repoActivity.get(repoName).push(exec);
+                    repoExecutionCount.set(repoName, repoExecutionCount.get(repoName) + 1);
+                }
+            });
+            
+            console.log('Repository Analysis:', {
+                totalRepos: repoActivity.size,
+                repoExecutions: Array.from(repoExecutionCount.entries())
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 15)
+                    .map(([name, count]) => `${name}: ${count}`)
+            });
+            
+            // Sort repositories by most recent activity and take top 10
+            const topRepos = Array.from(repoLastActivity.entries())
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10)
+                .map(([name]) => name);
+            
+            if (topRepos.length === 0) {
+                heatmap.innerHTML = '<div style="text-align: center; color: var(--text-faded); padding: 2rem;">No repository data available</div>';
+                return;
+            }
+            
+            // Debug: Show selected repositories and bucket configuration
+            console.log('Heatmap Configuration:', {
+                repositories: topRepos,
+                daySpan: daySpan,
+                bucketSize: bucketSize,
+                numBuckets: numBuckets,
+                bucketType: bucketSize === 1 ? 'daily' : bucketSize === 7 ? 'weekly' : `${bucketSize}-day`
+            });
+            
+            // Create activity matrix
+            const matrix = [];
+            let maxCount = 0;
+            
+            topRepos.forEach((repo, repoIdx) => {
+                matrix[repoIdx] = new Array(numBuckets).fill(0);
+                const repoExecs = repoActivity.get(repo) || [];
+                
+                repoExecs.forEach(exec => {
+                    const execDate = new Date(exec.timestamp);
+                    const daysSinceMin = Math.floor((execDate - minDate) / (1000 * 60 * 60 * 24));
+                    const bucketIdx = Math.floor(daysSinceMin / bucketSize);
+                    
+                    if (bucketIdx >= 0 && bucketIdx < numBuckets) {
+                        matrix[repoIdx][bucketIdx]++;
+                        maxCount = Math.max(maxCount, matrix[repoIdx][bucketIdx]);
                     }
                 });
+            });
+            
+            // Set grid template
+            heatmap.style.gridTemplateColumns = `repeat(${numBuckets}, 1fr)`;
+            heatmap.style.gridTemplateRows = `repeat(${topRepos.length}, 1fr)`;
+            
+            // Ensure proper height for repo labels container
+            if (topRepos.length < 10) {
+                // Adjust spacing for fewer repos
+                repoLabels.style.justifyContent = 'space-evenly';
             }
             
-            // Calculate max activity for scaling
-            const maxActivity = Math.max(...Array.from(activityMap.values()), 1);
+            // Add repository labels
+            topRepos.forEach((repo, idx) => {
+                const label = document.createElement('div');
+                label.className = 'repo-label';
+                label.textContent = repo;
+                label.title = `${idx + 1}. ${repo} (${repoExecutionCount.get(repo)} executions)`;
+                repoLabels.appendChild(label);
+            });
             
-            // Calculate the starting Sunday (52 weeks ago from today)
-            const today = new Date();
-            const endDate = new Date(today);
-            // Move to next Saturday
-            endDate.setDate(endDate.getDate() + (6 - endDate.getDay()));
-            
-            // Go back 52 weeks and find the Sunday
-            const startDate = new Date(endDate);
-            startDate.setDate(startDate.getDate() - (52 * 7 - 1));
-            
-            // Create a 2D array to hold cells (7 rows x 52 columns)
-            const grid = [];
-            for (let day = 0; day < 7; day++) {
-                grid[day] = [];
-            }
-            
-            // Track months for labels
-            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-                              'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            const monthLabels = [];
-            let currentMonth = -1;
-            
-            // Fill the grid column by column (week by week)
-            const currentDate = new Date(startDate);
-            for (let week = 0; week < 52; week++) {
-                // Track month changes
-                const month = currentDate.getMonth();
-                if (month !== currentMonth) {
-                    currentMonth = month;
-                    monthLabels.push({ 
-                        week: week, 
-                        month: monthNames[month] 
-                    });
-                }
-                
-                // Fill this week's column
-                for (let dayOfWeek = 0; dayOfWeek < 7; dayOfWeek++) {
+            // Create heatmap cells
+            for (let row = 0; row < topRepos.length; row++) {
+                for (let col = 0; col < numBuckets; col++) {
                     const cell = document.createElement('div');
                     cell.className = 'heatmap-cell';
                     
-                    // Calculate the date for this cell
-                    const cellDate = new Date(currentDate);
-                    cellDate.setDate(cellDate.getDate() + dayOfWeek);
-                    
-                    // Skip future dates
-                    if (cellDate > today) {
-                        cell.style.visibility = 'hidden';
-                        grid[dayOfWeek][week] = cell;
-                        continue;
-                    }
-                    
-                    const dateKey = cellDate.toDateString();
-                    const activityCount = activityMap.get(dateKey) || 0;
-                    
+                    const count = matrix[row][col];
                     let level = 0;
                     
-                    if (activityCount > 0) {
-                        // Calculate level based on activity
-                        const percentage = (activityCount / maxActivity) * 100;
-                        level = percentage > 80 ? 4 : percentage > 60 ? 3 : percentage > 40 ? 2 : percentage > 20 ? 1 : 0;
-                    } else {
-                        // No activity for this date
-                        level = 0;
+                    if (count > 0 && maxCount > 0) {
+                        const percentage = (count / maxCount) * 100;
+                        level = percentage > 75 ? 4 : percentage > 50 ? 3 : percentage > 25 ? 2 : percentage > 0 ? 1 : 0;
                     }
                     
                     cell.classList.add(`level-${level}`);
                     
-                    const dateStr = cellDate.toLocaleDateString('en-US', { 
-                        month: 'short', 
-                        day: 'numeric',
-                        year: 'numeric'
-                    });
-                    const activityStr = activityCount > 0 ? `${activityCount} execution${activityCount > 1 ? 's' : ''}` : 'No activity';
-                    cell.title = `${dateStr}: ${activityStr}`;
+                    // Calculate date range for this bucket
+                    const bucketStart = new Date(minDate);
+                    bucketStart.setDate(bucketStart.getDate() + (col * bucketSize));
+                    const bucketEnd = new Date(bucketStart);
+                    bucketEnd.setDate(bucketEnd.getDate() + bucketSize - 1);
                     
-                    grid[dayOfWeek][week] = cell;
-                }
-                
-                // Move to next week's Sunday
-                currentDate.setDate(currentDate.getDate() + 7);
-            }
-            
-            // Append cells to DOM row by row
-            for (let day = 0; day < 7; day++) {
-                for (let week = 0; week < 52; week++) {
-                    if (grid[day][week]) {
-                        heatmap.appendChild(grid[day][week]);
-                    }
+                    const dateRangeStr = bucketSize === 1 
+                        ? bucketStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                        : `${bucketStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${bucketEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+                    
+                    cell.title = `${topRepos[row]}\n${dateRangeStr}\n${count} execution${count !== 1 ? 's' : ''}`;
+                    
+                    heatmap.appendChild(cell);
                 }
             }
             
-            // Add month labels below heatmap
-            if (monthsContainer) {
-                monthsContainer.innerHTML = '';
-                monthLabels.forEach((label) => {
+            // Add date labels
+            const labelCount = Math.min(6, numBuckets); // Show max 6 date labels for better coverage
+            
+            if (numBuckets <= 10) {
+                // For small number of buckets, show every few buckets
+                const interval = Math.max(1, Math.floor(numBuckets / labelCount));
+                for (let i = 0; i < numBuckets; i += interval) {
+                    const labelDate = new Date(minDate);
+                    labelDate.setDate(labelDate.getDate() + (i * bucketSize));
+                    
                     const span = document.createElement('span');
-                    span.textContent = label.month;
-                    span.style.position = 'absolute';
-                    span.style.left = `${(label.week / 52) * 100}%`;
-                    monthsContainer.appendChild(span);
-                });
+                    span.textContent = labelDate.toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: bucketSize === 1 ? 'numeric' : undefined,
+                        year: labelDate.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined
+                    });
+                    dateLabels.appendChild(span);
+                }
+            } else {
+                // For larger number of buckets, distribute labels evenly
+                for (let i = 0; i <= labelCount; i++) {
+                    const bucketIdx = Math.floor((i / labelCount) * (numBuckets - 1));
+                    const labelDate = new Date(minDate);
+                    labelDate.setDate(labelDate.getDate() + (bucketIdx * bucketSize));
+                    
+                    const span = document.createElement('span');
+                    const formatOptions = {
+                        month: 'short',
+                        day: bucketSize <= 2 ? 'numeric' : undefined,
+                        year: undefined
+                    };
+                    
+                    // Add year for first and last labels or if year changes
+                    if (i === 0 || i === labelCount || labelDate.getFullYear() !== new Date().getFullYear()) {
+                        formatOptions.year = '2-digit';
+                    }
+                    
+                    span.textContent = labelDate.toLocaleDateString('en-US', formatOptions);
+                    dateLabels.appendChild(span);
+                }
             }
         }
 
