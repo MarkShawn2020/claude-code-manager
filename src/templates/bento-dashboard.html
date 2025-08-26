@@ -1907,37 +1907,87 @@
         // Initialize Cost Chart
         function initCostChart() {
             const ctx = document.getElementById('costChart').getContext('2d');
+            const gradient = ctx.createLinearGradient(0, 0, 0, 120);
+            gradient.addColorStop(0, 'rgba(217, 119, 87, 0.3)');
+            gradient.addColorStop(1, 'rgba(217, 119, 87, 0.01)');
             
             // Show data for selected date range
             const rangedData = appData.daily;
             
-            // Create labels for date range (but will be hidden)
-            const dates = rangedData.map(d => '');
+            // Generate complete date range based on selection
+            const today = new Date();
+            today.setHours(23, 59, 59, 999);
             
-            const costs = rangedData.map(d => d.totalCost || 0);
+            let startDate, endDate, numDays;
+            
+            // Check if we have a custom date range
+            if (window.customDateRange && typeof currentDateRange === 'number' && currentDateRange !== 7 && currentDateRange !== 30 && currentDateRange !== 90 && currentDateRange !== 365) {
+                startDate = new Date(window.customDateRange.start);
+                endDate = new Date(window.customDateRange.end);
+                numDays = Math.ceil((endDate - startDate) / (24 * 60 * 60 * 1000)) + 1;
+            } else if (currentDateRange === 'all') {
+                // Find earliest date in data
+                if (rangedData.length > 0) {
+                    startDate = new Date(rangedData[0].date);
+                    endDate = new Date(rangedData[rangedData.length - 1].date);
+                    numDays = Math.ceil((endDate - startDate) / (24 * 60 * 60 * 1000)) + 1;
+                } else {
+                    startDate = today;
+                    endDate = today;
+                    numDays = 1;
+                }
+            } else {
+                // Standard preset ranges
+                numDays = currentDateRange;
+                endDate = new Date(today);
+                startDate = new Date(today);
+                startDate.setDate(startDate.getDate() - (numDays - 1));
+            }
+            startDate.setHours(0, 0, 0, 0);
+            endDate.setHours(23, 59, 59, 999);
+            
+            // Create a map of existing data by date
+            const dataMap = {};
+            rangedData.forEach(d => {
+                const dateKey = new Date(d.date).toISOString().split('T')[0];
+                dataMap[dateKey] = d.totalCost || 0;
+            });
+            
+            // Generate complete arrays for all dates in range
+            const dates = [];
+            const costs = [];
+            for (let i = 0; i < numDays; i++) {
+                const currentDate = new Date(startDate);
+                currentDate.setDate(currentDate.getDate() + i);
+                const dateKey = currentDate.toISOString().split('T')[0];
+                
+                dates.push(dateKey);
+                costs.push(dataMap[dateKey] || 0); // Use 0 for missing data
+            }
 
             // Destroy existing chart if it exists
             if (window.costChartInstance) {
                 window.costChartInstance.destroy();
             }
             
-            // Use bar chart for better hover interaction
+            // Create mixed chart with line as primary
             window.costChartInstance = new Chart(ctx, {
-                type: 'bar',
+                type: 'line',
                 data: {
                     labels: dates,
                     datasets: [{
                         label: 'Daily Cost',
                         data: costs,
-                        backgroundColor: 'rgba(217, 119, 87, 0.3)',
-                        borderColor: 'transparent',
-                        hoverBackgroundColor: '#D97757',
-                        hoverBorderColor: '#D97757',
-                        borderWidth: 0,
-                        borderRadius: 4,
-                        borderSkipped: false,
-                        barPercentage: 0.9,
-                        categoryPercentage: 1.0
+                        borderColor: '#D97757',
+                        backgroundColor: gradient,
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 5,
+                        pointHoverBackgroundColor: '#D97757',
+                        pointHoverBorderColor: '#fff',
+                        pointHoverBorderWidth: 2
                     }]
                 },
                 options: {
@@ -1969,7 +2019,7 @@
                             callbacks: {
                                 title: function(tooltipItems) {
                                     const index = tooltipItems[0].dataIndex;
-                                    const date = new Date(rangedData[index].date);
+                                    const date = new Date(dates[index]);
                                     return date.toLocaleDateString('en-US', { 
                                         month: 'short', 
                                         day: 'numeric',
@@ -1977,10 +2027,14 @@
                                     });
                                 },
                                 label: function(context) {
-                                    const dayData = rangedData[context.dataIndex];
+                                    const dateKey = dates[context.dataIndex];
+                                    const dayData = rangedData.find(d => 
+                                        new Date(d.date).toISOString().split('T')[0] === dateKey
+                                    );
+                                    
                                     const labels = [];
                                     labels.push('Cost: $' + context.parsed.y.toFixed(2));
-                                    if (dayData.totalTokens) {
+                                    if (dayData && dayData.totalTokens) {
                                         labels.push('Tokens: ' + dayData.totalTokens.toLocaleString());
                                     }
                                     return labels;
@@ -1994,6 +2048,7 @@
                     },
                     scales: {
                         x: {
+                            type: 'category',
                             grid: { 
                                 display: false,
                                 drawBorder: false
@@ -2508,6 +2563,7 @@
         function applyDateRangeFilter(startDate, endDate) {
             // Update global date range for heatmap calculation
             currentDateRange = Math.ceil((endDate - startDate) / (24 * 60 * 60 * 1000)) + 1;
+            window.customDateRange = { start: startDate, end: endDate }; // Store custom range
             
             // Filter appData (usage)
             if (originalAppData) {
@@ -2575,10 +2631,12 @@
             if (range === 'all') {
                 startDate = new Date(0);
                 currentDateRange = 'all';
+                window.customDateRange = null; // Clear custom range
                 updateTemporalLabel('all');
             } else {
                 const days = parseInt(range);
                 currentDateRange = days;
+                window.customDateRange = null; // Clear custom range
                 startDate = new Date(now);
                 startDate.setDate(startDate.getDate() - (days - 1));
                 startDate.setHours(0, 0, 0, 0);
