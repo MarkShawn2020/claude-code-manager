@@ -571,57 +571,117 @@
         /* Chart Cards */
         .chart-card {
             display: flex;
-            flex-direction: column;
-            justify-content: center;
+            flex-direction: row;
+            justify-content: space-between;
             align-items: center;
-            gap: 1.5rem;
-            min-height: 200px;
+            gap: 2rem;
+            min-height: 240px;
             position: relative;
+            padding: 0.5rem 0;
+        }
+        
+        .chart-container {
+            position: relative;
+            flex: 0 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         #toolUsageChart {
-            max-width: 200px;
-            max-height: 200px;
+            width: 180px !important;
+            height: 180px !important;
         }
 
         .usage-stats {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 0.75rem;
-            width: 100%;
-            font-size: 0.75rem;
-            max-height: 150px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            font-size: 0.8rem;
+            max-height: 200px;
             overflow-y: auto;
-            padding: 0.5rem;
+            padding-right: 0.5rem;
+        }
+        
+        .usage-stats::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .usage-stats::-webkit-scrollbar-track {
             background: var(--bg-oat);
-            border-radius: 10px;
+            border-radius: 2px;
+        }
+        
+        .usage-stats::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 2px;
         }
 
         .usage-stat-item {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.75rem;
+            padding: 0.4rem 0.75rem;
+            background: var(--bg-oat);
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        
+        .usage-stat-item:hover {
+            background: var(--cloud-light);
+            transform: translateX(4px);
         }
 
         .usage-stat-color {
-            width: 12px;
-            height: 12px;
-            border-radius: 3px;
+            width: 14px;
+            height: 14px;
+            border-radius: 4px;
             flex-shrink: 0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         .usage-stat-label {
-            color: var(--text-faded);
+            color: var(--text-main);
+            font-weight: 500;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
             flex: 1;
+            font-size: 0.85rem;
         }
 
         .usage-stat-value {
-            color: var(--text-main);
-            font-weight: 600;
+            color: var(--primary);
+            font-weight: 700;
             margin-left: auto;
+            font-size: 0.9rem;
+        }
+        
+        .chart-center-label {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            pointer-events: none;
+        }
+        
+        .chart-center-value {
+            font-size: 1.75rem;
+            font-weight: 800;
+            background: var(--gradient-warm);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+        }
+        
+        .chart-center-text {
+            font-size: 0.7rem;
+            color: var(--text-faded);
+            margin-top: 0.25rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         /* Fallback for old Progress Cards (kept for compatibility) */
@@ -912,17 +972,28 @@
             
             .chart-card {
                 flex-direction: column;
-                gap: 1rem;
+                gap: 1.5rem;
+                align-items: center;
             }
             
             #toolUsageChart {
-                max-width: 160px;
-                max-height: 160px;
+                width: 160px !important;
+                height: 160px !important;
             }
             
             .usage-stats {
-                grid-template-columns: 1fr;
-                font-size: 0.7rem;
+                flex-direction: column;
+                width: 100%;
+                max-height: 180px;
+            }
+            
+            .usage-stat-item {
+                padding: 0.35rem 0.6rem;
+                font-size: 0.75rem;
+            }
+            
+            .chart-center-value {
+                font-size: 1.5rem;
             }
         }
 
@@ -1067,7 +1138,9 @@
             <div class="bento-card span-2">
                 <div class="card-label">Tool Usage Breakdown</div>
                 <div class="chart-card" id="toolUsageCard">
-                    <canvas id="toolUsageChart"></canvas>
+                    <div class="chart-container">
+                        <canvas id="toolUsageChart"></canvas>
+                    </div>
                     <div id="toolUsageStats" class="usage-stats"></div>
                 </div>
             </div>
@@ -1286,6 +1359,7 @@
         // Initialize Tool Usage Donut Chart
         function initToolUsage() {
             const chartCard = document.getElementById('toolUsageCard');
+            const chartContainer = chartCard.querySelector('.chart-container');
             const canvas = document.getElementById('toolUsageChart');
             const statsContainer = document.getElementById('toolUsageStats');
             
@@ -1330,9 +1404,9 @@
             // Group small tools into "Others" if there are too many
             let finalTools = sortedTools;
             let othersCount = 0;
-            if (sortedTools.length > 8) {
-                finalTools = sortedTools.slice(0, 7);
-                othersCount = sortedTools.slice(7).reduce((sum, [_, count]) => sum + count, 0);
+            if (sortedTools.length > 10) {
+                finalTools = sortedTools.slice(0, 9);
+                othersCount = sortedTools.slice(9).reduce((sum, [_, count]) => sum + count, 0);
                 if (othersCount > 0) {
                     finalTools.push(['Others', othersCount]);
                 }
@@ -1356,22 +1430,26 @@
                     backgroundColor: colors,
                     borderColor: '#ffffff',
                     borderWidth: 2,
-                    hoverOffset: 4
+                    hoverOffset: 8,
+                    hoverBorderWidth: 3
                 }]
             };
             
-            // Create the donut chart
+            // Create the donut chart with better configuration
             const ctx = canvas.getContext('2d');
             new Chart(ctx, {
                 type: 'doughnut',
                 data: chartData,
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    cutout: '60%',
+                    responsive: false,
+                    maintainAspectRatio: false,
+                    cutout: '65%',
+                    layout: {
+                        padding: 0
+                    },
                     plugins: {
                         legend: {
-                            display: false // We'll create a custom legend
+                            display: false
                         },
                         tooltip: {
                             backgroundColor: '#141413',
@@ -1385,35 +1463,38 @@
                                     const label = context.label || '';
                                     const value = context.raw;
                                     const percentage = ((value / totalCount) * 100).toFixed(1);
-                                    return `${label}: ${value} (${percentage}%)`;
+                                    return `${label}: ${value.toLocaleString()} (${percentage}%)`;
                                 }
                             }
                         }
+                    },
+                    animation: {
+                        animateRotate: true,
+                        animateScale: false
                     }
                 }
             });
             
-            // Create custom stats/legend below the chart
+            // Create enhanced stats/legend 
             statsContainer.innerHTML = finalTools.map(([name, count], index) => {
                 const percentage = ((count / totalCount) * 100).toFixed(1);
                 return `
-                    <div class="usage-stat-item">
+                    <div class="usage-stat-item" title="${name}: ${count.toLocaleString()} executions">
                         <span class="usage-stat-color" style="background: ${colors[index]}"></span>
-                        <span class="usage-stat-label" title="${name}">${name}</span>
+                        <span class="usage-stat-label">${name}</span>
                         <span class="usage-stat-value">${percentage}%</span>
                     </div>
                 `;
             }).join('');
             
-            // Add total count info
+            // Add enhanced center label
             const totalInfo = document.createElement('div');
-            totalInfo.style.cssText = 'position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; pointer-events: none;';
+            totalInfo.className = 'chart-center-label';
             totalInfo.innerHTML = `
-                <div style="font-size: 1.5rem; font-weight: 700; color: var(--text-main)">${totalCount}</div>
-                <div style="font-size: 0.75rem; color: var(--text-faded)">Total</div>
+                <div class="chart-center-value">${totalCount.toLocaleString()}</div>
+                <div class="chart-center-text">Tools Used</div>
             `;
-            chartCard.style.position = 'relative';
-            chartCard.appendChild(totalInfo);
+            chartContainer.appendChild(totalInfo);
         }
 
         // Initialize Top Features
