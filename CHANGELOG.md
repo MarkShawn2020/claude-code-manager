@@ -1,3 +1,13 @@
+# [2.6.0](https://github.com/MarkShawn2020/claude-code-manager/compare/v2.5.0...v2.6.0) (2025-08-26)
+
+
+### Features
+
+* better design ([8687f06](https://github.com/MarkShawn2020/claude-code-manager/commit/8687f06cbe9841dad1167a04a1c47bbe45feb872))
+* dashboard upgrade ([b95dbeb](https://github.com/MarkShawn2020/claude-code-manager/commit/b95dbeba1235b41e2445cd16921de67a62ddb025))
+* support data-range ([c039020](https://github.com/MarkShawn2020/claude-code-manager/commit/c0390201749c456c16fb58906b75bad767ea9149))
+* wonderful dashboard ([cd7cb5b](https://github.com/MarkShawn2020/claude-code-manager/commit/cd7cb5b071810824a4e4e9734fd9ee6d84fdcaf9))
+
 # [2.5.0](https://github.com/MarkShawn2020/claude-code-manager/compare/v2.4.2...v2.5.0) (2025-08-25)
 
 
