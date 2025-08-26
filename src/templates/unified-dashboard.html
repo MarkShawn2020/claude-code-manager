@@ -178,7 +178,8 @@
         .dashboard-container {
             max-width: 1600px;
             margin: 0 auto;
-            padding: var(--spacing-l);
+            padding: var(--spacing-xl);
+            padding-bottom: calc(var(--spacing-xl) * 2);
         }
 
         .tab-panel {
@@ -199,10 +200,28 @@
         .contribution-calendar {
             background: var(--background-main);
             border-radius: var(--radius-lg);
-            padding: var(--spacing-m);
-            margin-bottom: var(--spacing-l);
-            box-shadow: var(--shadow-md);
-            border: 1px solid var(--cloud-light);
+            padding: calc(var(--spacing-l) * 1.5);
+            margin-top: var(--spacing-xl);
+            margin-bottom: var(--spacing-xl);
+            margin-left: auto;
+            margin-right: auto;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.03);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            width: fit-content;
+            max-width: min(100%, 900px);
+            overflow-x: auto;
+        }
+        
+        .contribution-calendar:hover {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), 0 8px 24px rgba(0, 0, 0, 0.06);
+        }
+        
+        .calendar-wrapper {
+            width: fit-content;
+            overflow-x: auto;
+            padding: var(--spacing-m) 0;
+            margin: 0 auto;
         }
 
         .calendar-header {
@@ -221,14 +240,14 @@
         .calendar-legend {
             display: flex;
             align-items: center;
-            gap: var(--spacing-xs);
-            font-size: 0.75rem;
+            gap: 8px;
+            font-size: 0.7rem;
             color: var(--text-faded);
         }
 
         .legend-item {
-            width: 12px;
-            height: 12px;
+            width: 14px;
+            height: 14px;
             border-radius: 2px;
         }
 
@@ -239,10 +258,10 @@
 
         .calendar-grid {
             display: grid;
-            grid-template-columns: 30px repeat(14, 15px); /* 14 weeks for ~90 days */
-            grid-template-rows: 15px repeat(7, 15px);
+            grid-template-columns: 35px repeat(13, 18px); /* Day labels + 13 weeks with fixed cell width */
+            grid-auto-rows: 18px;
             gap: 3px;
-            min-width: 300px;
+            width: fit-content;
         }
 
         .calendar-month-label {
@@ -263,24 +282,25 @@
         }
 
         .calendar-cell {
-            width: 100%;
-            height: 100%;
-            min-width: 12px;
-            min-height: 12px;
-            border-radius: 2px;
+            width: 18px;
+            height: 18px;
+            border-radius: 3px;
             cursor: pointer;
             transition: all 0.2s ease;
             background: var(--cloud-light); /* Default background */
         }
 
         .calendar-cell:hover {
-            transform: scale(1.4);
-            box-shadow: var(--shadow-md);
+            transform: scale(1.5);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+            z-index: 10;
+            outline: 2px solid var(--primary);
+            outline-offset: -1px;
         }
 
-        .calendar-cell[data-level="0"] { background: var(--cloud-light); }
-        .calendar-cell[data-level="1"] { background: #D9A89E; }
-        .calendar-cell[data-level="2"] { background: #D98F7F; }
+        .calendar-cell[data-level="0"] { background: #E8E6DC; }
+        .calendar-cell[data-level="1"] { background: #D9C2B8; }
+        .calendar-cell[data-level="2"] { background: #D9A89E; }
         .calendar-cell[data-level="3"] { background: #D97757; }
         .calendar-cell[data-level="4"] { background: #CC5A3C; }
 
@@ -288,8 +308,9 @@
         .stats-overview {
             display: grid;
             grid-template-columns: repeat(6, 1fr);
-            gap: var(--spacing-s);
-            margin-bottom: var(--spacing-l);
+            gap: var(--spacing-m);
+            margin-top: var(--spacing-xl);
+            margin-bottom: var(--spacing-xl);
         }
 
         /* Compact stats for mobile */
@@ -333,51 +354,185 @@
             color: var(--text-faded);
         }
 
-        /* Usage Summary Section */
-        .usage-summary {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--background-clay) 100%);
-            color: var(--background-main);
-            border-radius: var(--radius-lg);
-            padding: var(--spacing-m);
-            margin-bottom: var(--spacing-l);
-            box-shadow: var(--shadow-lg);
-        }
-
-        .usage-summary-content {
+        /* Bento Grid Layout */
+        .bento-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: var(--spacing-m);
+            grid-template-columns: repeat(4, 1fr);
+            grid-auto-rows: 120px;
+            gap: calc(var(--spacing-m) * 1.25);
+            margin-bottom: calc(var(--spacing-xl) * 1.5);
         }
-
-        .usage-stat {
-            text-align: center;
+        
+        .bento-item {
+            background: var(--background-main);
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            border-radius: var(--radius-lg);
+            padding: calc(var(--spacing-m) * 1.25);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 2px 8px rgba(0, 0, 0, 0.04);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            position: relative;
         }
-
-        .usage-stat-value {
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 0.25rem;
+        
+        .bento-item::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.5));
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            pointer-events: none;
         }
-
-        .usage-stat-label {
-            font-size: 0.875rem;
-            opacity: 0.9;
+        
+        .bento-item:hover {
+            transform: translateY(-3px) scale(1.01);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08), 0 12px 28px rgba(0, 0, 0, 0.05);
+            border-color: rgba(217, 119, 87, 0.15);
+        }
+        
+        .bento-item:hover::before {
+            opacity: 1;
+        }
+        
+        /* Bento item sizes */
+        .bento-2x1 { grid-column: span 2; }
+        .bento-1x2 { grid-row: span 2; }
+        .bento-2x2 { grid-column: span 2; grid-row: span 2; }
+        .bento-3x1 { grid-column: span 3; }
+        .bento-4x1 { grid-column: span 4; }
+        
+        /* Bento content styles */
+        .bento-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: var(--spacing-xs);
+        }
+        
+        .bento-title {
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: var(--text-faded);
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-
-        .usage-stat-trend {
-            font-size: 0.75rem;
-            margin-top: 0.25rem;
-            opacity: 0.8;
+        
+        .bento-icon {
+            font-size: 1rem;
+            opacity: 0.4;
         }
+        
+        .bento-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-main);
+            line-height: 1;
+            margin-bottom: 0.25rem;
+        }
+        
+        .bento-subtitle {
+            font-size: 0.7rem;
+            color: var(--text-faded);
+        }
+        
+        .bento-chart {
+            flex: 1;
+            min-height: 0;
+            position: relative;
+            margin-top: var(--spacing-s);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .bento-chart canvas {
+            max-width: 100%;
+            max-height: 100%;
+        }
+        
+        /* Special bento items */
+        .bento-cost {
+            background: linear-gradient(135deg, var(--primary), var(--background-clay));
+            color: var(--background-main);
+            border: none;
+            box-shadow: 0 4px 16px rgba(217, 119, 87, 0.3), 0 8px 32px rgba(217, 119, 87, 0.2);
+        }
+        
+        .bento-cost:hover {
+            box-shadow: 0 8px 24px rgba(217, 119, 87, 0.4), 0 16px 48px rgba(217, 119, 87, 0.3);
+        }
+        
+        .bento-cost .bento-value,
+        .bento-cost .bento-title,
+        .bento-cost .bento-subtitle {
+            color: var(--background-main);
+        }
+        
+        .bento-activity {
+            background: linear-gradient(135deg, var(--background-oat), var(--background-ivory-medium));
+            border: 1px solid rgba(217, 119, 87, 0.1);
+        }
+        
+        .bento-mini-heatmap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2px;
+            height: auto;
+            margin-top: var(--spacing-xs);
+            justify-content: space-between;
+        }
+        
+        .bento-heatmap-cell {
+            width: calc((100% - 26px) / 14);
+            height: 12px;
+            background: var(--cloud-light);
+            border-radius: 2px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .bento-heatmap-cell:hover {
+            transform: scale(1.2);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            z-index: 10;
+            position: relative;
+        }
+        
+        /* Expandable section */
+        .expand-section {
+            margin-top: var(--spacing-l);
+        }
+        
+        .expand-header {
+            cursor: pointer;
+            padding: var(--spacing-s) var(--spacing-m);
+            background: var(--background-oat);
+            border-radius: var(--radius-md);
+            color: var(--text-faded);
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            list-style: none;
+        }
+        
+        .expand-header:hover {
+            background: var(--background-ivory-medium);
+            color: var(--text-main);
+        }
+        
+        /* Legacy usage summary - keep for compatibility */
+        .usage-summary { display: none; }
 
         .stat-card {
             background: var(--background-main);
             border-radius: var(--radius-lg);
-            padding: var(--spacing-m);
-            border: 1px solid var(--cloud-light);
-            transition: all 0.3s ease;
+            padding: calc(var(--spacing-m) * 1.5);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.03);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
         }
@@ -389,16 +544,32 @@
             left: 0;
             width: 4px;
             height: 100%;
+            background: var(--primary);
             opacity: 0;
-            transition: opacity 0.3s ease;
+            transition: opacity 0.4s ease;
+        }
+
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.3));
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            pointer-events: none;
         }
 
         .stat-card:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-lg);
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 16px 40px rgba(0, 0, 0, 0.08);
+            border-color: rgba(217, 119, 87, 0.2);
         }
 
         .stat-card:hover::before {
+            opacity: 1;
+        }
+
+        .stat-card:hover::after {
             opacity: 1;
         }
 
@@ -466,16 +637,23 @@
         .charts-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
-            gap: var(--spacing-m);
-            margin-bottom: var(--spacing-l);
+            gap: var(--spacing-xl);
+            margin-top: var(--spacing-xl);
+            margin-bottom: calc(var(--spacing-xl) * 1.5);
         }
 
         .chart-card {
             background: var(--background-main);
             border-radius: var(--radius-lg);
-            padding: var(--spacing-m);
-            border: 1px solid var(--cloud-light);
-            box-shadow: var(--shadow-md);
+            padding: calc(var(--spacing-m) * 1.5);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.03);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .chart-card:hover {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), 0 8px 24px rgba(0, 0, 0, 0.06);
+            transform: translateY(-2px);
         }
 
         .chart-header {
@@ -892,6 +1070,107 @@
             opacity: 1;
         }
 
+        /* Section Headers */
+        .section-header {
+            margin-bottom: var(--spacing-m);
+            padding-bottom: var(--spacing-s);
+            border-bottom: 1px solid var(--cloud-light);
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 0.25rem;
+        }
+
+        .section-subtitle {
+            font-size: 0.875rem;
+            color: var(--text-faded);
+        }
+
+        .subsection-title {
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-main);
+            margin-bottom: var(--spacing-s);
+        }
+
+        /* Chart Insights */
+        .chart-insights {
+            display: flex;
+            gap: var(--spacing-m);
+            margin-top: var(--spacing-m);
+            padding-top: var(--spacing-m);
+            border-top: 1px solid var(--cloud-light);
+        }
+
+        .insight-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex: 1;
+        }
+
+        .insight-icon {
+            font-size: 1.25rem;
+        }
+
+        .insight-text {
+            font-size: 0.875rem;
+            color: var(--text-faded);
+        }
+
+        /* Recent Activity Grid */
+        .recent-activity-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--spacing-l);
+            margin-bottom: var(--spacing-l);
+        }
+
+        .recent-projects, .recent-tasks {
+            background: var(--background-main);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-m);
+            box-shadow: var(--shadow-md);
+        }
+
+        .project-list, .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-s);
+        }
+
+        .project-item, .task-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-s);
+            background: var(--background-oat);
+            border-radius: var(--radius-md);
+            transition: all 0.2s ease;
+        }
+
+        .project-item:hover, .task-item:hover {
+            background: var(--background-ivory-medium);
+            transform: translateX(4px);
+        }
+
+        .project-name, .task-name {
+            font-weight: 500;
+            color: var(--text-main);
+        }
+
+        .project-meta, .task-meta {
+            font-size: 0.75rem;
+            color: var(--text-faded);
+        }
+
+        .desktop-only {
+            display: block;
+        }
+
         /* Responsive Design */
         /* Large screens - keep all 6 stats in one row */
         @media (min-width: 1440px) {
@@ -909,6 +1188,15 @@
 
         /* Tablet screens */
         @media (max-width: 1024px) {
+            .bento-grid {
+                grid-template-columns: repeat(3, 1fr);
+                grid-auto-rows: 90px;
+            }
+            
+            .bento-2x1 { grid-column: span 2; }
+            .bento-2x2 { grid-column: span 3; grid-row: span 2; }
+            .bento-4x1 { grid-column: span 3; }
+            
             .charts-grid {
                 grid-template-columns: 1fr;
             }
@@ -916,24 +1204,47 @@
             .header-stats {
                 display: none;
             }
-            
-            .usage-summary-content {
-                grid-template-columns: repeat(2, 1fr);
+
+            .recent-activity-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-insights {
+                flex-direction: column;
+                gap: var(--spacing-s);
             }
         }
 
-        /* Small screens - hide full stats, show compact */
+        /* Small screens - compact bento */
         @media (max-width: 767px) {
             .dashboard-container {
                 padding: var(--spacing-s);
             }
+            
+            .bento-grid {
+                grid-template-columns: repeat(2, 1fr);
+                grid-auto-rows: 80px;
+                gap: var(--spacing-xs);
+            }
+            
+            .bento-2x1 { grid-column: span 2; }
+            .bento-2x2 { grid-column: span 2; grid-row: span 2; }
+            .bento-4x1 { grid-column: span 2; }
+            
+            .bento-value {
+                font-size: 1.25rem;
+            }
+            
+            .bento-title {
+                font-size: 0.65rem;
+            }
+            
+            .bento-icon {
+                font-size: 0.875rem;
+            }
 
             .stats-overview {
                 display: none;
-            }
-
-            .stats-compact {
-                display: block;
             }
 
             .nav-tabs {
@@ -953,18 +1264,17 @@
             .search-input {
                 width: 100%;
             }
-            
-            .usage-summary {
-                padding: var(--spacing-s);
+
+            .section-header {
+                margin-bottom: var(--spacing-s);
             }
-            
-            .usage-summary-content {
-                grid-template-columns: 1fr;
-                gap: var(--spacing-s);
+
+            .desktop-only {
+                display: none;
             }
-            
-            .usage-stat-value {
-                font-size: 1.5rem;
+
+            .recent-activity-grid {
+                display: none;
             }
         }
         
@@ -975,7 +1285,19 @@
             }
             
             .contribution-calendar {
-                display: none;
+                max-width: 100%;
+                padding: var(--spacing-m);
+            }
+            
+            .calendar-grid {
+                grid-template-columns: 30px repeat(13, 12px);
+                grid-auto-rows: 12px;
+                gap: 2px;
+            }
+            
+            .calendar-cell {
+                width: 12px;
+                height: 12px;
             }
         }
     </style>
@@ -1024,34 +1346,141 @@
     <div class="dashboard-container">
         <!-- Overview Tab -->
         <div id="overview" class="tab-panel active">
-            <!-- Usage Summary Section -->
-            <div class="usage-summary">
-                <div class="usage-summary-content">
-                    <div class="usage-stat">
-                        <div class="usage-stat-value" id="usage-total-cost">--</div>
-                        <div class="usage-stat-label">Total Cost</div>
-                        <div class="usage-stat-trend">↑ 12% this month</div>
+            <!-- Bento Grid Layout -->
+            <div class="bento-grid">
+                <!-- Total Cost (2x1) -->
+                <div class="bento-item bento-2x1 bento-cost">
+                    <div class="bento-header">
+                        <div class="bento-title">Total Spend</div>
+                        <div class="bento-icon">💰</div>
                     </div>
-                    <div class="usage-stat">
-                        <div class="usage-stat-value" id="usage-daily-avg">--</div>
-                        <div class="usage-stat-label">Daily Average</div>
-                        <div class="usage-stat-trend">Peak: $318.30</div>
+                    <div>
+                        <div class="bento-value" id="bento-total-cost">$0</div>
+                        <div class="bento-subtitle" id="bento-cost-trend">Loading...</div>
                     </div>
-                    <div class="usage-stat">
-                        <div class="usage-stat-value" id="usage-tokens">--</div>
-                        <div class="usage-stat-label">Tokens Used</div>
-                        <div class="usage-stat-trend">Last 30 days</div>
+                </div>
+                
+                <!-- Daily Average -->
+                <div class="bento-item">
+                    <div class="bento-header">
+                        <div class="bento-title">Daily Avg</div>
+                        <div class="bento-icon">📊</div>
                     </div>
-                    <div class="usage-stat">
-                        <div class="usage-stat-value" id="usage-efficiency">--</div>
-                        <div class="usage-stat-label">Efficiency</div>
-                        <div class="usage-stat-trend">Cost per task</div>
+                    <div>
+                        <div class="bento-value" id="bento-daily-avg">$0</div>
+                        <div class="bento-subtitle">Per day</div>
+                    </div>
+                </div>
+                
+                <!-- Active Projects -->
+                <div class="bento-item">
+                    <div class="bento-header">
+                        <div class="bento-title">Projects</div>
+                        <div class="bento-icon">📁</div>
+                    </div>
+                    <div>
+                        <div class="bento-value" id="bento-projects">0</div>
+                        <div class="bento-subtitle" id="bento-projects-trend">Active</div>
+                    </div>
+                </div>
+                
+                <!-- Cost Trend Chart (2x2) -->
+                <div class="bento-item bento-2x2">
+                    <div class="bento-header">
+                        <div class="bento-title">Cost Trend (7 Days)</div>
+                        <div class="bento-icon">📈</div>
+                    </div>
+                    <div class="bento-chart">
+                        <canvas id="bento-cost-chart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Executions Today -->
+                <div class="bento-item bento-activity">
+                    <div class="bento-header">
+                        <div class="bento-title">Today</div>
+                        <div class="bento-icon">⚡</div>
+                    </div>
+                    <div>
+                        <div class="bento-value" id="bento-today">0</div>
+                        <div class="bento-subtitle">Executions</div>
+                    </div>
+                </div>
+                
+                <!-- Success Rate -->
+                <div class="bento-item">
+                    <div class="bento-header">
+                        <div class="bento-title">Success</div>
+                        <div class="bento-icon">✅</div>
+                    </div>
+                    <div>
+                        <div class="bento-value" id="bento-success">0%</div>
+                        <div class="bento-subtitle">Rate</div>
+                    </div>
+                </div>
+                
+                <!-- Peak Day (2x1) -->
+                <div class="bento-item bento-2x1">
+                    <div class="bento-header">
+                        <div class="bento-title">Peak Day</div>
+                        <div class="bento-icon">📅</div>
+                    </div>
+                    <div>
+                        <div class="bento-value" id="bento-peak-day">--</div>
+                        <div class="bento-subtitle" id="bento-peak-cost">$0 spent</div>
+                    </div>
+                </div>
+                
+                <!-- Efficiency Score (2x1) -->
+                <div class="bento-item bento-2x1">
+                    <div class="bento-header">
+                        <div class="bento-title">Efficiency</div>
+                        <div class="bento-icon">⚡</div>
+                    </div>
+                    <div>
+                        <div class="bento-value" id="bento-efficiency">--</div>
+                        <div class="bento-subtitle">Cost per task</div>
+                    </div>
+                </div>
+                
+                <!-- Top Tool -->
+                <div class="bento-item">
+                    <div class="bento-header">
+                        <div class="bento-title">Top Tool</div>
+                        <div class="bento-icon">🔧</div>
+                    </div>
+                    <div>
+                        <div class="bento-value" id="bento-top-tool">--</div>
+                        <div class="bento-subtitle" id="bento-tool-usage">0 uses</div>
+                    </div>
+                </div>
+                
+                <!-- Tokens Used -->
+                <div class="bento-item">
+                    <div class="bento-header">
+                        <div class="bento-title">Tokens</div>
+                        <div class="bento-icon">🎯</div>
+                    </div>
+                    <div>
+                        <div class="bento-value" id="bento-tokens">0</div>
+                        <div class="bento-subtitle">Million</div>
+                    </div>
+                </div>
+                
+                <!-- Tool Distribution (2x1) -->
+                <div class="bento-item bento-2x1">
+                    <div class="bento-header">
+                        <div class="bento-title">Tool Usage</div>
+                        <div class="bento-icon">⚙️</div>
+                    </div>
+                    <div class="bento-chart">
+                        <canvas id="bento-tools-chart"></canvas>
                     </div>
                 </div>
             </div>
 
-            <!-- GitHub-style Contribution Calendar -->
-            <div class="contribution-calendar">
+            <!-- Activity Visualization -->
+            <div class="contribution-calendar" style="margin-top: calc(var(--spacing-xl) * 2);">
                 <div class="calendar-header">
                     <h2 class="calendar-title">Activity Heatmap</h2>
                     <div class="calendar-legend">
@@ -1069,42 +1498,27 @@
                 </div>
             </div>
 
-            <!-- Compact Stats for Mobile -->
-            <div class="stats-compact">
-                <div class="stats-compact-grid">
-                    <div class="compact-stat">
-                        <span class="compact-stat-icon">📈</span>
-                        <div class="compact-stat-info">
-                            <div class="compact-stat-value" id="compact-productivity">--</div>
-                            <div class="compact-stat-label">Productivity</div>
+                    <!-- Recent Activity (Hidden - No Data) -->
+                    <div style="display: none;">
+                        <div class="recent-activity-grid">
+                            <div class="recent-projects">
+                                <h3 class="subsection-title">Active Projects</h3>
+                                <div class="project-list" id="recent-projects-list">
+                                    <!-- Will be populated dynamically -->
+                                </div>
+                            </div>
+                            <div class="recent-tasks">
+                                <h3 class="subsection-title">Latest Tasks</h3>
+                                <div class="task-list" id="recent-tasks-list">
+                                    <!-- Will be populated dynamically -->
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="compact-stat">
-                        <span class="compact-stat-icon">🎯</span>
-                        <div class="compact-stat-info">
-                            <div class="compact-stat-value" id="compact-success">--%</div>
-                            <div class="compact-stat-label">Success Rate</div>
-                        </div>
-                    </div>
-                    <div class="compact-stat">
-                        <span class="compact-stat-icon">⚡</span>
-                        <div class="compact-stat-info">
-                            <div class="compact-stat-value" id="compact-daily">--</div>
-                            <div class="compact-stat-label">Daily Tasks</div>
-                        </div>
-                    </div>
-                    <div class="compact-stat">
-                        <span class="compact-stat-icon">🏆</span>
-                        <div class="compact-stat-info">
-                            <div class="compact-stat-value" id="compact-milestone">--</div>
-                            <div class="compact-stat-label">Level</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Key Stats Overview -->
-            <div class="stats-overview">
+                    <!-- Legacy Stats Overview (Hidden - Replaced by Bento Grid) -->
+                    <div style="display: none;">
+                    <div class="stats-overview">
                 <div class="stat-card">
                     <div class="stat-icon">📈</div>
                     <div class="stat-value" id="stat-productivity">--</div>
@@ -1142,35 +1556,36 @@
                     <span class="stat-change positive">Unlocked today</span>
                 </div>
             </div>
+                    </div>
 
-            <!-- Quick Charts -->
-            <div class="charts-grid">
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <h3 class="chart-title">Activity by Hour</h3>
-                        <div class="chart-options">
-                            <button class="chart-option active">Today</button>
-                            <button class="chart-option">Week</button>
-                            <button class="chart-option">Month</button>
+                    <!-- Quick Charts (Additional Analytics) -->
+                    <div class="charts-grid">
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3 class="chart-title">Activity by Hour</h3>
+                                <div class="chart-options">
+                                    <button class="chart-option active">Today</button>
+                                    <button class="chart-option">Week</button>
+                                    <button class="chart-option">Month</button>
+                                </div>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="hourly-activity-chart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3 class="chart-title">Tool Usage Breakdown</h3>
+                                <div class="chart-options">
+                                    <button class="chart-option active">Count</button>
+                                    <button class="chart-option">Duration</button>
+                                </div>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="tool-usage-chart"></canvas>
+                            </div>
                         </div>
                     </div>
-                    <div class="chart-container">
-                        <canvas id="hourly-activity-chart"></canvas>
-                    </div>
-                </div>
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <h3 class="chart-title">Tool Usage Breakdown</h3>
-                        <div class="chart-options">
-                            <button class="chart-option active">Count</button>
-                            <button class="chart-option">Duration</button>
-                        </div>
-                    </div>
-                    <div class="chart-container">
-                        <canvas id="tool-usage-chart"></canvas>
-                    </div>
-                </div>
-            </div>
         </div>
 
         <!-- Analytics Tab -->
@@ -1323,6 +1738,7 @@
         const state = {
             currentTab: 'overview',
             charts: {},
+            bentoCharts: {},
             filters: {
                 projects: 'all',
                 search: ''
@@ -1331,9 +1747,21 @@
 
         // Initialize dashboard
         document.addEventListener('DOMContentLoaded', () => {
-            initializeNavigation();
-            initializeHeader();
-            renderOverviewTab();
+            console.log('Initializing dashboard with data:', {
+                projects: dashboardData.projects?.projects?.length || 0,
+                executions: dashboardData.executions?.length || 0,
+                usage: dashboardData.usage ? 'loaded' : 'missing',
+                executionStats: dashboardData.executionStats ? 'loaded' : 'missing'
+            });
+            
+            try {
+                initializeNavigation();
+                initializeHeader();
+                renderOverviewTab();
+            } catch (error) {
+                console.error('Error during dashboard initialization:', error);
+                console.error('Stack trace:', error.stack);
+            }
         });
 
         // Navigation
@@ -1400,15 +1828,347 @@
 
         // Overview Tab
         function renderOverviewTab() {
-            renderUsageSummary();
+            console.log('Rendering overview tab with data:', dashboardData);
+            renderBentoGrid();
+            // Render additional charts and visualizations
             renderContributionCalendar();
-            renderOverviewStats();
-            renderCompactStats();
-            renderHourlyActivityChart();
-            renderToolUsageChart();
+            // renderRecentActivity(); // Hidden - no data
+            // renderOverviewStats(); // Hidden - replaced by bento
+            
+            // Ensure charts are rendered after DOM is ready
+            setTimeout(() => {
+                renderHourlyActivityChart();
+                renderToolUsageChart();
+            }, 100);
+        }
+        
+        // Render Bento Grid
+        function renderBentoGrid() {
+            const usage = dashboardData.usage || {};
+            const executions = dashboardData.executions || [];
+            const projects = dashboardData.projects?.projects || [];
+            const executionStats = dashboardData.executionStats || {};
+            
+            // Total Cost
+            const totalCost = usage.totals?.totalCost || 0;
+            document.getElementById('bento-total-cost').textContent = formatCurrency(totalCost);
+            
+            // Cost trend
+            if (usage.daily && usage.daily.length > 7) {
+                const lastWeek = usage.daily.slice(-7).reduce((sum, d) => sum + (d.totalCost || 0), 0);
+                const prevWeek = usage.daily.slice(-14, -7).reduce((sum, d) => sum + (d.totalCost || 0), 0);
+                if (prevWeek > 0) {
+                    const trend = ((lastWeek - prevWeek) / prevWeek * 100).toFixed(0);
+                    const arrow = trend >= 0 ? '↑' : '↓';
+                    document.getElementById('bento-cost-trend').textContent = `${arrow} ${Math.abs(trend)}% vs last week`;
+                } else {
+                    document.getElementById('bento-cost-trend').textContent = 'No previous data';
+                }
+            } else {
+                document.getElementById('bento-cost-trend').textContent = 'Calculating...';
+            }
+            
+            // Daily Average
+            const dailyAvg = usage.metadata?.averageDaily?.cost || 0;
+            document.getElementById('bento-daily-avg').textContent = formatCurrency(dailyAvg);
+            
+            // Projects
+            document.getElementById('bento-projects').textContent = projects.length;
+            const activeProjects = projects.filter(p => p.historyItems && p.historyItems.length > 0).length;
+            document.getElementById('bento-projects-trend').textContent = `${activeProjects} active`;
+            
+            // Today's executions (using aggregated stats for accuracy)
+            const today = new Date().toISOString().split('T')[0];
+            let todayExecutions = 0;
+            
+            // Check aggregated stats first
+            if (executionStats.dailyStats) {
+                const todayStats = executionStats.dailyStats.find(stat => stat.day === today);
+                if (todayStats) {
+                    todayExecutions = todayStats.count;
+                }
+            }
+            
+            // Fallback to filtered executions if no aggregated stats
+            if (todayExecutions === 0) {
+                todayExecutions = executions.filter(e => e.timestamp && e.timestamp.startsWith(today)).length;
+            }
+            
+            document.getElementById('bento-today').textContent = todayExecutions.toString();
+            
+            // Success Rate
+            const successCount = executions.filter(e => e.success !== false && e.success !== 0).length;
+            const totalWithStatus = executions.filter(e => e.success !== undefined && e.success !== null).length;
+            const successRate = totalWithStatus > 0 ? (successCount / totalWithStatus * 100).toFixed(0) : 100;
+            document.getElementById('bento-success').textContent = `${successRate}%`;
+            console.log(`Success rate: ${successCount}/${totalWithStatus} = ${successRate}%`);
+            
+            // Top Tool
+            const toolCounts = {};
+            executions.forEach(e => {
+                const tool = e.tool_name || 'unknown';
+                toolCounts[tool] = (toolCounts[tool] || 0) + 1;
+            });
+            const topTool = Object.entries(toolCounts).reduce((max, [tool, count]) => 
+                count > max.count ? { tool, count } : max, { tool: '--', count: 0 });
+            document.getElementById('bento-top-tool').textContent = topTool.tool;
+            document.getElementById('bento-tool-usage').textContent = `${topTool.count} uses`;
+            
+            // Tokens
+            const totalTokens = usage.totals?.totalTokens || 0;
+            const tokensInMillions = (totalTokens / 1000000).toFixed(1);
+            document.getElementById('bento-tokens').textContent = tokensInMillions;
+            
+            // Peak Day
+            const peakUsage = usage.metadata?.peakUsage || {};
+            if (peakUsage.date) {
+                const peakDate = new Date(peakUsage.date);
+                document.getElementById('bento-peak-day').textContent = peakDate.toLocaleDateString('en-US', { 
+                    weekday: 'short', 
+                    month: 'short', 
+                    day: 'numeric' 
+                });
+                document.getElementById('bento-peak-cost').textContent = `${formatCurrency(peakUsage.cost || 0)} spent`;
+            } else {
+                document.getElementById('bento-peak-day').textContent = 'N/A';
+                document.getElementById('bento-peak-cost').textContent = 'No data';
+            }
+            
+            // Efficiency
+            const efficiency = executions.length > 0 ? (totalCost / executions.length) : 0;
+            document.getElementById('bento-efficiency').textContent = formatCurrency(efficiency);
+            
+            // Render mini charts
+            renderBentoCostChart();
+            renderBentoToolsChart();
+        }
+        
+        // Bento Cost Chart
+        function renderBentoCostChart() {
+            const usage = dashboardData.usage || {};
+            const daily = usage.daily || [];
+            const last7Days = daily.slice(-7);
+            
+            const ctx = document.getElementById('bento-cost-chart');
+            if (!ctx || last7Days.length === 0) return;
+            
+            const labels = last7Days.map(d => {
+                const date = new Date(d.date);
+                return date.toLocaleDateString('en-US', { weekday: 'short' });
+            });
+            
+            const costData = last7Days.map(d => d.totalCost || 0);
+            
+            // Destroy existing chart if any
+            if (state.bentoCharts.cost) {
+                state.bentoCharts.cost.destroy();
+            }
+            
+            state.bentoCharts.cost = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: costData,
+                        borderColor: '#D97757',
+                        backgroundColor: 'rgba(217, 119, 87, 0.1)',
+                        tension: 0.4,
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#D97757',
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return formatCurrency(context.parsed.y);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            display: true,
+                            grid: { 
+                                display: false,
+                                drawBorder: false
+                            },
+                            ticks: { 
+                                font: { size: 9 },
+                                padding: 2
+                            }
+                        },
+                        y: {
+                            display: true,
+                            grid: {
+                                display: true,
+                                color: 'rgba(0, 0, 0, 0.05)',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Bento Tools Chart
+        function renderBentoToolsChart() {
+            const executions = dashboardData.executions || [];
+            const toolCounts = {};
+            
+            executions.forEach(e => {
+                const tool = e.tool_name || 'unknown';
+                toolCounts[tool] = (toolCounts[tool] || 0) + 1;
+            });
+            
+            const sortedTools = Object.entries(toolCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5);
+            
+            const ctx = document.getElementById('bento-tools-chart');
+            if (!ctx) {
+                console.error('Tools chart canvas not found');
+                return;
+            }
+            
+            if (sortedTools.length === 0) {
+                // Draw placeholder if no data
+                const context = ctx.getContext('2d');
+                context.fillStyle = '#87867F';
+                context.font = '12px Fira Code';
+                context.textAlign = 'center';
+                context.fillText('No tool data available', ctx.width / 2, ctx.height / 2);
+                return;
+            }
+            
+            console.log('Rendering tools chart with data:', sortedTools);
+            
+            // Destroy existing chart if any
+            if (state.bentoCharts.tools) {
+                state.bentoCharts.tools.destroy();
+            }
+            
+            state.bentoCharts.tools = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: sortedTools.map(([tool]) => {
+                        // Truncate long tool names
+                        return tool.length > 8 ? tool.substring(0, 8) + '...' : tool;
+                    }),
+                    datasets: [{
+                        data: sortedTools.map(([, count]) => count),
+                        backgroundColor: [
+                            '#D97757',
+                            '#97B5D5',
+                            '#629A90',
+                            '#B49FD8',
+                            '#C2C07D'
+                        ],
+                        borderRadius: 4,
+                        barThickness: 'flex',
+                        maxBarThickness: 30
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.parsed.y} uses`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            display: true,
+                            grid: { display: false },
+                            ticks: { font: { size: 8 } }
+                        },
+                        y: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Bento Heatmap (removed - using full heatmap instead)
+        function renderBentoHeatmap_deprecated() {
+            const executionStats = dashboardData.executionStats || {};
+            const dailyStats = executionStats.dailyStats || [];
+            
+            // Create a map of last 14 days
+            const heatmapData = {};
+            const today = new Date();
+            for (let i = 13; i >= 0; i--) {
+                const date = new Date(today);
+                date.setDate(date.getDate() - i);
+                const dateStr = date.toISOString().split('T')[0];
+                heatmapData[dateStr] = 0;
+            }
+            
+            // Fill with actual data
+            dailyStats.forEach(stat => {
+                if (heatmapData.hasOwnProperty(stat.day)) {
+                    heatmapData[stat.day] = stat.count;
+                }
+            });
+            
+            // Find max value for scaling
+            const maxCount = Math.max(...Object.values(heatmapData), 1);
+            
+            // Render heatmap cells
+            const container = document.getElementById('bento-heatmap');
+            if (container) {
+                console.log('Rendering heatmap with data:', heatmapData);
+                container.innerHTML = '';
+                
+                // Create cells for each day (7 rows x 2 weeks)
+                const dates = Object.entries(heatmapData).sort((a, b) => a[0].localeCompare(b[0]));
+                
+                dates.forEach(([date, count]) => {
+                    const cell = document.createElement('div');
+                    cell.className = 'bento-heatmap-cell';
+                    
+                    // Calculate intensity
+                    const intensity = count / maxCount;
+                    let bgColor = '#E8E6DC'; // Default light color
+                    
+                    if (count === 0) {
+                        bgColor = '#E8E6DC';
+                    } else if (intensity < 0.25) {
+                        bgColor = '#D9C2B8';
+                    } else if (intensity < 0.5) {
+                        bgColor = '#D9A89E';
+                    } else if (intensity < 0.75) {
+                        bgColor = '#D97757';
+                    } else {
+                        bgColor = '#CC5A3C';
+                    }
+                    
+                    cell.style.backgroundColor = bgColor;
+                    cell.title = `${new Date(date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}: ${count} executions`;
+                    container.appendChild(cell);
+                });
+            } else {
+                console.error('Heatmap container not found');
+            }
         }
 
-        // Usage Summary
+        // Legacy Usage Summary (not used in bento, kept for compatibility)
         function renderUsageSummary() {
             const usage = dashboardData.usage || {};
             const executions = dashboardData.executions || [];
@@ -1424,6 +2184,262 @@
             document.getElementById('usage-daily-avg').textContent = formatCurrency(dailyAvg);
             document.getElementById('usage-tokens').textContent = formatShortNumber(totalTokens);
             document.getElementById('usage-efficiency').textContent = `$${efficiency}`;
+            
+            // Update trends
+            const peakCost = usage.metadata?.peakUsage?.cost || 0;
+            document.getElementById('daily-avg-trend').textContent = `Peak: ${formatCurrency(peakCost)}`;
+            
+            // Calculate trend percentage
+            if (usage.daily && usage.daily.length > 7) {
+                const lastWeek = usage.daily.slice(-7).reduce((sum, d) => sum + (d.totalCost || 0), 0);
+                const prevWeek = usage.daily.slice(-14, -7).reduce((sum, d) => sum + (d.totalCost || 0), 0);
+                if (prevWeek > 0) {
+                    const trend = ((lastWeek - prevWeek) / prevWeek * 100).toFixed(0);
+                    const arrow = trend >= 0 ? '↑' : '↓';
+                    document.getElementById('cost-trend-label').textContent = `${arrow} ${Math.abs(trend)}% vs last week`;
+                }
+            }
+        }
+
+        // Cost Trend Chart
+        function renderCostTrendChart() {
+            const usage = dashboardData.usage || {};
+            const daily = usage.daily || [];
+            
+            // Default to 7 days view
+            let period = 7;
+            let periodData = daily.slice(-period);
+            
+            const ctx = document.getElementById('cost-trend-chart');
+            if (!ctx) return;
+            
+            // Prepare data for chart
+            const labels = periodData.map(d => {
+                const date = new Date(d.date);
+                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            });
+            
+            const costData = periodData.map(d => d.totalCost || 0);
+            const tokenData = periodData.map(d => (d.totalTokens || 0) / 1000000); // Convert to millions
+            
+            const chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Daily Cost ($)',
+                        data: costData,
+                        borderColor: '#D97757',
+                        backgroundColor: 'rgba(217, 119, 87, 0.1)',
+                        tension: 0.4,
+                        yAxisID: 'y'
+                    }, {
+                        label: 'Tokens (M)',
+                        data: tokenData,
+                        borderColor: '#97B5D5',
+                        backgroundColor: 'rgba(151, 181, 213, 0.1)',
+                        tension: 0.4,
+                        yAxisID: 'y1'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value.toFixed(0);
+                                }
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toFixed(1) + 'M';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        if (context.datasetIndex === 0) {
+                                            label += formatCurrency(context.parsed.y);
+                                        } else {
+                                            label += context.parsed.y.toFixed(2) + 'M tokens';
+                                        }
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Store chart instance
+            state.charts.costTrend = chart;
+            
+            // Add event listeners for period buttons
+            document.querySelectorAll('#cost-trend-chart').forEach(btn => {
+                btn.parentElement.parentElement.querySelectorAll('.chart-option').forEach(button => {
+                    button.addEventListener('click', function() {
+                        // Remove active class from all buttons
+                        this.parentElement.querySelectorAll('.chart-option').forEach(b => b.classList.remove('active'));
+                        this.classList.add('active');
+                        
+                        // Update chart based on period
+                        const periodMap = { '7d': 7, '30d': 30, '90d': 90 };
+                        period = periodMap[this.dataset.period] || 7;
+                        periodData = daily.slice(-period);
+                        
+                        // Update chart data
+                        chart.data.labels = periodData.map(d => {
+                            const date = new Date(d.date);
+                            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        });
+                        chart.data.datasets[0].data = periodData.map(d => d.totalCost || 0);
+                        chart.data.datasets[1].data = periodData.map(d => (d.totalTokens || 0) / 1000000);
+                        chart.update();
+                    });
+                });
+            });
+            
+            // Update insights
+            updateCostInsights(daily);
+        }
+        
+        function updateCostInsights(daily) {
+            if (!daily || daily.length === 0) return;
+            
+            // Calculate trend
+            const lastWeek = daily.slice(-7);
+            const prevWeek = daily.slice(-14, -7);
+            
+            if (lastWeek.length > 0 && prevWeek.length > 0) {
+                const lastWeekAvg = lastWeek.reduce((sum, d) => sum + (d.totalCost || 0), 0) / lastWeek.length;
+                const prevWeekAvg = prevWeek.reduce((sum, d) => sum + (d.totalCost || 0), 0) / prevWeek.length;
+                
+                const trendElement = document.getElementById('cost-insight-trend');
+                if (trendElement) {
+                    if (lastWeekAvg > prevWeekAvg) {
+                        trendElement.textContent = `Average daily cost trending up ${((lastWeekAvg - prevWeekAvg) / prevWeekAvg * 100).toFixed(0)}%`;
+                    } else {
+                        trendElement.textContent = `Average daily cost trending down ${((prevWeekAvg - lastWeekAvg) / prevWeekAvg * 100).toFixed(0)}%`;
+                    }
+                }
+            }
+            
+            // Find peak day
+            const dayOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const dayTotals = {};
+            daily.forEach(d => {
+                const day = dayOfWeek[new Date(d.date).getDay()];
+                dayTotals[day] = (dayTotals[day] || 0) + (d.totalCost || 0);
+            });
+            
+            const peakDay = Object.entries(dayTotals).reduce((max, [day, total]) => 
+                total > max.total ? { day, total } : max, { day: '', total: 0 });
+            
+            const peakElement = document.getElementById('cost-insight-peak');
+            if (peakElement && peakDay.day) {
+                peakElement.textContent = `Peak usage on ${peakDay.day}`;
+            }
+            
+            // Suggestion based on usage pattern
+            const suggestionElement = document.getElementById('cost-insight-suggestion');
+            if (suggestionElement) {
+                const avgCost = daily.reduce((sum, d) => sum + (d.totalCost || 0), 0) / daily.length;
+                if (avgCost > 100) {
+                    suggestionElement.textContent = 'Consider using cached tokens to reduce costs';
+                } else if (avgCost > 50) {
+                    suggestionElement.textContent = 'Token usage is moderate - optimize for efficiency';
+                } else {
+                    suggestionElement.textContent = 'Cost efficiency is good - keep it up!';
+                }
+            }
+        }
+        
+        // Recent Activity
+        function renderRecentActivity() {
+            const projects = dashboardData.projects?.projects || [];
+            const executions = dashboardData.executions || [];
+            
+            // Recent projects (last 5 active)
+            const recentProjects = projects
+                .filter(p => p.historyItems && p.historyItems.length > 0)
+                .sort((a, b) => {
+                    // Sort by most recent activity
+                    const aLatest = a.historyItems[0]?.display || '';
+                    const bLatest = b.historyItems[0]?.display || '';
+                    return bLatest.localeCompare(aLatest);
+                })
+                .slice(0, 5);
+            
+            const projectsList = document.getElementById('recent-projects-list');
+            if (projectsList) {
+                projectsList.innerHTML = recentProjects.map(project => {
+                    const name = project.path.split('/').pop() || 'Unknown';
+                    const sessions = project.historyItems?.length || 0;
+                    return `
+                        <div class="project-item">
+                            <div>
+                                <div class="project-name">${name}</div>
+                                <div class="project-meta">${sessions} sessions</div>
+                            </div>
+                            <div class="project-meta">${formatBytes(project.totalSize || 0)}</div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            // Recent tasks (last 5 executions)
+            const recentTasks = executions.slice(0, 5);
+            
+            const tasksList = document.getElementById('recent-tasks-list');
+            if (tasksList) {
+                tasksList.innerHTML = recentTasks.map(exec => {
+                    const toolName = exec.tool_name || 'Unknown';
+                    const time = new Date(exec.timestamp).toLocaleTimeString('en-US', { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                    });
+                    const status = exec.success ? '✅' : '❌';
+                    return `
+                        <div class="task-item">
+                            <div>
+                                <div class="task-name">${status} ${toolName}</div>
+                                <div class="task-meta">${time}</div>
+                            </div>
+                            <div class="task-meta">${exec.duration_ms || 0}ms</div>
+                        </div>
+                    `;
+                }).join('');
+            }
         }
 
         // Compact Stats for Mobile
@@ -1564,15 +2580,30 @@
         // Hourly Activity Chart
         function renderHourlyActivityChart() {
             const ctx = document.getElementById('hourly-activity-chart');
-            if (!ctx) return;
+            if (!ctx) {
+                console.error('Hourly activity chart canvas not found');
+                return;
+            }
             
             const executions = dashboardData.executions || [];
+            console.log('Rendering hourly chart with', executions.length, 'executions');
+            
             const hourlyData = new Array(24).fill(0);
             
             executions.forEach(exec => {
-                const hour = new Date(exec.timestamp).getHours();
-                hourlyData[hour]++;
+                if (exec.timestamp) {
+                    try {
+                        const hour = new Date(exec.timestamp).getHours();
+                        if (!isNaN(hour)) {
+                            hourlyData[hour]++;
+                        }
+                    } catch (e) {
+                        console.warn('Invalid timestamp:', exec.timestamp);
+                    }
+                }
             });
+            
+            console.log('Hourly data:', hourlyData);
             
             if (state.charts.hourlyActivity) {
                 state.charts.hourlyActivity.destroy();
@@ -1607,18 +2638,38 @@
         // Tool Usage Chart
         function renderToolUsageChart() {
             const ctx = document.getElementById('tool-usage-chart');
-            if (!ctx) return;
+            if (!ctx) {
+                console.error('Tool usage chart canvas not found');
+                return;
+            }
             
             const executions = dashboardData.executions || [];
+            console.log('Rendering tool usage chart with', executions.length, 'executions');
+            
             const toolCounts = {};
             
             executions.forEach(exec => {
-                toolCounts[exec.tool_name] = (toolCounts[exec.tool_name] || 0) + 1;
+                if (exec.tool_name) {
+                    toolCounts[exec.tool_name] = (toolCounts[exec.tool_name] || 0) + 1;
+                }
             });
+            
+            console.log('Tool counts:', toolCounts);
             
             const sortedTools = Object.entries(toolCounts)
                 .sort((a, b) => b[1] - a[1])
                 .slice(0, 6);
+            
+            if (sortedTools.length === 0) {
+                console.warn('No tool data to display');
+                // Draw placeholder text
+                const context = ctx.getContext('2d');
+                context.fillStyle = '#87867F';
+                context.font = '14px Fira Code';
+                context.textAlign = 'center';
+                context.fillText('No tool data available', ctx.width / 2, ctx.height / 2);
+                return;
+            }
             
             if (state.charts.toolUsage) {
                 state.charts.toolUsage.destroy();
