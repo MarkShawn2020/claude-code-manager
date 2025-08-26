@@ -116,6 +116,20 @@
             margin-top: 0.1rem;
         }
 
+        .version-badge {
+            display: inline-block;
+            margin-left: 0.75rem;
+            padding: 0.2rem 0.6rem;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+            vertical-align: middle;
+            backdrop-filter: blur(10px);
+        }
+
         .header-nav {
             display: flex;
             gap: 2rem;
@@ -554,7 +568,63 @@
         .heatmap-legend-item.level-3 { background: #997A5F; }
         .heatmap-legend-item.level-4 { background: var(--primary); }
 
-        /* Progress Cards */
+        /* Chart Cards */
+        .chart-card {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 1.5rem;
+            min-height: 200px;
+            position: relative;
+        }
+
+        #toolUsageChart {
+            max-width: 200px;
+            max-height: 200px;
+        }
+
+        .usage-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+            width: 100%;
+            font-size: 0.75rem;
+            max-height: 150px;
+            overflow-y: auto;
+            padding: 0.5rem;
+            background: var(--bg-oat);
+            border-radius: 10px;
+        }
+
+        .usage-stat-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .usage-stat-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+
+        .usage-stat-label {
+            color: var(--text-faded);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            flex: 1;
+        }
+
+        .usage-stat-value {
+            color: var(--text-main);
+            font-weight: 600;
+            margin-left: auto;
+        }
+
+        /* Fallback for old Progress Cards (kept for compatibility) */
         .progress-card {
             display: flex;
             flex-direction: column;
@@ -821,6 +891,12 @@
                 font-size: 1.25rem;
             }
             
+            .version-badge {
+                font-size: 0.65rem;
+                padding: 0.15rem 0.4rem;
+                margin-left: 0.5rem;
+            }
+            
             .hero-metric .metric-value {
                 font-size: 2.5rem;
             }
@@ -832,6 +908,21 @@
             .header-nav {
                 flex-direction: column;
                 gap: 1rem;
+            }
+            
+            .chart-card {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            #toolUsageChart {
+                max-width: 160px;
+                max-height: 160px;
+            }
+            
+            .usage-stats {
+                grid-template-columns: 1fr;
+                font-size: 0.7rem;
             }
         }
 
@@ -849,7 +940,10 @@
             <div class="header-brand">
                 <div class="logo-mark">CC</div>
                 <div class="header-titles">
-                    <div class="header-title">Claude Code Manager</div>
+                    <div class="header-title">
+                        Claude Code Manager
+                        <span class="version-badge" id="versionBadge"></span>
+                    </div>
                     <div class="header-subtitle">Professional Analytics & Insights</div>
                 </div>
             </div>
@@ -972,8 +1066,9 @@
             <!-- Tool Usage -->
             <div class="bento-card span-2">
                 <div class="card-label">Tool Usage Breakdown</div>
-                <div class="progress-card" id="toolUsage">
-                    <!-- Will be populated dynamically -->
+                <div class="chart-card" id="toolUsageCard">
+                    <canvas id="toolUsageChart"></canvas>
+                    <div id="toolUsageStats" class="usage-stats"></div>
                 </div>
             </div>
 
@@ -1068,14 +1163,20 @@
         // Use only real data - no mocking allowed
         const appData = DATA?.usage || null;
         
-        // Check if data is available
-        if (!appData || !appData.totals) {
+        // Populate version badge if available
+        const versionBadge = document.getElementById('versionBadge');
+        if (versionBadge && DATA?.version) {
+            versionBadge.textContent = `v${DATA.version}`;
+        }
+        
+        // Check if data is available - now more flexible (usage data is optional)
+        if (!DATA || (!DATA.usage && !DATA.projects && !DATA.executions)) {
             document.body.innerHTML = `
                 <div style="display: flex; justify-content: center; align-items: center; height: 100vh; background: var(--bg-main);">
                     <div style="text-align: center; padding: 3rem;">
                         <div style="font-size: 4rem; margin-bottom: 1rem;">📊</div>
                         <h1 style="color: var(--text-main); margin-bottom: 1rem;">No Data Available</h1>
-                        <p style="color: var(--text-faded);">Please run 'ccm usage' first to generate usage data.</p>
+                        <p style="color: var(--text-faded);">Please run 'ccm dashboard' to generate data.</p>
                         <a href="#" onclick="window.location.reload()" style="display: inline-block; margin-top: 2rem; padding: 0.75rem 2rem; background: var(--primary); color: white; text-decoration: none; border-radius: 8px;">Refresh</a>
                     </div>
                 </div>
@@ -1105,32 +1206,55 @@
         // Initialize Header Stats
         function initHeaderStats() {
             const headerStats = document.getElementById('header-stats');
-            headerStats.innerHTML = `
-                <div class="header-stat">
-                    <div class="header-stat-value">${formatCurrency(appData.totals.totalCost)}</div>
-                    <div class="header-stat-label">Total Cost</div>
-                </div>
-                <div class="header-stat">
-                    <div class="header-stat-value">${formatNumber(appData.totals.totalTokens)}</div>
-                    <div class="header-stat-label">Tokens</div>
-                </div>
-                <div class="header-stat">
-                    <div class="header-stat-value">${appData.metadata.totalDays}</div>
-                    <div class="header-stat-label">Days</div>
-                </div>
-            `;
+            if (appData && appData.totals) {
+                headerStats.innerHTML = `
+                    <div class="header-stat">
+                        <div class="header-stat-value">${formatCurrency(appData.totals.totalCost)}</div>
+                        <div class="header-stat-label">Total Cost</div>
+                    </div>
+                    <div class="header-stat">
+                        <div class="header-stat-value">${formatNumber(appData.totals.totalTokens)}</div>
+                        <div class="header-stat-label">Tokens</div>
+                    </div>
+                    <div class="header-stat">
+                        <div class="header-stat-value">${appData.metadata.totalDays}</div>
+                        <div class="header-stat-label">Days</div>
+                    </div>
+                `;
+            } else {
+                // Show project stats when usage data is not available
+                headerStats.innerHTML = `
+                    <div class="header-stat">
+                        <div class="header-stat-value">${DATA?.projects?.metadata?.totalProjects || 0}</div>
+                        <div class="header-stat-label">Projects</div>
+                    </div>
+                    <div class="header-stat">
+                        <div class="header-stat-value">${DATA?.projects?.metadata?.totalExecutions || 0}</div>
+                        <div class="header-stat-label">Executions</div>
+                    </div>
+                    <div class="header-stat">
+                        <div class="header-stat-value">${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
+                        <div class="header-stat-label">Today</div>
+                    </div>
+                `;
+            }
         }
 
         // Initialize Dashboard Metrics
         function initDashboard() {
-            // Update hero metric
-            document.getElementById('totalCost').textContent = formatCurrency(appData.totals.totalCost);
-            
-            // Calculate trend
-            const lastWeekAvg = appData.daily.slice(-7).reduce((acc, d) => acc + d.totalCost, 0) / 7;
-            const prevWeekAvg = appData.daily.slice(-14, -7).reduce((acc, d) => acc + d.totalCost, 0) / 7;
-            const trendPercent = ((lastWeekAvg - prevWeekAvg) / prevWeekAvg * 100).toFixed(1);
-            document.getElementById('costTrend').textContent = `${trendPercent > 0 ? '↑' : '↓'} ${Math.abs(trendPercent)}% this week`;
+            // Update hero metric (handle missing usage data)
+            if (appData && appData.totals) {
+                document.getElementById('totalCost').textContent = formatCurrency(appData.totals.totalCost);
+                
+                // Calculate trend
+                const lastWeekAvg = appData.daily.slice(-7).reduce((acc, d) => acc + d.totalCost, 0) / 7;
+                const prevWeekAvg = appData.daily.slice(-14, -7).reduce((acc, d) => acc + d.totalCost, 0) / 7;
+                const trendPercent = prevWeekAvg > 0 ? ((lastWeekAvg - prevWeekAvg) / prevWeekAvg * 100).toFixed(1) : '0';
+                document.getElementById('costTrend').textContent = `${trendPercent > 0 ? '↑' : '↓'} ${Math.abs(trendPercent)}% this week`;
+            } else {
+                document.getElementById('totalCost').textContent = '--';
+                document.getElementById('costTrend').textContent = 'Usage data not loaded';
+            }
 
             // Update project count
             const projectCount = DATA?.projects?.metadata?.totalProjects || 0;
@@ -1152,19 +1276,23 @@
             // Initialize Top Features
             initTopFeatures();
             
-            // Initialize Charts
-            initCostChart();
+            // Initialize Charts (only if data available)
+            if (appData && appData.daily) {
+                initCostChart();
+            }
             generateHeatmap();
         }
 
-        // Initialize Tool Usage Progress Bars
+        // Initialize Tool Usage Donut Chart
         function initToolUsage() {
-            const container = document.getElementById('toolUsage');
+            const chartCard = document.getElementById('toolUsageCard');
+            const canvas = document.getElementById('toolUsageChart');
+            const statsContainer = document.getElementById('toolUsageStats');
             
             // Calculate real tool usage from executions
             const executions = DATA?.executions || [];
             if (executions.length === 0) {
-                container.innerHTML = '<div style="text-align: center; color: var(--text-faded); padding: 2rem;">No execution data available</div>';
+                chartCard.innerHTML = '<div style="text-align: center; color: var(--text-faded); padding: 2rem;">No execution data available</div>';
                 return;
             }
             
@@ -1178,32 +1306,114 @@
                 }
             });
             
-            // Get top 3 tools and calculate percentages
-            const tools = Object.entries(toolCounts)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 3)
-                .map(([name, count], index) => ({
-                    name: name,
-                    percentage: Math.round((count / totalCount) * 100),
-                    color: ['var(--gradient-accent)', 'var(--gradient-warm)', 'var(--gradient-cool)'][index]
-                }));
+            // Sort tools by count
+            const sortedTools = Object.entries(toolCounts)
+                .sort((a, b) => b[1] - a[1]);
             
-            if (tools.length === 0) {
-                container.innerHTML = '<div style="text-align: center; color: var(--text-faded); padding: 2rem;">No tool usage data</div>';
+            if (sortedTools.length === 0) {
+                chartCard.innerHTML = '<div style="text-align: center; color: var(--text-faded); padding: 2rem;">No tool usage data</div>';
                 return;
             }
-
-            container.innerHTML = tools.map(tool => `
-                <div>
-                    <div class="progress-stats">
-                        <span>${tool.name}</span>
-                        <span>${tool.percentage}%</span>
+            
+            // Generate colors for all tools using the design system colors
+            const baseColors = [
+                '#D97757', // primary
+                '#629A90', // cactus
+                '#97B5D5', // sky
+                '#B49FD8', // fig
+                '#C2C07D', // olive
+                '#CC785C', // clay
+                '#D2BEDF', // heather
+                '#87867F', // text-faded
+            ];
+            
+            // Group small tools into "Others" if there are too many
+            let finalTools = sortedTools;
+            let othersCount = 0;
+            if (sortedTools.length > 8) {
+                finalTools = sortedTools.slice(0, 7);
+                othersCount = sortedTools.slice(7).reduce((sum, [_, count]) => sum + count, 0);
+                if (othersCount > 0) {
+                    finalTools.push(['Others', othersCount]);
+                }
+            }
+            
+            const colors = finalTools.map((_, index) => {
+                if (index < baseColors.length) {
+                    return baseColors[index];
+                } else {
+                    // Generate additional colors if needed
+                    const hue = (index * 360 / finalTools.length) % 360;
+                    return `hsl(${hue}, 60%, 60%)`;
+                }
+            });
+            
+            // Prepare chart data
+            const chartData = {
+                labels: finalTools.map(([name]) => name),
+                datasets: [{
+                    data: finalTools.map(([_, count]) => count),
+                    backgroundColor: colors,
+                    borderColor: '#ffffff',
+                    borderWidth: 2,
+                    hoverOffset: 4
+                }]
+            };
+            
+            // Create the donut chart
+            const ctx = canvas.getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: chartData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    cutout: '60%',
+                    plugins: {
+                        legend: {
+                            display: false // We'll create a custom legend
+                        },
+                        tooltip: {
+                            backgroundColor: '#141413',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            padding: 12,
+                            cornerRadius: 8,
+                            displayColors: true,
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw;
+                                    const percentage = ((value / totalCount) * 100).toFixed(1);
+                                    return `${label}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Create custom stats/legend below the chart
+            statsContainer.innerHTML = finalTools.map(([name, count], index) => {
+                const percentage = ((count / totalCount) * 100).toFixed(1);
+                return `
+                    <div class="usage-stat-item">
+                        <span class="usage-stat-color" style="background: ${colors[index]}"></span>
+                        <span class="usage-stat-label" title="${name}">${name}</span>
+                        <span class="usage-stat-value">${percentage}%</span>
                     </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: ${tool.percentage}%; background: ${tool.color}"></div>
-                    </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
+            
+            // Add total count info
+            const totalInfo = document.createElement('div');
+            totalInfo.style.cssText = 'position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; pointer-events: none;';
+            totalInfo.innerHTML = `
+                <div style="font-size: 1.5rem; font-weight: 700; color: var(--text-main)">${totalCount}</div>
+                <div style="font-size: 0.75rem; color: var(--text-faded)">Total</div>
+            `;
+            chartCard.style.position = 'relative';
+            chartCard.appendChild(totalInfo);
         }
 
         // Initialize Top Features
@@ -1694,9 +1904,9 @@
             // Animate values
             if (appData && appData.totals) {
                 animateValue('totalCost', 0, appData.totals.totalCost, 1000);
-                animateValue('projectCount', 0, DATA?.projects?.metadata?.totalProjects || 0, 1000);
-                animateValue('sessionCount', 0, DATA?.projects?.metadata?.totalExecutions || 0, 1000);
             }
+            animateValue('projectCount', 0, DATA?.projects?.metadata?.totalProjects || 0, 1000);
+            animateValue('sessionCount', 0, DATA?.projects?.metadata?.totalExecutions || 0, 1000);
         });
     </script>
 </body>

@@ -80,6 +80,7 @@ interface ClaudeData {
 }
 
 interface UnifiedDashboardData {
+  version?: string;
   projects?: {
     projects: ProcessedProject[];
     executions: any[];
@@ -131,7 +132,7 @@ function checkDataFreshness(): DataFreshness {
 }
 
 async function refreshUsageData(outputPath: string): Promise<boolean> {
-  console.log(chalk.blue('🔄 Fetching latest usage data...'));
+  console.log(chalk.blue('🔄 Fetching latest usage data (this may take a moment)...'));
   
   return new Promise((resolve) => {
     // Ensure the .data directory exists
@@ -140,67 +141,98 @@ async function refreshUsageData(outputPath: string): Promise<boolean> {
       fs.mkdirSync(dataDir, { recursive: true });
     }
     
-    // Call ccusage directly instead of through ccm wrapper
-    // This avoids the complex dependency checking and should be faster
-    const child = spawn('npx', ['ccusage', '--json'], {
-      stdio: ['ignore', 'pipe', 'pipe'],
-      shell: true
-    });
+    // Try to use ccusage directly first (faster), fallback to npx
+    const commands = [
+      { cmd: 'ccusage', args: ['--json'] },
+      { cmd: 'npx', args: ['ccusage', '--json'] }
+    ];
     
-    let jsonOutput = '';
-    let errorOutput = '';
-    
-    // Set a timeout for the operation
-    const timeout = setTimeout(() => {
-      console.log(chalk.yellow('⏱️  ccusage is taking longer than expected...'));
-      child.kill();
-      resolve(false);
-    }, 30000); // 30 second timeout
-    
-    child.stdout?.on('data', (data) => {
-      jsonOutput += data.toString();
-    });
-    
-    child.stderr?.on('data', (data) => {
-      errorOutput += data.toString();
-    });
-    
-    child.on('close', (code) => {
-      clearTimeout(timeout);
-      
-      if (code === 0 && jsonOutput.trim()) {
-        try {
-          // Validate JSON format
-          const parsedData = JSON.parse(jsonOutput);
-          
-          // Write to file
-          fs.writeFileSync(outputPath, jsonOutput, 'utf8');
-          console.log(chalk.green('✅ Usage data refreshed successfully'));
-          resolve(true);
-        } catch (error) {
-          console.log(chalk.red('❌ Failed to parse usage data JSON'));
-          console.log(chalk.gray(`Error: ${error}`));
-          resolve(false);
-        }
-      } else {
-        console.log(chalk.red('❌ Failed to fetch usage data'));
-        if (errorOutput) {
-          console.log(chalk.gray(`Error: ${errorOutput.trim()}`));
-        }
-        if (code === null) {
-          console.log(chalk.yellow('💡 ccusage operation was cancelled due to timeout'));
-        }
+    let attemptIndex = 0;
+    const tryCommand = () => {
+      if (attemptIndex >= commands.length) {
+        console.log(chalk.red('❌ Failed to execute ccusage with any method'));
         resolve(false);
+        return;
       }
-    });
+      
+      const { cmd, args } = commands[attemptIndex];
+      console.log(chalk.gray(`  Trying: ${cmd} ${args.join(' ')}`));
+      
+      const child = spawn(cmd, args, {
+        stdio: ['ignore', 'pipe', 'pipe'],
+        shell: process.platform === 'win32'
+      });
+      
+      let jsonOutput = '';
+      let errorOutput = '';
+      
+      // Set a shorter initial timeout, with warning
+      let warningShown = false;
+      const warningTimeout = setTimeout(() => {
+        if (!warningShown) {
+          console.log(chalk.yellow('  ⏱️  Still fetching usage data... (API may be slow)'));
+          warningShown = true;
+        }
+      }, 5000); // Show warning after 5 seconds
+      
+      const timeout = setTimeout(() => {
+        console.log(chalk.yellow('  ⏱️  Timeout reached, cancelling...'));
+        child.kill();
+        attemptIndex++;
+        tryCommand(); // Try next command
+      }, 15000); // Reduced to 15 second timeout
     
-    child.on('error', (error) => {
-      clearTimeout(timeout);
-      console.log(chalk.red('❌ Failed to execute ccusage command'));
-      console.log(chalk.gray(`Error: ${error.message}`));
-      console.log(chalk.yellow('💡 Make sure ccusage is installed: npm install -g ccusage'));
-      resolve(false);
-    });
+      child.stdout?.on('data', (data) => {
+        jsonOutput += data.toString();
+      });
+      
+      child.stderr?.on('data', (data) => {
+        errorOutput += data.toString();
+      });
+      
+      child.on('close', (code) => {
+        clearTimeout(timeout);
+        clearTimeout(warningTimeout);
+        
+        if (code === 0 && jsonOutput.trim()) {
+          try {
+            // Validate JSON format
+            const parsedData = JSON.parse(jsonOutput);
+            
+            // Write to file
+            fs.writeFileSync(outputPath, jsonOutput, 'utf8');
+            console.log(chalk.green('✅ Usage data refreshed successfully'));
+            resolve(true);
+          } catch (error) {
+            console.log(chalk.red(`❌ Failed to parse usage data JSON from ${cmd}`));
+            console.log(chalk.gray(`Error: ${error}`));
+            attemptIndex++;
+            tryCommand(); // Try next command
+          }
+        } else {
+          if (code === null) {
+            // Killed by timeout, already trying next command
+            return;
+          }
+          console.log(chalk.gray(`  ${cmd} failed with code ${code}`));
+          if (errorOutput && errorOutput.includes('command not found')) {
+            console.log(chalk.gray(`  ${cmd} not found`));
+          }
+          attemptIndex++;
+          tryCommand(); // Try next command
+        }
+      });
+      
+      child.on('error', (error) => {
+        clearTimeout(timeout);
+        clearTimeout(warningTimeout);
+        console.log(chalk.gray(`  ${cmd} error: ${error.message}`));
+        attemptIndex++;
+        tryCommand(); // Try next command
+      });
+    };
+    
+    tryCommand(); // Start with first command
   });
 }
 
@@ -354,25 +386,21 @@ function loadProjectsData(): { projects: ProcessedProject[], executions: any[], 
           `);
           const totalCount = countStmt.get().total;
           
-          // Get ALL executions from the last 30 days for complete repository activity
+          // Get a reasonable sample of executions for the heatmap and tool usage
+          // Include essential fields for both visualizations
           const stmt = db.prepare(`
             SELECT 
-              session_id,
               timestamp,
-              tool_name,
-              tool_input,
-              tool_response,
               project_path,
-              success,
-              error_message,
-              created_at
+              tool_name
             FROM executions 
             WHERE project_path IS NOT NULL
               AND timestamp >= datetime('now', '-30 days')
             ORDER BY timestamp DESC
+            LIMIT 10000
           `);
           let executions = stmt.all();
-          console.log(chalk.gray(`  Loaded ${executions.length} executions from last 30 days`));
+          console.log(chalk.gray(`  Loaded ${executions.length} executions for heatmap`));
           
           // No fallback needed - if there's no data in last 30 days, show empty
           
@@ -540,13 +568,40 @@ async function generateDashboard(data: UnifiedDashboardData): Promise<void> {
   }
 }
 
-export async function dashboardCommand(options: { export?: string; format?: string; refresh?: boolean; view?: string }) {
+export async function dashboardCommand(options: { export?: string; format?: string; refresh?: boolean; view?: string; skipUsage?: boolean }) {
   try {
     // Create unified dashboard data
     const unifiedData: UnifiedDashboardData = {};
     
-    // Load projects and executions data
-    const projectsResult = loadProjectsData();
+    // Load package.json version
+    try {
+      const packageJsonPath = path.join(__dirname, '../../package.json');
+      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+      unifiedData.version = packageJson.version;
+    } catch (error) {
+      console.warn(chalk.yellow('Warning: Could not read package.json version'));
+    }
+    
+    // Load data in parallel for better performance
+    console.log(chalk.cyan('📊 Loading dashboard data...'));
+    
+    // Start operations in parallel (skip usage if requested)
+    const loadPromises: Promise<any>[] = [
+      // Load projects data (synchronous, wrapped in Promise)
+      Promise.resolve(loadProjectsData())
+    ];
+    
+    // Only load usage data if not skipped
+    if (!options.skipUsage) {
+      loadPromises.push(getUsageData(options.refresh));
+    } else {
+      console.log(chalk.gray('  Skipping usage data (--skip-usage)'));
+      loadPromises.push(Promise.resolve(null));
+    }
+    
+    const [projectsResult, usageResult] = await Promise.all(loadPromises);
+    
+    // Process projects data
     if (projectsResult) {
       const { projects, executions } = projectsResult;
       
@@ -556,8 +611,8 @@ export async function dashboardCommand(options: { export?: string; format?: stri
         metadata: {
           generatedAt: new Date().toISOString(),
           totalProjects: projects.length,
-          totalSize: projects.reduce((sum, p) => sum + p.totalSize, 0),
-          totalEntries: projects.reduce((sum, p) => sum + p.historyItems.length, 0),
+          totalSize: projects.reduce((sum: number, p: ProcessedProject) => sum + p.totalSize, 0),
+          totalEntries: projects.reduce((sum: number, p: ProcessedProject) => sum + p.historyItems.length, 0),
           totalExecutions: (projectsResult as any).executionStats?.totalCount || executions.length
         }
       };
@@ -565,8 +620,7 @@ export async function dashboardCommand(options: { export?: string; format?: stri
       unifiedData.executionStats = (projectsResult as any).executionStats;
     }
     
-    // Get usage data (with smart caching and auto-refresh)
-    const usageResult = await getUsageData(options.refresh);
+    // Process usage data
     if (usageResult) {
       const { data: usageData } = usageResult;
       

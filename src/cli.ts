@@ -100,6 +100,7 @@ program
   .option('--export <path>', 'Export data to file instead of opening dashboard')
   .option('--format <format>', 'Export format: json, csv (requires --export)', 'json')
   .option('--refresh', 'Force refresh usage data from ccusage before showing dashboard')
+  .option('--skip-usage', 'Skip loading usage data for faster dashboard launch')
   .action(dashboardCommand);
 
 program.addCommand(featCommand());
