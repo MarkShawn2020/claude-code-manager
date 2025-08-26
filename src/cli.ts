@@ -36,7 +36,7 @@ program
   .option('--with-ai', 'Include AI responses in conversation display')
   .option('--output-path <path>', 'Export data to file or directory (supports auto-naming)')
   .option('--output-format <format>', 'Export format: json, markdown (requires --output-path)', 'json')
-  .option('--analyzer', 'Open interactive analyzer in browser')
+  .option('--analyzer', 'Open interactive analyzer in browser (redirects to dashboard)')
   .action(statCommand);
 
 program
@@ -96,7 +96,7 @@ program
 
 program
   .command('dashboard')
-  .description('Interactive usage analytics dashboard for Claude Code token usage and costs')
+  .description('Unified analytics dashboard for Claude Code (projects, usage, costs, and executions)')
   .option('--export <path>', 'Export data to file instead of opening dashboard')
   .option('--format <format>', 'Export format: json, csv (requires --export)', 'json')
   .option('--refresh', 'Force refresh usage data from ccusage before showing dashboard')

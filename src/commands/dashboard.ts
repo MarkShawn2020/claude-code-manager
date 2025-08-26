@@ -61,6 +61,40 @@ interface ProcessedUsageData {
   };
 }
 
+interface ProcessedProject {
+  path: string;
+  totalSize: number;
+  historyItems: Array<{
+    display: string;
+    size: number;
+  }>;
+}
+
+interface ProjectData {
+  history?: Array<{ display: string }>;
+  [key: string]: any;
+}
+
+interface ClaudeData {
+  projects: Record<string, ProjectData>;
+}
+
+interface UnifiedDashboardData {
+  projects?: {
+    projects: ProcessedProject[];
+    executions: any[];
+    metadata: {
+      generatedAt: string;
+      totalProjects: number;
+      totalSize: number;
+      totalEntries: number;
+      totalExecutions: number;
+    };
+  };
+  usage?: ProcessedUsageData;
+  executions?: any[];
+}
+
 interface DataFreshness {
   exists: boolean;
   path: string;
@@ -253,31 +287,115 @@ function processUsageData(rawData: UsageData): ProcessedUsageData {
   };
 }
 
-async function generateDashboard(data: ProcessedUsageData): Promise<void> {
-  // Read the HTML template
-  const templatePath = path.join(__dirname, '../templates/dashboard.html');
+function loadProjectsData(): { projects: ProcessedProject[], executions: any[] } | null {
+  try {
+    // Load Claude data file
+    const homeDir = os.homedir();
+    const dataFilePath = path.join(homeDir, '.claude.json');
+    
+    if (!fs.existsSync(dataFilePath)) {
+      console.warn(chalk.yellow('No Claude data file found'));
+      return null;
+    }
+    
+    const rawData = fs.readFileSync(dataFilePath, 'utf8');
+    const data: ClaudeData = JSON.parse(rawData);
+    
+    if (!data.projects) {
+      return { projects: [], executions: [] };
+    }
+    
+    // Process projects
+    const projects: ProcessedProject[] = Object.entries(data.projects)
+      .map(([projectPath, projectData]) => {
+        const historyItems = (projectData.history || []).map(item => ({
+          display: item.display,
+          size: JSON.stringify(item).length
+        }));
+        
+        return {
+          path: projectPath,
+          totalSize: JSON.stringify(projectData).length,
+          historyItems
+        };
+      });
+    
+    // Load execution data from SQLite database
+    let executionData: any[] = [];
+    try {
+      const Database = require('better-sqlite3');
+      const claudeDbPath = path.join(homeDir, '.claude', 'db.sql');
+      
+      if (fs.existsSync(claudeDbPath)) {
+        const db = new Database(claudeDbPath, { readonly: true });
+        
+        try {
+          const stmt = db.prepare(`
+            SELECT 
+              session_id,
+              timestamp,
+              tool_name,
+              tool_input,
+              tool_response,
+              project_path,
+              success,
+              error_message,
+              created_at
+            FROM executions 
+            ORDER BY timestamp DESC 
+            LIMIT 1000
+          `);
+          
+          executionData = stmt.all();
+        } catch (err) {
+          console.warn(chalk.yellow('Warning: Could not load execution data from database'));
+        } finally {
+          db.close();
+        }
+      }
+    } catch (error) {
+      console.warn(chalk.yellow('Warning: Could not access Claude execution database'));
+    }
+    
+    return { projects, executions: executionData };
+  } catch (error) {
+    console.error(chalk.red('Error loading projects data:'), error);
+    return null;
+  }
+}
+
+async function generateDashboard(data: UnifiedDashboardData): Promise<void> {
+  // Read the unified HTML template
+  const templatePath = path.join(__dirname, '../templates/unified-dashboard.html');
   let template: string;
   
   try {
     template = fs.readFileSync(templatePath, 'utf8');
   } catch (error) {
-    console.error(chalk.red('Error: Could not find dashboard template'));
-    console.error(chalk.yellow('Make sure the template exists at: src/templates/dashboard.html'));
+    console.error(chalk.red('Error: Could not find unified dashboard template'));
+    console.error(chalk.yellow('Make sure the template exists at: src/templates/unified-dashboard.html'));
     process.exit(1);
   }
 
-  // Replace the data placeholder with actual data
-  const htmlContent = template.replace('/*DATA_PLACEHOLDER*/', JSON.stringify(data));
+  // Replace the data placeholder with base64-encoded JSON for safe embedding
+  const jsonData = JSON.stringify(data);
+  const base64Data = Buffer.from(jsonData).toString('base64');
+  
+  // Inject the base64 data that will be decoded in the browser
+  const htmlContent = template.replace(
+    '/*DATA_PLACEHOLDER*/', 
+    `JSON.parse(atob('${base64Data}'))`
+  );
 
   // Generate output file path
   const outputDir = os.tmpdir();
-  const outputFile = path.join(outputDir, `claude-usage-dashboard-${Date.now()}.html`);
+  const outputFile = path.join(outputDir, `claude-unified-dashboard-${Date.now()}.html`);
 
   try {
     // Write the HTML file
     fs.writeFileSync(outputFile, htmlContent);
     
-    console.log(chalk.green('🎉 Claude Usage Dashboard generated!'));
+    console.log(chalk.green('🎉 Claude Unified Dashboard generated!'));
     console.log(chalk.blue(`📄 Report saved to: ${outputFile}`));
     console.log(chalk.yellow('🌐 Opening in browser...'));
 
@@ -388,30 +506,50 @@ async function generateDashboard(data: ProcessedUsageData): Promise<void> {
   }
 }
 
-export async function dashboardCommand(options: { export?: string; format?: string; refresh?: boolean }) {
+export async function dashboardCommand(options: { export?: string; format?: string; refresh?: boolean; view?: string }) {
   try {
+    // Create unified dashboard data
+    const unifiedData: UnifiedDashboardData = {};
+    
+    // Load projects and executions data
+    const projectsResult = loadProjectsData();
+    if (projectsResult) {
+      const { projects, executions } = projectsResult;
+      
+      unifiedData.projects = {
+        projects,
+        executions,
+        metadata: {
+          generatedAt: new Date().toISOString(),
+          totalProjects: projects.length,
+          totalSize: projects.reduce((sum, p) => sum + p.totalSize, 0),
+          totalEntries: projects.reduce((sum, p) => sum + p.historyItems.length, 0),
+          totalExecutions: executions.length
+        }
+      };
+      unifiedData.executions = executions;
+    }
+    
     // Get usage data (with smart caching and auto-refresh)
-    const result = await getUsageData(options.refresh);
-    if (!result) {
-      console.error(chalk.red('Error: Could not get usage data'));
-      console.error(chalk.yellow('This could be due to:'));
-      console.error(chalk.yellow('• ccusage tool not available or configured'));
-      console.error(chalk.yellow('• No Claude usage data available'));
-      console.error(chalk.yellow('• Permission issues writing to .data directory'));
-      console.error(chalk.gray('\nTry running: ccm usage --json first to debug'));
-      process.exit(1);
+    const usageResult = await getUsageData(options.refresh);
+    if (usageResult) {
+      const { data: usageData } = usageResult;
+      
+      if (usageData.daily && usageData.daily.length > 0) {
+        // Process the usage data
+        const processedUsageData = processUsageData(usageData);
+        unifiedData.usage = processedUsageData;
+      }
     }
     
-    const { data: usageData, path: usageFilePath } = result;
-    
-    if (!usageData.daily || usageData.daily.length === 0) {
-      console.error(chalk.red('Error: No usage data found'));
-      console.error(chalk.yellow('The usage.json file appears to be empty or invalid'));
+    // Check if we have any data
+    if (!unifiedData.projects && !unifiedData.usage) {
+      console.error(chalk.red('Error: No data available for dashboard'));
+      console.error(chalk.yellow('Make sure you have:'));
+      console.error(chalk.yellow('• Claude project data (~/.claude.json)'));
+      console.error(chalk.yellow('• Usage data (run ccm usage first)'));
       process.exit(1);
     }
-    
-    // Process the data
-    const processedData = processUsageData(usageData);
     
     // Handle export option
     if (options.export) {
@@ -424,14 +562,12 @@ export async function dashboardCommand(options: { export?: string; format?: stri
       
       try {
         const exportContent = exportFormat === 'json' 
-          ? JSON.stringify(processedData, null, 2)
-          : generateCSVExport(processedData);
+          ? JSON.stringify(unifiedData, null, 2)
+          : generateCSVExport(unifiedData.usage!);
         
         fs.writeFileSync(options.export, exportContent, 'utf8');
         console.log(chalk.green(`✅ Data exported to: ${options.export}`));
         console.log(chalk.blue(`📊 Format: ${exportFormat.toUpperCase()}`));
-        console.log(chalk.blue(`📅 Date range: ${processedData.metadata.dateRange.start} to ${processedData.metadata.dateRange.end}`));
-        console.log(chalk.blue(`💰 Total cost: $${processedData.totals.totalCost.toFixed(2)}`));
         return;
       } catch (error) {
         console.error(chalk.red(`❌ Failed to export data: ${error instanceof Error ? error.message : String(error)}`));
@@ -440,16 +576,24 @@ export async function dashboardCommand(options: { export?: string; format?: stri
     }
     
     // Show summary info
-    console.log(chalk.cyan('📊 Claude Usage Dashboard'));
-    console.log(chalk.white(`📅 Date range: ${chalk.bold(processedData.metadata.dateRange.start)} to ${chalk.bold(processedData.metadata.dateRange.end)}`));
-    console.log(chalk.white(`📈 Total days: ${chalk.bold(processedData.metadata.totalDays)}`));
-    console.log(chalk.white(`💰 Total cost: ${chalk.bold('$' + processedData.totals.totalCost.toFixed(2))}`));
-    console.log(chalk.white(`🎯 Peak usage: ${chalk.bold('$' + processedData.metadata.peakUsage.cost.toFixed(2))} on ${processedData.metadata.peakUsage.date}`));
-    console.log(chalk.white(`🤖 Models used: ${chalk.bold(processedData.metadata.models.join(', '))}`));
+    console.log(chalk.cyan('📊 Claude Unified Dashboard'));
+    
+    if (unifiedData.projects) {
+      console.log(chalk.white(`\n📁 Projects: ${chalk.bold(unifiedData.projects.metadata.totalProjects)}`));
+      console.log(chalk.white(`📝 Total entries: ${chalk.bold(unifiedData.projects.metadata.totalEntries)}`));
+      console.log(chalk.white(`⚡ Executions tracked: ${chalk.bold(unifiedData.projects.metadata.totalExecutions)}`));
+    }
+    
+    if (unifiedData.usage) {
+      console.log(chalk.white(`\n💰 Total cost: ${chalk.bold('$' + unifiedData.usage.totals.totalCost.toFixed(2))}`));
+      console.log(chalk.white(`📅 Date range: ${chalk.bold(unifiedData.usage.metadata.dateRange.start)} to ${chalk.bold(unifiedData.usage.metadata.dateRange.end)}`));
+      console.log(chalk.white(`🎯 Peak usage: ${chalk.bold('$' + unifiedData.usage.metadata.peakUsage.cost.toFixed(2))} on ${unifiedData.usage.metadata.peakUsage.date}`));
+    }
+    
     console.log();
     
     // Generate and open dashboard
-    await generateDashboard(processedData);
+    await generateDashboard(unifiedData);
     
   } catch (error) {
     if (error instanceof SyntaxError) {

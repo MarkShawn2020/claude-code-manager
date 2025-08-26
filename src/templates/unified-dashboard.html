@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Code Manager - Unified Dashboard</title>
+    <style>
+        :root {
+            --primary-color: #646CFF;
+            --secondary-color: #535BF2;
+            --background: #0f0f0f;
+            --card-bg: #1a1a1a;
+            --text-primary: rgba(255, 255, 255, 0.9);
+            --text-secondary: rgba(255, 255, 255, 0.6);
+            --border-color: #2a2a2a;
+            --success: #4ade80;
+            --warning: #fb923c;
+            --error: #ef4444;
+            --hover-bg: rgba(100, 108, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* Tab Navigation */
+        .tabs {
+            display: flex;
+            background: var(--card-bg);
+            border-bottom: 2px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            background: rgba(26, 26, 26, 0.95);
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 1.25rem 2rem;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .tab-button:hover {
+            color: var(--text-primary);
+            background: var(--hover-bg);
+        }
+
+        .tab-button.active {
+            color: var(--primary-color);
+            background: rgba(100, 108, 255, 0.05);
+        }
+
+        .tab-button.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: scaleX(0); }
+            to { transform: scaleX(1); }
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { 
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Container and Layout */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            margin-bottom: 2rem;
+        }
+
+        .title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(120deg, var(--primary-color), var(--secondary-color));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--primary-color);
+            box-shadow: 0 8px 20px rgba(100, 108, 255, 0.15);
+        }
+
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .stat-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.75rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: rgba(100, 108, 255, 0.3);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Charts */
+        .chart-container {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.75rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border-color);
+            min-height: 400px;
+        }
+
+        /* Project List */
+        .project-list {
+            max-height: 600px;
+            overflow-y: auto;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+        }
+
+        .project-item {
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .project-item:hover {
+            background: rgba(100, 108, 255, 0.05);
+            border-color: var(--primary-color);
+            transform: translateX(4px);
+        }
+
+        .project-path {
+            color: var(--primary-color);
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            font-family: 'Courier New', monospace;
+        }
+
+        .project-stats {
+            display: flex;
+            gap: 1.5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 4rem;
+            color: var(--text-secondary);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 48px;
+            height: 48px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Timeline */
+        .timeline-container {
+            position: relative;
+            padding: 1rem;
+        }
+
+        .timeline-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .timeline-item:hover {
+            background: rgba(100, 108, 255, 0.05);
+        }
+
+        .timeline-time {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            min-width: 150px;
+        }
+
+        .timeline-tool {
+            background: rgba(100, 108, 255, 0.1);
+            color: var(--primary-color);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            margin: 0 1rem;
+        }
+
+        .timeline-description {
+            flex: 1;
+            color: var(--text-primary);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--card-bg);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-color);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .title {
+                font-size: 1.75rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tab-button {
+                padding: 1rem;
+                font-size: 0.875rem;
+            }
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Tab Navigation -->
+    <div class="tabs">
+        <button class="tab-button active" data-tab="projects">📊 Projects Analytics</button>
+        <button class="tab-button" data-tab="usage">💰 Usage & Costs</button>
+        <button class="tab-button" data-tab="executions">⚡ Execution Timeline</button>
+    </div>
+
+    <!-- Projects Analytics Tab -->
+    <div id="projects" class="tab-content active">
+        <div class="container">
+            <div class="header">
+                <h1 class="title">Projects Analytics</h1>
+                <p class="subtitle">Claude Code session analysis and history</p>
+            </div>
+            <div id="projects-content">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>Loading projects data...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Usage & Costs Tab -->
+    <div id="usage" class="tab-content">
+        <div class="container">
+            <div class="header">
+                <h1 class="title">Usage & Costs</h1>
+                <p class="subtitle">Token usage and cost analysis</p>
+            </div>
+            <div id="usage-content">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>Loading usage data...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Execution Timeline Tab -->
+    <div id="executions" class="tab-content">
+        <div class="container">
+            <div class="header">
+                <h1 class="title">Execution Timeline</h1>
+                <p class="subtitle">Tool execution history and patterns</p>
+            </div>
+            <div id="executions-content">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>Loading execution data...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data will be injected here
+        let dashboardData = {};
+        try {
+            dashboardData = /*DATA_PLACEHOLDER*/;
+            console.log('Dashboard data loaded successfully:', dashboardData);
+        } catch (error) {
+            console.error('Failed to load dashboard data:', error);
+            // Show error message instead of stuck loading
+            document.querySelectorAll('.loading').forEach(el => {
+                el.innerHTML = `
+                    <div class="card">
+                        <p style="color: var(--error); text-align: center;">
+                            Failed to load data. Please refresh the page or regenerate the dashboard.
+                        </p>
+                        <p style="color: var(--text-secondary); text-align: center; margin-top: 1rem;">
+                            Error: ${error.message}
+                        </p>
+                    </div>
+                `;
+            });
+        }
+
+        // Tab switching functionality
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', () => {
+                const tabName = button.dataset.tab;
+                
+                // Update active button
+                document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                
+                // Update active content
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                document.getElementById(tabName).classList.add('active');
+                
+                // Initialize tab content if needed
+                initializeTab(tabName);
+            });
+        });
+
+        // Utility functions
+        function formatSize(bytes) {
+            if (!bytes || bytes === 0) return '0 bytes';
+            if (bytes > 1024 * 1024 * 1024) return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+            if (bytes > 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+            if (bytes > 1024) return (bytes / 1024).toFixed(2) + ' KB';
+            return bytes + ' bytes';
+        }
+
+        function formatNumber(num) {
+            if (!num) return '0';
+            return num.toLocaleString();
+        }
+
+        function formatCurrency(num) {
+            if (!num) return '$0.00';
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD'
+            }).format(num);
+        }
+
+        // Initialize tabs
+        function initializeTab(tabName) {
+            switch(tabName) {
+                case 'projects':
+                    renderProjectsTab();
+                    break;
+                case 'usage':
+                    renderUsageTab();
+                    break;
+                case 'executions':
+                    renderExecutionsTab();
+                    break;
+            }
+        }
+
+        // Projects Analytics Tab
+        function renderProjectsTab() {
+            const container = document.getElementById('projects-content');
+            
+            if (!dashboardData || !dashboardData.projects) {
+                container.innerHTML = `
+                    <div class="card">
+                        <p style="color: var(--text-secondary); text-align: center;">No project data available</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const { projects, metadata } = dashboardData.projects;
+            
+            let html = `
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Projects</div>
+                        <div class="stat-value">${formatNumber(metadata.totalProjects)}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total Size</div>
+                        <div class="stat-value">${formatSize(metadata.totalSize)}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total Entries</div>
+                        <div class="stat-value">${formatNumber(metadata.totalEntries)}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total Executions</div>
+                        <div class="stat-value">${formatNumber(metadata.totalExecutions || 0)}</div>
+                    </div>
+                </div>
+            `;
+
+            // Add projects list
+            html += `
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Projects (${projects.length})</div>
+                    </div>
+                    <div class="project-list">
+            `;
+
+            // Sort projects by size (largest first)
+            const sortedProjects = [...projects].sort((a, b) => b.totalSize - a.totalSize);
+            
+            sortedProjects.forEach(project => {
+                html += `
+                    <div class="project-item">
+                        <div class="project-path">${project.path}</div>
+                        <div class="project-stats">
+                            <span>📝 ${formatNumber(project.historyItems.length)} items</span>
+                            <span>💾 ${formatSize(project.totalSize)}</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+
+        // Usage Tab
+        function renderUsageTab() {
+            const container = document.getElementById('usage-content');
+            
+            if (!dashboardData || !dashboardData.usage) {
+                container.innerHTML = `
+                    <div class="card">
+                        <p style="color: var(--text-secondary); text-align: center;">No usage data available. Run 'ccm usage' first to fetch data.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const { daily, totals, metadata } = dashboardData.usage;
+            
+            let html = `
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Cost</div>
+                        <div class="stat-value">${formatCurrency(totals.totalCost)}</div>
+                        <div class="stat-subtitle">${metadata.dateRange.start} - ${metadata.dateRange.end}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total Tokens</div>
+                        <div class="stat-value">${formatNumber(totals.totalTokens)}</div>
+                        <div class="stat-subtitle">Across ${metadata.totalDays} days</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Peak Daily Cost</div>
+                        <div class="stat-value">${formatCurrency(metadata.peakUsage.cost)}</div>
+                        <div class="stat-subtitle">On ${metadata.peakUsage.date}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Average Daily</div>
+                        <div class="stat-value">${formatCurrency(metadata.averageDaily.cost)}</div>
+                        <div class="stat-subtitle">${formatNumber(Math.round(metadata.averageDaily.tokens))} tokens/day</div>
+                    </div>
+                </div>
+            `;
+
+            // Add usage chart
+            html += `
+                <div class="chart-container">
+                    <canvas id="usage-chart"></canvas>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+            
+            // Render chart after DOM is updated
+            setTimeout(() => renderUsageChart(daily), 100);
+        }
+
+        // Executions Tab
+        function renderExecutionsTab() {
+            const container = document.getElementById('executions-content');
+            
+            if (!dashboardData || !dashboardData.executions || dashboardData.executions.length === 0) {
+                container.innerHTML = `
+                    <div class="card">
+                        <p style="color: var(--text-secondary); text-align: center;">No execution data available</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const executions = dashboardData.executions;
+            
+            // Group executions by tool
+            const toolStats = {};
+            executions.forEach(exec => {
+                if (!toolStats[exec.tool_name]) {
+                    toolStats[exec.tool_name] = { count: 0, success: 0, failed: 0 };
+                }
+                toolStats[exec.tool_name].count++;
+                if (exec.success) {
+                    toolStats[exec.tool_name].success++;
+                } else {
+                    toolStats[exec.tool_name].failed++;
+                }
+            });
+
+            let html = `
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Executions</div>
+                        <div class="stat-value">${formatNumber(executions.length)}</div>
+                    </div>
+            `;
+
+            // Add top 3 tools
+            const sortedTools = Object.entries(toolStats)
+                .sort((a, b) => b[1].count - a[1].count)
+                .slice(0, 3);
+
+            sortedTools.forEach(([tool, stats]) => {
+                html += `
+                    <div class="stat-card">
+                        <div class="stat-label">${tool}</div>
+                        <div class="stat-value">${formatNumber(stats.count)}</div>
+                        <div class="stat-subtitle">✅ ${stats.success} | ❌ ${stats.failed}</div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+
+            // Add recent executions timeline
+            html += `
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Recent Executions</div>
+                    </div>
+                    <div class="timeline-container">
+            `;
+
+            // Show last 50 executions
+            const recentExecutions = executions.slice(0, 50);
+            recentExecutions.forEach(exec => {
+                const time = new Date(exec.timestamp).toLocaleString();
+                const status = exec.success ? '✅' : '❌';
+                
+                html += `
+                    <div class="timeline-item">
+                        <span class="timeline-time">${time}</span>
+                        <span class="timeline-tool">${exec.tool_name}</span>
+                        <span class="timeline-description">${status} ${exec.project_path || 'Unknown project'}</span>
+                    </div>
+                `;
+            });
+
+            html += `
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+
+        function renderUsageChart(daily) {
+            const ctx = document.getElementById('usage-chart');
+            if (!ctx || !daily) return;
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: daily.map(d => d.date),
+                    datasets: [{
+                        label: 'Daily Cost ($)',
+                        data: daily.map(d => d.totalCost),
+                        borderColor: '#646CFF',
+                        backgroundColor: 'rgba(100, 108, 255, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { 
+                                color: 'rgba(255, 255, 255, 0.9)',
+                                font: { size: 14 }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(26, 26, 26, 0.95)',
+                            titleColor: 'rgba(255, 255, 255, 0.9)',
+                            bodyColor: 'rgba(255, 255, 255, 0.9)',
+                            borderColor: '#646CFF',
+                            borderWidth: 1,
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Cost: $' + context.parsed.y.toFixed(2);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { 
+                                color: 'rgba(255, 255, 255, 0.05)',
+                                borderColor: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: { 
+                                color: 'rgba(255, 255, 255, 0.6)',
+                                maxTicksLimit: 10
+                            }
+                        },
+                        y: {
+                            grid: { 
+                                color: 'rgba(255, 255, 255, 0.05)',
+                                borderColor: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: { 
+                                color: 'rgba(255, 255, 255, 0.6)',
+                                callback: function(value) {
+                                    return '$' + value.toFixed(0);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM loaded, initializing dashboard...');
+            try {
+                // Initialize first tab
+                renderProjectsTab();
+                console.log('Dashboard initialized successfully');
+            } catch (error) {
+                console.error('Failed to initialize dashboard:', error);
+                const container = document.getElementById('projects-content');
+                if (container) {
+                    container.innerHTML = `
+                        <div class="card">
+                            <p style="color: var(--error); text-align: center;">
+                                Failed to initialize dashboard: ${error.message}
+                            </p>
+                        </div>
+                    `;
+                }
+            }
+        });
+        
+        // Also try to initialize immediately if DOM is already loaded
+        if (document.readyState === 'loading') {
+            // DOM not yet loaded, wait for it
+        } else {
+            // DOM already loaded, initialize now
+            try {
+                renderProjectsTab();
+            } catch (error) {
+                console.error('Failed to render initial tab:', error);
+            }
+        }
+    </script>
+</body>
+</html>
