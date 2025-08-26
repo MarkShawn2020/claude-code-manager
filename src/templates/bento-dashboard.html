@@ -214,20 +214,76 @@
             margin-top: 0.25rem;
         }
 
-        .refresh-btn {
-            padding: 0.75rem 1.5rem;
+        .date-range-selector {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .date-range-input {
+            padding: 0.75rem 1.25rem;
             background: white;
             border: 1px solid var(--border);
             border-radius: 12px;
             font-size: 0.9rem;
             font-weight: 500;
+            color: var(--text-main);
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            outline: none;
+            min-width: 240px;
         }
-
-        .refresh-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
+        
+        .date-range-input:hover {
+            border-color: var(--primary);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .date-range-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(217, 119, 87, 0.1);
+        }
+        
+        .date-preset-btn {
+            padding: 0.5rem 0.75rem;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-faded);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+        
+        .date-preset-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: rgba(217, 119, 87, 0.05);
+        }
+        
+        .date-preset-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        /* Flatpickr custom styles */
+        .flatpickr-calendar {
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border);
+        }
+        
+        .flatpickr-day.selected {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+        
+        .flatpickr-day.inRange {
+            background: rgba(217, 119, 87, 0.1);
+            border-color: transparent;
         }
 
         /* Bento Grid */
@@ -728,8 +784,8 @@
         }
 
         #toolUsageChart {
-            width: 140px !important;
-            height: 140px !important;
+            width: 120px !important;
+            height: 120px !important;
         }
 
         .usage-stats {
@@ -749,6 +805,8 @@
             gap: 0.4rem;
             font-size: 0.75rem;
             width: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
         }
         
         .usage-stats::-webkit-scrollbar {
@@ -776,8 +834,17 @@
         }
         
         .compact-stats .usage-stat-item {
-            padding: 0.3rem 0.5rem;
-            gap: 0.5rem;
+            padding: 0.25rem 0.4rem;
+            gap: 0.4rem;
+            font-size: 0.7rem;
+        }
+        
+        .compact-stats .usage-stat-label {
+            font-size: 0.7rem;
+        }
+        
+        .compact-stats .usage-stat-value {
+            font-size: 0.75rem;
         }
         
         .usage-stat-item:hover {
@@ -806,6 +873,7 @@
             white-space: nowrap;
             flex: 1;
             font-size: 0.85rem;
+            min-width: 0;
         }
 
         .usage-stat-value {
@@ -825,7 +893,7 @@
         }
         
         .chart-center-value {
-            font-size: 1.5rem;
+            font-size: 1.25rem;
             font-weight: 800;
             background: var(--gradient-warm);
             -webkit-background-clip: text;
@@ -834,11 +902,11 @@
         }
         
         .chart-center-text {
-            font-size: 0.65rem;
+            font-size: 0.6rem;
             color: var(--text-faded);
-            margin-top: 0.2rem;
+            margin-top: 0.15rem;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
         }
 
         /* Fallback for old Progress Cards (kept for compatibility) */
@@ -1231,6 +1299,14 @@
                 <h1 class="section-title">Overview Dashboard</h1>
                 <p class="section-subtitle">Real-time analytics and performance metrics</p>
             </div>
+            <div class="date-range-selector">
+                <input type="text" id="dateRangePicker" class="date-range-input" placeholder="Select date range" readonly>
+                <button class="date-preset-btn" data-range="7">7D</button>
+                <button class="date-preset-btn active" data-range="30">30D</button>
+                <button class="date-preset-btn" data-range="90">90D</button>
+                <button class="date-preset-btn" data-range="365">1Y</button>
+                <button class="date-preset-btn" data-range="all">All</button>
+            </div>
         </div>
 
         <!-- Bento Grid Layout -->
@@ -1274,7 +1350,7 @@
 
             <!-- Combined Temporal Visualization (30 Days) -->
             <div class="bento-card span-4 temporal-viz">
-                <div class="card-label">📊 30-Day Temporal Analysis</div>
+                <div class="card-label">📊 <span id="temporalLabel">30-Day</span> Temporal Analysis</div>
                 <div class="temporal-container">
                     <!-- Cost Trend Section -->
                     <div class="cost-trend-section">
@@ -1391,12 +1467,69 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
         // Data will be injected here by the backend
         const DATA = /*DATA_PLACEHOLDER*/;
 
         // Use only real data - no mocking allowed
-        const appData = DATA?.usage || null;
+        const originalAppData = DATA?.usage || null;
+        const originalExecutions = DATA?.executions || [];
+        const originalProjects = DATA?.projects || null;
+        
+        // Global date range state
+        let currentDateRange = 30; // Default to 30 days
+        let filteredData = {
+            appData: null,
+            executions: [],
+            projects: null
+        };
+        
+        // Filter data based on date range
+        function filterDataByDateRange(days) {
+            const now = new Date();
+            const cutoffDate = days === 'all' ? new Date(0) : new Date(now - days * 24 * 60 * 60 * 1000);
+            
+            // Filter appData (usage)
+            if (originalAppData) {
+                const filteredDaily = originalAppData.daily.filter(d => 
+                    new Date(d.date) >= cutoffDate
+                );
+                
+                // Recalculate totals
+                const totals = filteredDaily.reduce((acc, day) => ({
+                    totalCost: acc.totalCost + day.totalCost,
+                    totalTokens: acc.totalTokens + day.totalTokens,
+                    inputTokens: acc.inputTokens + day.inputTokens,
+                    outputTokens: acc.outputTokens + day.outputTokens
+                }), { totalCost: 0, totalTokens: 0, inputTokens: 0, outputTokens: 0 });
+                
+                filteredData.appData = {
+                    ...originalAppData,
+                    daily: filteredDaily,
+                    totals: totals,
+                    metadata: {
+                        ...originalAppData.metadata,
+                        totalDays: filteredDaily.length
+                    }
+                };
+            }
+            
+            // Filter executions
+            filteredData.executions = originalExecutions.filter(exec => 
+                new Date(exec.timestamp) >= cutoffDate
+            );
+            
+            // Keep projects as-is (it's metadata, not time-series)
+            filteredData.projects = originalProjects;
+            
+            return filteredData;
+        }
+        
+        // Use filtered data
+        filterDataByDateRange(currentDateRange);
+        let appData = filteredData.appData;
         
         // Populate version badge if available
         const versionBadge = document.getElementById('versionBadge');
@@ -1523,8 +1656,8 @@
             const canvas = document.getElementById('toolUsageChart');
             const statsContainer = document.getElementById('toolUsageStats');
             
-            // Calculate real tool usage from executions
-            const executions = DATA?.executions || [];
+            // Calculate real tool usage from filtered executions
+            const executions = filteredData.executions;
             if (executions.length === 0) {
                 chartCard.innerHTML = '<div style="text-align: center; color: var(--text-faded); padding: 2rem;">No execution data available</div>';
                 return;
@@ -1595,9 +1728,14 @@
                 }]
             };
             
+            // Destroy existing chart if it exists
+            if (window.toolUsageChartInstance) {
+                window.toolUsageChartInstance.destroy();
+            }
+            
             // Create the donut chart with better configuration
             const ctx = canvas.getContext('2d');
-            new Chart(ctx, {
+            window.toolUsageChartInstance = new Chart(ctx, {
                 type: 'doughnut',
                 data: chartData,
                 options: {
@@ -1635,18 +1773,25 @@
                 }
             });
             
+            // Clear previous content to prevent overlap
+            statsContainer.innerHTML = '';
+            
             // Create enhanced stats/legend - show only top 3 for compact view
             const displayTools = finalTools.slice(0, 3);
-            statsContainer.innerHTML = displayTools.map(([name, count], index) => {
+            const statsHTML = displayTools.map(([name, count], index) => {
                 const percentage = ((count / totalCount) * 100).toFixed(1);
+                // Truncate long tool names
+                const displayName = name.length > 12 ? name.substring(0, 10) + '...' : name;
                 return `
                     <div class="usage-stat-item" title="${name}: ${count.toLocaleString()} executions">
                         <span class="usage-stat-color" style="background: ${colors[index]}"></span>
-                        <span class="usage-stat-label">${name}</span>
+                        <span class="usage-stat-label">${displayName}</span>
                         <span class="usage-stat-value">${percentage}%</span>
                     </div>
                 `;
             }).join('');
+            
+            statsContainer.innerHTML = statsHTML;
             
             // Add summary if there are more tools
             if (finalTools.length > 3) {
@@ -1661,12 +1806,18 @@
                 `;
             }
             
+            // Remove any existing center label to prevent duplicates
+            const existingLabel = chartContainer.querySelector('.chart-center-label');
+            if (existingLabel) {
+                existingLabel.remove();
+            }
+            
             // Add enhanced center label
             const totalInfo = document.createElement('div');
             totalInfo.className = 'chart-center-label';
             totalInfo.innerHTML = `
                 <div class="chart-center-value">${totalCount.toLocaleString()}</div>
-                <div class="chart-center-text">Tools Used</div>
+                <div class="chart-center-text">Tools</div>
             `;
             chartContainer.appendChild(totalInfo);
         }
@@ -1675,7 +1826,7 @@
         function initTopProjects() {
             const container = document.getElementById('topReposList');
             const labelElement = document.getElementById('topReposLabel');
-            const executions = DATA?.executions || [];
+            const executions = filteredData.executions;
             
             if (executions.length === 0) {
                 container.innerHTML = '<div style="text-align: center; color: var(--text-faded); padding: 1rem;">No project data available</div>';
@@ -1760,15 +1911,20 @@
             gradient.addColorStop(0, 'rgba(217, 119, 87, 0.3)');
             gradient.addColorStop(1, 'rgba(217, 119, 87, 0.01)');
             
-            // Show last 30 days of cost data
-            const last30Days = appData.daily.slice(-30);
+            // Show data for selected date range
+            const rangedData = appData.daily;
             
-            // Create labels for all 30 days (but will be hidden)
-            const dates = last30Days.map(d => '');
+            // Create labels for date range (but will be hidden)
+            const dates = rangedData.map(d => '');
             
-            const costs = last30Days.map(d => d.totalCost || 0);
+            const costs = rangedData.map(d => d.totalCost || 0);
 
-            new Chart(ctx, {
+            // Destroy existing chart if it exists
+            if (window.costChartInstance) {
+                window.costChartInstance.destroy();
+            }
+            
+            window.costChartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: dates,
@@ -1810,7 +1966,7 @@
                             callbacks: {
                                 title: function(tooltipItems) {
                                     const index = tooltipItems[0].dataIndex;
-                                    const date = new Date(last30Days[index].date);
+                                    const date = new Date(rangedData[index].date);
                                     return date.toLocaleDateString('en-US', { 
                                         month: 'short', 
                                         day: 'numeric',
@@ -1866,27 +2022,40 @@
             repoLabels.innerHTML = '';
             sharedDateAxis.innerHTML = '';
             
-            // Get all executions (should be last 30 days from backend)
-            const executions = DATA?.executions || [];
+            // Use filtered executions
+            const executions = filteredData.executions;
             
             if (executions.length === 0) {
-                heatmap.innerHTML = '<div style="text-align: center; color: var(--text-faded); padding: 2rem;">No execution data available in the last 30 days</div>';
+                const rangeText = currentDateRange === 'all' ? '' : ` in the selected period`;
+                heatmap.innerHTML = `<div style="text-align: center; color: var(--text-faded); padding: 2rem;">No execution data available${rangeText}</div>`;
                 return;
             }
             
-            // Fixed 30-day range (in local timezone)
+            // Dynamic date range based on selection
             const today = new Date();
             today.setHours(23, 59, 59, 999); // End of today
-            const thirtyDaysAgo = new Date(today);
-            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29); // 30 days total including today
-            thirtyDaysAgo.setHours(0, 0, 0, 0); // Start of day 30 days ago
             
-            const minDate = thirtyDaysAgo;
+            let minDate, numDays;
+            if (currentDateRange === 'all') {
+                // Find earliest execution
+                const earliestExec = filteredData.executions.reduce((earliest, exec) => {
+                    const execDate = new Date(exec.timestamp);
+                    return execDate < earliest ? execDate : earliest;
+                }, today);
+                minDate = new Date(earliestExec);
+                minDate.setHours(0, 0, 0, 0);
+                numDays = Math.ceil((today - minDate) / (24 * 60 * 60 * 1000)) + 1;
+            } else {
+                numDays = parseInt(currentDateRange);
+                minDate = new Date(today);
+                minDate.setDate(minDate.getDate() - (numDays - 1));
+                minDate.setHours(0, 0, 0, 0);
+            }
+            
             const maxDate = today;
-            const numDays = 30; // Fixed 30 days
             
             // Debug info
-            console.log('Project Activity (Last 30 Days):', {
+            console.log(`Project Activity (${currentDateRange === 'all' ? 'All Time' : 'Last ' + currentDateRange + ' Days'}):`, {
                 localTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                 localDateRange: `${minDate.toLocaleDateString()} to ${maxDate.toLocaleDateString()}`,
                 totalExecutions: executions.length,
@@ -1973,7 +2142,7 @@
                 repoDailyActivity.set('Others', othersDailyMap);
             }
             
-            console.log('Project Analysis (30 days):', {
+            console.log(`Project Analysis (${currentDateRange === 'all' ? 'All Time' : currentDateRange + ' days'}):`, {
                 totalRepos: repoTotalCounts.size,
                 top9: top9Repos.map(r => `${r}: ${repoTotalCounts.get(r)}`),
                 othersCount: othersRepos.length,
@@ -2093,8 +2262,35 @@
             const sharedDateAxis = document.getElementById('sharedDateAxis');
             sharedDateAxis.innerHTML = '';
             
-            // Add date labels at regular intervals
-            const labelPositions = [0, 6, 12, 18, 24, 29]; // Days to show labels
+            // Determine label positions based on date range
+            let labelPositions;
+            if (numDays <= 7) {
+                // Show all days for weekly view
+                labelPositions = Array.from({length: Math.min(numDays, 7)}, (_, i) => i);
+            } else if (numDays <= 30) {
+                // Show labels every ~6 days for monthly view
+                labelPositions = [0];
+                for (let i = 1; i < 5; i++) {
+                    labelPositions.push(Math.floor(numDays * i / 5));
+                }
+                labelPositions.push(numDays - 1);
+            } else if (numDays <= 90) {
+                // Show labels every ~15 days for quarterly view
+                labelPositions = [];
+                for (let i = 0; i <= 6; i++) {
+                    labelPositions.push(Math.floor(numDays * i / 6));
+                }
+            } else {
+                // Show monthly labels for yearly+ view
+                const interval = Math.floor(numDays / 12);
+                labelPositions = [];
+                for (let i = 0; i < 12 && i * interval < numDays; i++) {
+                    labelPositions.push(i * interval);
+                }
+                if (labelPositions[labelPositions.length - 1] !== numDays - 1) {
+                    labelPositions.push(numDays - 1);
+                }
+            }
             
             labelPositions.forEach(day => {
                 const labelDate = new Date(minDate);
@@ -2107,7 +2303,7 @@
                 });
                 
                 // Add year for first and last label if different years
-                if (day === 0 || day === 29) {
+                if (day === labelPositions[0] || day === labelPositions[labelPositions.length - 1]) {
                     const year = labelDate.getFullYear();
                     const currentYear = new Date().getFullYear();
                     if (year !== currentYear) {
@@ -2184,8 +2380,165 @@
             }, 16);
         }
 
+        // Initialize Flatpickr date range picker
+        let datePickerInstance = null;
+        
+        function initDateRangePicker() {
+            const now = new Date();
+            const thirtyDaysAgo = new Date(now);
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29);
+            
+            datePickerInstance = flatpickr('#dateRangePicker', {
+                mode: 'range',
+                dateFormat: 'M j, Y',
+                defaultDate: [thirtyDaysAgo, now],
+                maxDate: now,
+                showMonths: window.innerWidth > 768 ? 2 : 1,
+                onChange: function(selectedDates, dateStr) {
+                    if (selectedDates.length === 2) {
+                        // Custom date range selected
+                        const days = Math.ceil((selectedDates[1] - selectedDates[0]) / (24 * 60 * 60 * 1000)) + 1;
+                        
+                        // Update preset buttons
+                        document.querySelectorAll('.date-preset-btn').forEach(btn => {
+                            btn.classList.remove('active');
+                        });
+                        
+                        // Update label
+                        updateTemporalLabel(days, true);
+                        
+                        // Apply filter with custom range
+                        applyDateRangeFilter(selectedDates[0], selectedDates[1]);
+                    }
+                }
+            });
+        }
+        
+        function updateTemporalLabel(days, isCustom = false) {
+            const temporalLabel = document.getElementById('temporalLabel');
+            if (temporalLabel) {
+                if (days === 'all') {
+                    temporalLabel.textContent = 'All-Time';
+                } else if (isCustom) {
+                    temporalLabel.textContent = `${days}-Day`;
+                } else if (days === 365) {
+                    temporalLabel.textContent = 'Yearly';
+                } else {
+                    temporalLabel.textContent = `${days}-Day`;
+                }
+            }
+        }
+        
+        function applyDateRangeFilter(startDate, endDate) {
+            // Update global date range for heatmap calculation
+            currentDateRange = Math.ceil((endDate - startDate) / (24 * 60 * 60 * 1000)) + 1;
+            
+            // Filter appData (usage)
+            if (originalAppData) {
+                const filteredDaily = originalAppData.daily.filter(d => {
+                    const date = new Date(d.date);
+                    return date >= startDate && date <= endDate;
+                });
+                
+                // Recalculate totals
+                const totals = filteredDaily.reduce((acc, day) => ({
+                    totalCost: acc.totalCost + day.totalCost,
+                    totalTokens: acc.totalTokens + day.totalTokens,
+                    inputTokens: acc.inputTokens + day.inputTokens,
+                    outputTokens: acc.outputTokens + day.outputTokens
+                }), { totalCost: 0, totalTokens: 0, inputTokens: 0, outputTokens: 0 });
+                
+                filteredData.appData = {
+                    ...originalAppData,
+                    daily: filteredDaily,
+                    totals: totals,
+                    metadata: {
+                        ...originalAppData.metadata,
+                        totalDays: filteredDaily.length
+                    }
+                };
+            }
+            
+            // Filter executions
+            filteredData.executions = originalExecutions.filter(exec => {
+                const date = new Date(exec.timestamp);
+                return date >= startDate && date <= endDate;
+            });
+            
+            // Update global appData
+            appData = filteredData.appData;
+            
+            // Re-initialize dashboard
+            initHeaderStats();
+            initDashboard();
+            
+            // Re-animate values
+            if (appData && appData.totals) {
+                animateValue('totalCost', 0, appData.totals.totalCost, 1000);
+                document.getElementById('totalTokens').textContent = formatNumber(appData.totals.totalTokens || 0);
+            }
+        }
+        
+        // Handle preset button clicks
+        function onPresetButtonClick(event) {
+            const btn = event.target;
+            if (!btn.classList.contains('date-preset-btn')) return;
+            
+            const range = btn.dataset.range;
+            
+            // Update active state
+            document.querySelectorAll('.date-preset-btn').forEach(b => {
+                b.classList.remove('active');
+            });
+            btn.classList.add('active');
+            
+            const now = new Date();
+            now.setHours(23, 59, 59, 999);
+            let startDate;
+            
+            if (range === 'all') {
+                startDate = new Date(0);
+                currentDateRange = 'all';
+                updateTemporalLabel('all');
+            } else {
+                const days = parseInt(range);
+                currentDateRange = days;
+                startDate = new Date(now);
+                startDate.setDate(startDate.getDate() - (days - 1));
+                startDate.setHours(0, 0, 0, 0);
+                updateTemporalLabel(days);
+            }
+            
+            // Update date picker display
+            if (range !== 'all') {
+                datePickerInstance.setDate([startDate, now]);
+            } else {
+                datePickerInstance.setDate([]);
+                datePickerInstance.input.value = 'All Time';
+            }
+            
+            // Apply filter
+            if (range === 'all') {
+                filterDataByDateRange('all');
+                appData = filteredData.appData;
+                initHeaderStats();
+                initDashboard();
+                if (appData && appData.totals) {
+                    animateValue('totalCost', 0, appData.totals.totalCost, 1000);
+                    document.getElementById('totalTokens').textContent = formatNumber(appData.totals.totalTokens || 0);
+                }
+            } else {
+                applyDateRangeFilter(startDate, now);
+            }
+        }
+        
         // Initialize on load
         window.addEventListener('DOMContentLoaded', () => {
+            // Initialize date picker
+            initDateRangePicker();
+            
+            // Set up preset button listeners
+            document.querySelector('.date-range-selector').addEventListener('click', onPresetButtonClick);
             initHeaderStats();
             initDashboard();
             
