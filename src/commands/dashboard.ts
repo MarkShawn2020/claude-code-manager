@@ -93,6 +93,10 @@ interface UnifiedDashboardData {
   };
   usage?: ProcessedUsageData;
   executions?: any[];
+  executionStats?: {
+    dailyStats?: any[];
+    totalCount?: number;
+  };
 }
 
 interface DataFreshness {
@@ -287,7 +291,7 @@ function processUsageData(rawData: UsageData): ProcessedUsageData {
   };
 }
 
-function loadProjectsData(): { projects: ProcessedProject[], executions: any[] } | null {
+function loadProjectsData(): { projects: ProcessedProject[], executions: any[], executionStats?: any } | null {
   try {
     // Load Claude data file
     const homeDir = os.homedir();
@@ -321,7 +325,7 @@ function loadProjectsData(): { projects: ProcessedProject[], executions: any[] }
       });
     
     // Load execution data from SQLite database
-    let executionData: any[] = [];
+    let executionData: any = { executions: [], dailyStats: [], totalCount: 0 };
     try {
       const Database = require('better-sqlite3');
       const claudeDbPath = path.join(homeDir, '.claude', 'db.sql');
@@ -330,6 +334,27 @@ function loadProjectsData(): { projects: ProcessedProject[], executions: any[] }
         const db = new Database(claudeDbPath, { readonly: true });
         
         try {
+          // First, get aggregated stats from all executions
+          const statsStmt = db.prepare(`
+            SELECT 
+              date(timestamp) as day,
+              COUNT(*) as count
+            FROM executions 
+            WHERE timestamp >= datetime('now', '-90 days')
+            GROUP BY day
+          `);
+          
+          const dailyStats = statsStmt.all();
+          
+          // Get total count
+          const countStmt = db.prepare(`
+            SELECT COUNT(*) as total
+            FROM executions
+            WHERE timestamp >= datetime('now', '-90 days')
+          `);
+          const totalCount = countStmt.get().total;
+          
+          // Get limited recent executions for timeline display
           const stmt = db.prepare(`
             SELECT 
               session_id,
@@ -342,11 +367,15 @@ function loadProjectsData(): { projects: ProcessedProject[], executions: any[] }
               error_message,
               created_at
             FROM executions 
-            ORDER BY timestamp DESC 
-            LIMIT 1000
+            ORDER BY timestamp DESC
+            LIMIT 500
           `);
           
-          executionData = stmt.all();
+          executionData = {
+            executions: stmt.all(),
+            dailyStats: dailyStats,
+            totalCount: totalCount
+          };
         } catch (err) {
           console.warn(chalk.yellow('Warning: Could not load execution data from database'));
         } finally {
@@ -357,7 +386,7 @@ function loadProjectsData(): { projects: ProcessedProject[], executions: any[] }
       console.warn(chalk.yellow('Warning: Could not access Claude execution database'));
     }
     
-    return { projects, executions: executionData };
+    return { projects, executions: executionData.executions || [], executionStats: { dailyStats: executionData.dailyStats, totalCount: executionData.totalCount } };
   } catch (error) {
     console.error(chalk.red('Error loading projects data:'), error);
     return null;
@@ -528,6 +557,7 @@ export async function dashboardCommand(options: { export?: string; format?: stri
         }
       };
       unifiedData.executions = executions;
+      unifiedData.executionStats = (projectsResult as any).executionStats;
     }
     
     // Get usage data (with smart caching and auto-refresh)

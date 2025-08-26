@@ -239,10 +239,10 @@
 
         .calendar-grid {
             display: grid;
-            grid-template-columns: 30px repeat(53, 1fr);
-            grid-template-rows: repeat(8, 1fr);
+            grid-template-columns: 30px repeat(14, 15px); /* 14 weeks for ~90 days */
+            grid-template-rows: 15px repeat(7, 15px);
             gap: 3px;
-            min-width: 900px;
+            min-width: 300px;
         }
 
         .calendar-month-label {
@@ -263,11 +263,14 @@
         }
 
         .calendar-cell {
-            width: 12px;
-            height: 12px;
+            width: 100%;
+            height: 100%;
+            min-width: 12px;
+            min-height: 12px;
             border-radius: 2px;
             cursor: pointer;
             transition: all 0.2s ease;
+            background: var(--cloud-light); /* Default background */
         }
 
         .calendar-cell:hover {
@@ -977,7 +980,6 @@
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/date-fns@2.30.0/index.min.js"></script>
 </head>
 <body>
     <!-- Enhanced Header -->
@@ -1388,7 +1390,10 @@
             const usage = dashboardData.usage || {};
             
             document.getElementById('total-projects').textContent = projects.length;
-            document.getElementById('total-executions').textContent = executions.length.toLocaleString();
+            // Use total count from stats if available, otherwise use array length
+            const executionStats = dashboardData.executionStats || {};
+            const totalExecutions = executionStats.totalCount || executions.length;
+            document.getElementById('total-executions').textContent = totalExecutions.toLocaleString();
             document.getElementById('total-cost').textContent = formatCurrency(usage.totals?.totalCost || 0);
             document.getElementById('current-streak').textContent = calculateStreak(executions);
         }
@@ -1448,32 +1453,54 @@
             if (!calendar) return;
             
             const executions = dashboardData.executions || [];
-            const today = new Date();
-            const yearAgo = new Date(today);
-            yearAgo.setFullYear(yearAgo.getFullYear() - 1);
+            const executionStats = dashboardData.executionStats || {};
             
-            // Group executions by date
+            // Use aggregated daily stats if available
             const activityByDate = {};
-            executions.forEach(exec => {
-                const date = new Date(exec.timestamp).toDateString();
-                activityByDate[date] = (activityByDate[date] || 0) + 1;
-            });
+            
+            if (executionStats.dailyStats && executionStats.dailyStats.length > 0) {
+                // Use pre-aggregated daily stats for better performance
+                executionStats.dailyStats.forEach(stat => {
+                    const date = new Date(stat.day + ' 00:00:00').toDateString();
+                    activityByDate[date] = stat.count;
+                });
+                console.log('Using aggregated stats, total days:', executionStats.dailyStats.length);
+                console.log('Total executions:', executionStats.totalCount);
+            } else {
+                // Fallback to computing from executions array
+                executions.forEach(exec => {
+                    if (exec.timestamp) {
+                        const date = new Date(exec.timestamp).toDateString();
+                        activityByDate[date] = (activityByDate[date] || 0) + 1;
+                    }
+                });
+                console.log('Computed from executions:', executions.length);
+            }
+            
+            console.log('Activity by date:', activityByDate);
+            console.log('Number of days with activity:', Object.keys(activityByDate).length);
+            
+            const today = new Date();
+            const startDate = new Date(today);
+            startDate.setDate(startDate.getDate() - 90); // Show last 90 days
             
             // Find max activity for normalization
             const maxActivity = Math.max(...Object.values(activityByDate), 1);
+            console.log('Max activity:', maxActivity);
             
             // Generate calendar grid
             let html = '';
             
             // Month labels
             const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            let currentMonth = yearAgo.getMonth();
+            let currentMonth = startDate.getMonth();
             let monthStartCol = 2;
             
-            for (let week = 0; week < 53; week++) {
-                const weekDate = new Date(yearAgo);
+            const totalWeeks = Math.ceil(90 / 7); // About 13 weeks for 90 days
+            for (let week = 0; week < totalWeeks; week++) {
+                const weekDate = new Date(startDate);
                 weekDate.setDate(weekDate.getDate() + week * 7);
-                if (weekDate.getMonth() !== currentMonth) {
+                if (weekDate.getMonth() !== currentMonth && weekDate <= today) {
                     html += `<div class="calendar-month-label" style="grid-column: ${monthStartCol + week}">${months[weekDate.getMonth()]}</div>`;
                     currentMonth = weekDate.getMonth();
                 }
@@ -1486,9 +1513,10 @@
             });
             
             // Generate cells for each day
-            for (let week = 0; week < 53; week++) {
+            // Use totalWeeks already declared above
+            for (let week = 0; week < totalWeeks; week++) {
                 for (let day = 0; day < 7; day++) {
-                    const cellDate = new Date(yearAgo);
+                    const cellDate = new Date(startDate);
                     cellDate.setDate(cellDate.getDate() + week * 7 + day);
                     
                     if (cellDate <= today) {
