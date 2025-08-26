@@ -287,14 +287,18 @@
         }
         
         .timeline-months {
-            display: grid;
-            grid-template-columns: repeat(12, 1fr);
+            display: flex;
+            justify-content: space-between;
             font-size: 0.65rem;
             color: var(--text-faded);
+            padding: 0.5rem 30px 0 30px;
+            border-top: 1px solid rgba(135, 134, 127, 0.2);
+            margin-top: 0.25rem;
+        }
+        
+        .timeline-months span {
+            flex: 1;
             text-align: center;
-            padding: 0.5rem 0 0;
-            border-top: 1px solid var(--border);
-            margin-top: 0.5rem;
         }
         
         .timeline-card .cost-curve-container {
@@ -309,11 +313,21 @@
         
         .timeline-card .heatmap-wrapper {
             height: auto;
+            padding: 0;
         }
         
         .timeline-card .heatmap-grid {
             height: auto;
             aspect-ratio: 52 / 7;
+        }
+        
+        .timeline-card .heatmap-legend {
+            margin-top: 0.25rem;
+        }
+        
+        .timeline-card .heatmap-days {
+            width: 30px;
+            font-size: 0.6rem;
         }
 
         /* Hero Metric Card */
@@ -437,22 +451,6 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 0.3rem;
-        }
-
-        .heatmap-months {
-            display: grid;
-            grid-template-columns: repeat(52, 1fr);
-            font-size: 0.65rem;
-            color: var(--text-faded);
-            height: 15px;
-            padding: 0 2px;
-            gap: 1.5px;
-        }
-        
-        .heatmap-months span {
-            white-space: nowrap;
-            overflow: hidden;
         }
 
         .heatmap-grid {
@@ -880,7 +878,6 @@
                                     <div class="day-label">Sun</div>
                                 </div>
                                 <div class="heatmap-content">
-                                    <div class="heatmap-months" id="heatmapMonths"></div>
                                     <div class="heatmap-grid" id="activityHeatmap"></div>
                                 </div>
                             </div>
@@ -897,6 +894,9 @@
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- Shared Timeline Months -->
+                    <div class="timeline-months" id="timelineMonths"></div>
                 </div>
             </div>
 
@@ -994,7 +994,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         // Data will be injected here by the backend
-        const DATA = /*DATA_PLACEHOLDER*/null;
+        const DATA = /*DATA_PLACEHOLDER*/;
 
         // Fallback sample data for development/testing
         const sampleData = {
@@ -1036,7 +1036,7 @@
         };
 
         // Use real data if available, otherwise use sample data
-        const appData = DATA || sampleData;
+        const appData = DATA?.usage || DATA || sampleData;
 
         // Format functions
         function formatCurrency(value) {
@@ -1088,11 +1088,13 @@
             document.getElementById('costTrend').textContent = `${trendPercent > 0 ? '↑' : '↓'} ${Math.abs(trendPercent)}% this week`;
 
             // Update project count
-            document.getElementById('projectCount').textContent = appData.metadata.totalProjects;
+            const projectCount = DATA?.projects?.metadata?.totalProjects || appData.metadata.totalProjects || 0;
+            document.getElementById('projectCount').textContent = projectCount;
             document.getElementById('projectTrend').innerHTML = '<span>↑ 8 new this week</span>';
 
-            // Update session count
-            document.getElementById('sessionCount').textContent = appData.metadata.totalSessions;
+            // Update session count  
+            const sessionCount = DATA?.projects?.metadata?.totalExecutions || appData.metadata.totalSessions || 0;
+            document.getElementById('sessionCount').textContent = sessionCount;
             document.getElementById('sessionTrend').innerHTML = '<span>↑ 23% active</span>';
 
             // Initialize Tool Usage
@@ -1191,6 +1193,12 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    layout: {
+                        padding: {
+                            top: 5,
+                            bottom: 0
+                        }
+                    },
                     plugins: {
                         legend: { display: false },
                         tooltip: {
@@ -1211,14 +1219,7 @@
                         x: {
                             grid: { display: false },
                             ticks: { 
-                                color: '#87867F', 
-                                font: { size: 10 },
-                                maxRotation: 0,
-                                autoSkip: true,
-                                maxTicksLimit: 12,
-                                callback: function(value, index) {
-                                    return this.getLabelForValue(value);
-                                }
+                                display: false
                             }
                         },
                         y: {
@@ -1242,9 +1243,8 @@
         // Generate Activity Heatmap
         function generateHeatmap() {
             const heatmap = document.getElementById('activityHeatmap');
-            const monthsContainer = document.getElementById('heatmapMonths');
+            const timelineMonths = document.getElementById('timelineMonths');
             heatmap.innerHTML = '';
-            monthsContainer.innerHTML = '';
             
             // Create a map for quick data lookup
             const dataMap = new Map();
@@ -1262,25 +1262,23 @@
             const startDate = new Date(today);
             startDate.setDate(startDate.getDate() - 364); // 52 weeks ago
             
-            // Track months for labels
-            let lastMonth = -1;
+            // Generate shared month labels
             const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
                               'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const monthsSet = new Set();
+            
+            // Clear and populate timeline months
+            if (timelineMonths && timelineMonths.innerHTML === '') {
+                for (let i = 0; i < 12; i++) {
+                    const monthDate = new Date(startDate);
+                    monthDate.setMonth(monthDate.getMonth() + i);
+                    const monthLabel = document.createElement('span');
+                    monthLabel.textContent = monthNames[monthDate.getMonth()];
+                    timelineMonths.appendChild(monthLabel);
+                }
+            }
             
             for (let week = 0; week < 52; week++) {
-                // Add month labels
-                const weekStartDate = new Date(startDate);
-                weekStartDate.setDate(weekStartDate.getDate() + (week * 7));
-                const month = weekStartDate.getMonth();
-                
-                if (month !== lastMonth) {
-                    const monthLabel = document.createElement('span');
-                    monthLabel.textContent = monthNames[month];
-                    monthLabel.style.gridColumn = week + 1;
-                    monthsContainer.appendChild(monthLabel);
-                    lastMonth = month;
-                }
-                
                 for (let day = 0; day < 7; day++) {
                     const cell = document.createElement('div');
                     cell.className = 'heatmap-cell';
@@ -1440,10 +1438,10 @@
             initDashboard();
             
             // Animate values
-            if (appData) {
+            if (appData && appData.totals) {
                 animateValue('totalCost', 0, appData.totals.totalCost, 1000);
-                animateValue('projectCount', 0, appData.metadata.totalProjects, 1000);
-                animateValue('sessionCount', 0, appData.metadata.totalSessions, 1000);
+                animateValue('projectCount', 0, DATA?.projects?.metadata?.totalProjects || appData.metadata.totalProjects || 0, 1000);
+                animateValue('sessionCount', 0, DATA?.projects?.metadata?.totalExecutions || appData.metadata.totalSessions || 0, 1000);
             }
         });
     </script>

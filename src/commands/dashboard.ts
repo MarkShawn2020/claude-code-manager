@@ -394,15 +394,15 @@ function loadProjectsData(): { projects: ProcessedProject[], executions: any[], 
 }
 
 async function generateDashboard(data: UnifiedDashboardData): Promise<void> {
-  // Read the unified HTML template
-  const templatePath = path.join(__dirname, '../templates/unified-dashboard.html');
+  // Read the bento HTML template
+  const templatePath = path.join(__dirname, '../templates/bento-dashboard.html');
   let template: string;
   
   try {
     template = fs.readFileSync(templatePath, 'utf8');
   } catch (error) {
-    console.error(chalk.red('Error: Could not find unified dashboard template'));
-    console.error(chalk.yellow('Make sure the template exists at: src/templates/unified-dashboard.html'));
+    console.error(chalk.red('Error: Could not find bento dashboard template'));
+    console.error(chalk.yellow('Make sure the template exists at: src/templates/bento-dashboard.html'));
     process.exit(1);
   }
 

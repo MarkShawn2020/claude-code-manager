@@ -403,6 +403,7 @@
         .bento-2x2 { grid-column: span 2; grid-row: span 2; }
         .bento-3x1 { grid-column: span 3; }
         .bento-4x1 { grid-column: span 4; }
+        .bento-4x2 { grid-column: span 4; grid-row: span 2; }
         
         /* Bento content styles */
         .bento-header {
@@ -451,6 +452,71 @@
         .bento-chart canvas {
             max-width: 100%;
             max-height: 100%;
+        }
+        
+        /* Unified Timeline Styles */
+        #unified-timeline .timeline-container {
+            display: flex;
+            flex-direction: column;
+            height: calc(100% - 50px);
+            padding: var(--spacing-s);
+            gap: 0.25rem;
+        }
+        
+        #unified-timeline .timeline-section {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        
+        #unified-timeline .section-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text-faded);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        #unified-timeline .cost-curve-container {
+            height: 70px;
+            position: relative;
+        }
+        
+        #unified-timeline .activity-heatmap-container {
+            height: 50px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #unified-timeline .heatmap-grid {
+            display: grid;
+            grid-template-columns: repeat(90, 1fr);
+            grid-template-rows: repeat(7, 1fr);
+            gap: 1px;
+            height: 100%;
+            width: 100%;
+        }
+        
+        #unified-timeline .heatmap-cell {
+            background: var(--cloud-light);
+            border-radius: 1px;
+            transition: transform 0.2s ease;
+            cursor: pointer;
+        }
+        
+        #unified-timeline .heatmap-cell:hover {
+            transform: scale(1.2);
+            z-index: 10;
+            position: relative;
+        }
+        
+        #unified-timeline .timeline-months {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.625rem;
+            color: var(--text-faded);
+            padding: 0 2px;
+            margin-top: auto;
         }
         
         /* Special bento items */
@@ -1196,6 +1262,7 @@
             .bento-2x1 { grid-column: span 2; }
             .bento-2x2 { grid-column: span 3; grid-row: span 2; }
             .bento-4x1 { grid-column: span 3; }
+            .bento-4x2 { grid-column: span 3; grid-row: span 2; }
             
             .charts-grid {
                 grid-template-columns: 1fr;
@@ -1230,6 +1297,7 @@
             .bento-2x1 { grid-column: span 2; }
             .bento-2x2 { grid-column: span 2; grid-row: span 2; }
             .bento-4x1 { grid-column: span 2; }
+            .bento-4x2 { grid-column: span 2; grid-row: span 2; }
             
             .bento-value {
                 font-size: 1.25rem;
@@ -1939,25 +2007,33 @@
             document.getElementById('bento-efficiency').textContent = formatCurrency(efficiency);
             
             // Render mini charts
-            renderBentoCostChart();
+            renderUnifiedTimeline();
             renderBentoToolsChart();
         }
         
-        // Bento Cost Chart
-        function renderBentoCostChart() {
+        // Unified Timeline Functions
+        function renderUnifiedTimeline() {
+            renderTimelineCostChart();
+            renderTimelineHeatmap();
+            renderTimelineMonths();
+        }
+        
+        // Timeline Cost Chart
+        function renderTimelineCostChart() {
             const usage = dashboardData.usage || {};
             const daily = usage.daily || [];
-            const last7Days = daily.slice(-7);
+            const last90Days = daily.slice(-90);
             
             const ctx = document.getElementById('bento-cost-chart');
-            if (!ctx || last7Days.length === 0) return;
+            if (!ctx) return;
             
-            const labels = last7Days.map(d => {
-                const date = new Date(d.date);
-                return date.toLocaleDateString('en-US', { weekday: 'short' });
-            });
-            
-            const costData = last7Days.map(d => d.totalCost || 0);
+            // Aggregate data by week for cleaner visualization
+            const weeklyData = [];
+            for (let i = 0; i < last90Days.length; i += 7) {
+                const weekSlice = last90Days.slice(i, i + 7);
+                const weekCost = weekSlice.reduce((sum, d) => sum + (d.totalCost || 0), 0);
+                weeklyData.push(weekCost);
+            }
             
             // Destroy existing chart if any
             if (state.bentoCharts.cost) {
@@ -1967,15 +2043,14 @@
             state.bentoCharts.cost = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: labels,
+                    labels: weeklyData.map(() => ''),
                     datasets: [{
-                        data: costData,
+                        data: weeklyData,
                         borderColor: '#D97757',
                         backgroundColor: 'rgba(217, 119, 87, 0.1)',
                         tension: 0.4,
-                        borderWidth: 2,
-                        pointRadius: 3,
-                        pointBackgroundColor: '#D97757',
+                        borderWidth: 1.5,
+                        pointRadius: 0,
                         fill: true
                     }]
                 },
@@ -2018,6 +2093,98 @@
                     }
                 }
             });
+        }
+        
+        // Timeline Activity Heatmap
+        function renderTimelineHeatmap() {
+            const container = document.getElementById('bento-heatmap-grid');
+            if (!container) return;
+            
+            const executions = dashboardData.executions || [];
+            const executionStats = dashboardData.executionStats || {};
+            
+            // Use aggregated daily stats if available
+            const activityByDate = {};
+            
+            if (executionStats.dailyStats && executionStats.dailyStats.length > 0) {
+                executionStats.dailyStats.forEach(stat => {
+                    const date = new Date(stat.day + ' 00:00:00').toDateString();
+                    activityByDate[date] = stat.count;
+                });
+            } else {
+                executions.forEach(exec => {
+                    if (exec.timestamp) {
+                        const date = new Date(exec.timestamp).toDateString();
+                        activityByDate[date] = (activityByDate[date] || 0) + 1;
+                    }
+                });
+            }
+            
+            const today = new Date();
+            const startDate = new Date(today);
+            startDate.setDate(startDate.getDate() - 90); // Show last 90 days
+            
+            // Find max activity for normalization
+            const maxActivity = Math.max(...Object.values(activityByDate), 1);
+            
+            // Clear container
+            container.innerHTML = '';
+            
+            // Generate cells for 90 days (13 weeks)
+            for (let week = 0; week < 13; week++) {
+                for (let day = 0; day < 7; day++) {
+                    const date = new Date(startDate);
+                    date.setDate(startDate.getDate() + (week * 7) + day);
+                    
+                    if (date <= today) {
+                        const dateStr = date.toDateString();
+                        const count = activityByDate[dateStr] || 0;
+                        
+                        const cell = document.createElement('div');
+                        cell.className = 'heatmap-cell';
+                        
+                        // Calculate intensity
+                        const intensity = count / maxActivity;
+                        let bgColor = '#E8E6DC'; // Default light color
+                        
+                        if (count === 0) {
+                            bgColor = '#E8E6DC';
+                        } else if (intensity < 0.25) {
+                            bgColor = '#D9C2B8';
+                        } else if (intensity < 0.5) {
+                            bgColor = '#D9A89E';
+                        } else if (intensity < 0.75) {
+                            bgColor = '#D97757';
+                        } else {
+                            bgColor = '#CC5A3C';
+                        }
+                        
+                        cell.style.backgroundColor = bgColor;
+                        cell.title = `${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}: ${count} executions`;
+                        container.appendChild(cell);
+                    }
+                }
+            }
+        }
+        
+        // Timeline Month Labels
+        function renderTimelineMonths() {
+            const container = document.getElementById('timeline-months');
+            if (!container) return;
+            
+            const today = new Date();
+            const monthLabels = [];
+            
+            // Generate month labels for the last 3 months
+            for (let i = 2; i >= 0; i--) {
+                const date = new Date(today);
+                date.setMonth(date.getMonth() - i);
+                monthLabels.push(date.toLocaleDateString('en-US', { month: 'short' }));
+            }
+            
+            container.innerHTML = monthLabels.map(month => 
+                `<span class="month-label">${month}</span>`
+            ).join('');
         }
         
         // Bento Tools Chart
