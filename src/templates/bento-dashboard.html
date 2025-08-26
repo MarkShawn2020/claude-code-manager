@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Claude Code Manager - Bento Dashboard</title>
+    <title>Claude Code Manager - Professional Dashboard</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
         
@@ -31,6 +31,7 @@
             --gradient-accent: linear-gradient(135deg, #629A90 0%, #97B5D5 100%);
             --gradient-warm: linear-gradient(135deg, #D97757 0%, #C2C07D 100%);
             --gradient-cool: linear-gradient(135deg, #97B5D5 0%, #B49FD8 100%);
+            --gradient-dark: linear-gradient(135deg, #141413 0%, #3D3D3A 100%);
             
             /* Spacing */
             --gap: 1.25rem;
@@ -57,39 +58,146 @@
             overflow-x: hidden;
         }
 
-        /* Main Container */
+        /* Professional Header */
+        .professional-header {
+            background: var(--gradient-dark);
+            padding: 2rem 0;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .logo-mark {
+            width: 48px;
+            height: 48px;
+            background: var(--gradient-primary);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 1.5rem;
+            color: white;
+            box-shadow: 0 4px 16px rgba(217, 119, 87, 0.3);
+        }
+
+        .header-titles {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header-title {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: white;
+            letter-spacing: -0.5px;
+        }
+
+        .header-subtitle {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 0.1rem;
+        }
+
+        .header-nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 2.5rem;
+        }
+
+        .header-stat {
+            text-align: center;
+        }
+
+        .header-stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .header-stat-label {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .header-btn {
+            padding: 0.75rem 1.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+        }
+
+        .header-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .header-btn.primary {
+            background: var(--gradient-primary);
+            border: none;
+        }
+
+        /* Main Dashboard Container */
         .dashboard-container {
             max-width: 1400px;
             margin: 0 auto;
             padding: 2rem;
         }
 
-        /* Header */
-        .dashboard-header {
-            margin-bottom: 2.5rem;
+        /* Section Header */
+        .section-header {
+            margin-bottom: 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .header-title {
-            font-size: 2.5rem;
-            font-weight: 800;
-            background: var(--gradient-primary);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: -1px;
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-main);
         }
 
-        .header-subtitle {
+        .section-subtitle {
             font-size: 0.95rem;
             color: var(--text-faded);
             margin-top: 0.25rem;
-        }
-
-        .header-actions {
-            display: flex;
-            gap: 1rem;
         }
 
         .refresh-btn {
@@ -380,12 +488,130 @@
             box-shadow: var(--shadow-md);
         }
 
+        /* Professional Footer */
+        .professional-footer {
+            background: var(--gradient-dark);
+            margin-top: 4rem;
+            padding: 3rem 0 2rem;
+        }
+
+        .footer-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 3rem;
+            margin-bottom: 2rem;
+        }
+
+        .footer-brand {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .footer-logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            color: white;
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .footer-description {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .footer-column h4 {
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .footer-links {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .footer-link {
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+
+        .footer-link:hover {
+            color: var(--primary);
+        }
+
+        .footer-divider {
+            border: 0;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 2rem 0;
+        }
+
+        .footer-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.85rem;
+        }
+
+        .footer-social {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .social-link {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .social-link:hover {
+            background: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        /* Loading State */
+        .loading {
+            background: linear-gradient(90deg, 
+                var(--bg-oat) 25%, 
+                var(--cloud-light) 50%, 
+                var(--bg-oat) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 2s infinite;
+        }
+
         /* Responsive Design */
         @media (max-width: 1200px) {
             .bento-grid {
                 grid-template-columns: repeat(3, 1fr);
             }
             .span-4 { grid-column: span 3; }
+            .header-stats {
+                display: none;
+            }
         }
 
         @media (max-width: 900px) {
@@ -393,6 +619,9 @@
                 grid-template-columns: repeat(2, 1fr);
             }
             .span-3, .span-4 { grid-column: span 2; }
+            .footer-content {
+                grid-template-columns: 1fr 1fr;
+            }
         }
 
         @media (max-width: 600px) {
@@ -416,11 +645,20 @@
             }
             
             .header-title {
-                font-size: 1.75rem;
+                font-size: 1.25rem;
             }
             
             .hero-metric .metric-value {
                 font-size: 2.5rem;
+            }
+            
+            .footer-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-nav {
+                flex-direction: column;
+                gap: 1rem;
             }
         }
 
@@ -429,49 +667,58 @@
             0% { background-position: -200% 0; }
             100% { background-position: 200% 0; }
         }
-
-        .loading {
-            background: linear-gradient(90deg, 
-                var(--bg-oat) 25%, 
-                var(--cloud-light) 50%, 
-                var(--bg-oat) 75%);
-            background-size: 200% 100%;
-            animation: shimmer 2s infinite;
-        }
     </style>
 </head>
 <body>
+    <!-- Professional Header -->
+    <header class="professional-header">
+        <div class="header-container">
+            <div class="header-brand">
+                <div class="logo-mark">CC</div>
+                <div class="header-titles">
+                    <div class="header-title">Claude Code Manager</div>
+                    <div class="header-subtitle">Professional Analytics & Insights</div>
+                </div>
+            </div>
+            <nav class="header-nav">
+                <div class="header-stats" id="header-stats">
+                    <!-- Stats will be populated dynamically -->
+                </div>
+                <div class="header-actions">
+                    <button class="header-btn" onclick="exportData()">Export</button>
+                    <button class="header-btn primary" onclick="refreshData()">Refresh</button>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Dashboard -->
     <div class="dashboard-container">
-        <!-- Header -->
-        <header class="dashboard-header">
+        <!-- Section Header -->
+        <div class="section-header">
             <div>
-                <h1 class="header-title">Claude Code Manager</h1>
-                <p class="header-subtitle">Real-time analytics and insights</p>
+                <h1 class="section-title">Overview Dashboard</h1>
+                <p class="section-subtitle">Real-time analytics and performance metrics</p>
             </div>
-            <div class="header-actions">
-                <button class="refresh-btn" onclick="refreshData()">
-                    <span>↻ Refresh</span>
-                </button>
-            </div>
-        </header>
+        </div>
 
         <!-- Bento Grid Layout -->
         <div class="bento-grid">
             <!-- Hero Metric: Total Cost -->
             <div class="bento-card hero-metric span-2">
                 <div class="metric-label">TOTAL COST</div>
-                <div class="metric-value" id="totalCost">$2,847</div>
-                <span class="metric-change">↑ 12% this month</span>
+                <div class="metric-value" id="totalCost">--</div>
+                <span class="metric-change" id="costTrend">Calculating...</span>
             </div>
 
             <!-- Projects Count -->
             <div class="bento-card stat-card">
                 <div>
                     <div class="card-label">Projects</div>
-                    <div class="stat-value" id="projectCount">124</div>
+                    <div class="stat-value" id="projectCount">--</div>
                 </div>
-                <div class="stat-trend">
-                    <span>↑ 8 new</span>
+                <div class="stat-trend" id="projectTrend">
+                    <span>Loading...</span>
                 </div>
             </div>
 
@@ -479,10 +726,10 @@
             <div class="bento-card stat-card">
                 <div>
                     <div class="card-label">Sessions</div>
-                    <div class="stat-value" id="sessionCount">847</div>
+                    <div class="stat-value" id="sessionCount">--</div>
                 </div>
-                <div class="stat-trend">
-                    <span>↑ 23% active</span>
+                <div class="stat-trend" id="sessionTrend">
+                    <span>Loading...</span>
                 </div>
             </div>
 
@@ -514,46 +761,16 @@
             <!-- Tool Usage -->
             <div class="bento-card span-2">
                 <div class="card-label">Tool Usage Breakdown</div>
-                <div class="progress-card">
-                    <div>
-                        <div class="progress-stats">
-                            <span>Bash Commands</span>
-                            <span>68%</span>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: 68%"></div>
-                        </div>
-                    </div>
-                    <div>
-                        <div class="progress-stats">
-                            <span>File Operations</span>
-                            <span>22%</span>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: 22%"></div>
-                        </div>
-                    </div>
-                    <div>
-                        <div class="progress-stats">
-                            <span>Web Searches</span>
-                            <span>10%</span>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: 10%"></div>
-                        </div>
-                    </div>
+                <div class="progress-card" id="toolUsage">
+                    <!-- Will be populated dynamically -->
                 </div>
             </div>
 
             <!-- Top Features -->
             <div class="bento-card">
                 <div class="card-label">Top Features</div>
-                <div class="feature-tags">
-                    <span class="tag">Real-time Monitor</span>
-                    <span class="tag">Analytics</span>
-                    <span class="tag">Export</span>
-                    <span class="tag">Backup</span>
-                    <span class="tag">Memory</span>
+                <div class="feature-tags" id="topFeatures">
+                    <!-- Will be populated dynamically -->
                 </div>
             </div>
 
@@ -561,16 +778,16 @@
             <div class="bento-card">
                 <div class="card-label">Quick Actions</div>
                 <div class="quick-actions">
-                    <button class="action-btn">
+                    <button class="action-btn" onclick="exportData('json')">
                         <span>📊 Export</span>
                     </button>
-                    <button class="action-btn">
+                    <button class="action-btn" onclick="openAnalyzer()">
                         <span>🔍 Analyze</span>
                     </button>
-                    <button class="action-btn">
+                    <button class="action-btn" onclick="backupData()">
                         <span>💾 Backup</span>
                     </button>
-                    <button class="action-btn">
+                    <button class="action-btn" onclick="openSettings()">
                         <span>⚙️ Settings</span>
                     </button>
                 </div>
@@ -578,104 +795,400 @@
         </div>
     </div>
 
+    <!-- Professional Footer -->
+    <footer class="professional-footer">
+        <div class="footer-container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="footer-logo">
+                        <span style="font-size: 1.5rem;">💎</span>
+                        Claude Code Manager
+                    </div>
+                    <p class="footer-description">
+                        Advanced analytics and monitoring for Claude Code workflows.
+                        Track, analyze, and optimize your AI-powered development process.
+                    </p>
+                </div>
+                <div class="footer-column">
+                    <h4>Product</h4>
+                    <div class="footer-links">
+                        <a href="#" class="footer-link">Features</a>
+                        <a href="#" class="footer-link">Pricing</a>
+                        <a href="#" class="footer-link">Documentation</a>
+                        <a href="#" class="footer-link">API</a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h4>Resources</h4>
+                    <div class="footer-links">
+                        <a href="#" class="footer-link">Getting Started</a>
+                        <a href="#" class="footer-link">Tutorials</a>
+                        <a href="#" class="footer-link">Community</a>
+                        <a href="#" class="footer-link">Support</a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h4>Connect</h4>
+                    <div class="footer-links">
+                        <a href="#" class="footer-link">GitHub</a>
+                        <a href="#" class="footer-link">Discord</a>
+                        <a href="#" class="footer-link">Twitter</a>
+                        <a href="#" class="footer-link">LinkedIn</a>
+                    </div>
+                </div>
+            </div>
+            <hr class="footer-divider">
+            <div class="footer-bottom">
+                <div>&copy; 2024 Claude Code Manager. All rights reserved.</div>
+                <div class="footer-social">
+                    <a href="#" class="social-link">𝕏</a>
+                    <a href="#" class="social-link">◻</a>
+                    <a href="#" class="social-link">▶</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // Initialize Cost Chart
-        const ctx = document.getElementById('costChart').getContext('2d');
-        const gradient = ctx.createLinearGradient(0, 0, 0, 200);
-        gradient.addColorStop(0, 'rgba(217, 119, 87, 0.4)');
-        gradient.addColorStop(1, 'rgba(217, 119, 87, 0.01)');
+        // Data will be injected here by the backend
+        const DATA = /*DATA_PLACEHOLDER*/null;
 
-        const costChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-                datasets: [{
-                    label: 'Monthly Cost',
-                    data: [1200, 1900, 1700, 2100, 2400, 2200, 2600, 2847, 2900, 3100, 2950, 3200],
-                    borderColor: '#D97757',
-                    backgroundColor: gradient,
-                    borderWidth: 3,
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 0,
-                    pointHoverRadius: 6,
-                    pointHoverBackgroundColor: '#D97757',
-                    pointHoverBorderColor: '#fff',
-                    pointHoverBorderWidth: 2
-                }]
+        // Fallback sample data for development/testing
+        const sampleData = {
+            totals: {
+                totalCost: 2847.56,
+                totalTokens: 15234567,
+                inputTokens: 8234567,
+                outputTokens: 5000000,
+                cacheReadTokens: 1500000,
+                cacheCreationTokens: 500000
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        backgroundColor: '#141413',
-                        titleColor: '#fff',
-                        bodyColor: '#fff',
-                        padding: 12,
-                        cornerRadius: 8,
-                        displayColors: false,
-                        callbacks: {
-                            label: function(context) {
-                                return '$' + context.parsed.y.toLocaleString();
+            metadata: {
+                totalDays: 30,
+                totalProjects: 124,
+                totalSessions: 847,
+                averageDaily: {
+                    cost: 94.92,
+                    tokens: 507819
+                },
+                models: ["claude-3-opus", "claude-3-sonnet", "claude-3-haiku"],
+                dateRange: {
+                    start: "2024-01-01",
+                    end: "2024-01-30"
+                }
+            },
+            daily: Array.from({ length: 30 }, (_, i) => {
+                const date = new Date();
+                date.setDate(date.getDate() - (29 - i));
+                return {
+                    date: date.toISOString().split('T')[0],
+                    totalCost: 80 + Math.random() * 40,
+                    totalTokens: 400000 + Math.random() * 200000,
+                    inputTokens: 200000 + Math.random() * 100000,
+                    outputTokens: 150000 + Math.random() * 75000,
+                    cacheReadTokens: 40000 + Math.random() * 20000,
+                    cacheCreationTokens: 10000 + Math.random() * 5000
+                };
+            })
+        };
+
+        // Use real data if available, otherwise use sample data
+        const appData = DATA || sampleData;
+
+        // Format functions
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(value);
+        }
+
+        function formatNumber(value) {
+            if (value >= 1000000) {
+                return (value / 1000000).toFixed(1) + 'M';
+            } else if (value >= 1000) {
+                return (value / 1000).toFixed(1) + 'K';
+            }
+            return value.toLocaleString();
+        }
+
+        // Initialize Header Stats
+        function initHeaderStats() {
+            const headerStats = document.getElementById('header-stats');
+            headerStats.innerHTML = `
+                <div class="header-stat">
+                    <div class="header-stat-value">${formatCurrency(appData.totals.totalCost)}</div>
+                    <div class="header-stat-label">Total Cost</div>
+                </div>
+                <div class="header-stat">
+                    <div class="header-stat-value">${formatNumber(appData.totals.totalTokens)}</div>
+                    <div class="header-stat-label">Tokens</div>
+                </div>
+                <div class="header-stat">
+                    <div class="header-stat-value">${appData.metadata.totalDays}</div>
+                    <div class="header-stat-label">Days</div>
+                </div>
+            `;
+        }
+
+        // Initialize Dashboard Metrics
+        function initDashboard() {
+            // Update hero metric
+            document.getElementById('totalCost').textContent = formatCurrency(appData.totals.totalCost);
+            
+            // Calculate trend
+            const lastWeekAvg = appData.daily.slice(-7).reduce((acc, d) => acc + d.totalCost, 0) / 7;
+            const prevWeekAvg = appData.daily.slice(-14, -7).reduce((acc, d) => acc + d.totalCost, 0) / 7;
+            const trendPercent = ((lastWeekAvg - prevWeekAvg) / prevWeekAvg * 100).toFixed(1);
+            document.getElementById('costTrend').textContent = `${trendPercent > 0 ? '↑' : '↓'} ${Math.abs(trendPercent)}% this week`;
+
+            // Update project count
+            document.getElementById('projectCount').textContent = appData.metadata.totalProjects;
+            document.getElementById('projectTrend').innerHTML = '<span>↑ 8 new this week</span>';
+
+            // Update session count
+            document.getElementById('sessionCount').textContent = appData.metadata.totalSessions;
+            document.getElementById('sessionTrend').innerHTML = '<span>↑ 23% active</span>';
+
+            // Initialize Tool Usage
+            initToolUsage();
+            
+            // Initialize Top Features
+            initTopFeatures();
+            
+            // Initialize Charts
+            initCostChart();
+            generateHeatmap();
+        }
+
+        // Initialize Tool Usage Progress Bars
+        function initToolUsage() {
+            const container = document.getElementById('toolUsage');
+            const tools = [
+                { name: 'Bash Commands', percentage: 68, color: 'var(--gradient-accent)' },
+                { name: 'File Operations', percentage: 22, color: 'var(--gradient-warm)' },
+                { name: 'Web Searches', percentage: 10, color: 'var(--gradient-cool)' }
+            ];
+
+            container.innerHTML = tools.map(tool => `
+                <div>
+                    <div class="progress-stats">
+                        <span>${tool.name}</span>
+                        <span>${tool.percentage}%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${tool.percentage}%; background: ${tool.color}"></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Initialize Top Features
+        function initTopFeatures() {
+            const container = document.getElementById('topFeatures');
+            const features = ['Real-time Monitor', 'Analytics', 'Export', 'Backup', 'Memory'];
+            
+            container.innerHTML = features.map(feature => 
+                `<span class="tag">${feature}</span>`
+            ).join('');
+        }
+
+        // Initialize Cost Chart
+        function initCostChart() {
+            const ctx = document.getElementById('costChart').getContext('2d');
+            const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+            gradient.addColorStop(0, 'rgba(217, 119, 87, 0.4)');
+            gradient.addColorStop(1, 'rgba(217, 119, 87, 0.01)');
+
+            const labels = appData.daily.map(d => {
+                const date = new Date(d.date);
+                return (date.getMonth() + 1) + '/' + date.getDate();
+            });
+
+            const data = appData.daily.map(d => d.totalCost);
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Daily Cost',
+                        data: data,
+                        borderColor: '#D97757',
+                        backgroundColor: gradient,
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 6,
+                        pointHoverBackgroundColor: '#D97757',
+                        pointHoverBorderColor: '#fff',
+                        pointHoverBorderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#141413',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            padding: 12,
+                            cornerRadius: 8,
+                            displayColors: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return '$' + context.parsed.y.toFixed(2);
+                                }
                             }
                         }
-                    }
-                },
-                scales: {
-                    x: {
-                        grid: { display: false },
-                        ticks: { color: '#87867F', font: { size: 11 } }
                     },
-                    y: {
-                        grid: { 
-                            color: 'rgba(0, 0, 0, 0.05)',
-                            drawBorder: false
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { 
+                                color: '#87867F', 
+                                font: { size: 11 },
+                                maxRotation: 0,
+                                autoSkip: true,
+                                maxTicksLimit: 10
+                            }
                         },
-                        ticks: { 
-                            color: '#87867F',
-                            font: { size: 11 },
-                            callback: function(value) {
-                                return '$' + value.toLocaleString();
+                        y: {
+                            grid: { 
+                                color: 'rgba(0, 0, 0, 0.05)',
+                                drawBorder: false
+                            },
+                            ticks: { 
+                                color: '#87867F',
+                                font: { size: 11 },
+                                callback: function(value) {
+                                    return '$' + value;
+                                }
                             }
                         }
                     }
                 }
-            }
-        });
+            });
+        }
 
         // Generate Activity Heatmap
         function generateHeatmap() {
             const heatmap = document.getElementById('activityHeatmap');
             heatmap.innerHTML = '';
             
+            // Generate heatmap based on actual daily data
+            const today = new Date();
+            const startDate = new Date(today);
+            startDate.setDate(startDate.getDate() - 364); // 52 weeks ago
+            
             for (let week = 0; week < 52; week++) {
                 for (let day = 0; day < 7; day++) {
                     const cell = document.createElement('div');
                     cell.className = 'heatmap-cell';
                     
-                    // Generate random activity level with bias towards recent weeks
-                    const recencyBias = week > 40 ? 2 : 1;
-                    const level = Math.floor(Math.random() * 5 * recencyBias) % 5;
+                    const cellDate = new Date(startDate);
+                    cellDate.setDate(cellDate.getDate() + (week * 7 + day));
+                    
+                    // Find matching data
+                    const dayData = appData.daily.find(d => {
+                        const dDate = new Date(d.date);
+                        return dDate.toDateString() === cellDate.toDateString();
+                    });
+                    
+                    // Calculate activity level based on token usage
+                    let level = 0;
+                    if (dayData) {
+                        const maxTokens = Math.max(...appData.daily.map(d => d.totalTokens));
+                        const percentage = (dayData.totalTokens / maxTokens) * 100;
+                        level = percentage > 80 ? 4 : percentage > 60 ? 3 : percentage > 40 ? 2 : percentage > 20 ? 1 : 0;
+                    }
+                    
                     cell.classList.add(`level-${level}`);
                     
-                    // Add tooltip
-                    const date = new Date();
-                    date.setDate(date.getDate() - ((51 - week) * 7 + (6 - day)));
-                    const contributions = level > 0 ? Math.floor(Math.random() * 20) + 1 : 0;
-                    
-                    cell.title = `${date.toLocaleDateString()}: ${contributions} contributions`;
+                    const dateStr = cellDate.toLocaleDateString();
+                    const tokens = dayData ? formatNumber(dayData.totalTokens) : '0';
+                    cell.title = `${dateStr}: ${tokens} tokens`;
                     
                     heatmap.appendChild(cell);
                 }
             }
         }
 
+        // Export data function
+        function exportData(format = 'json') {
+            const dataStr = format === 'json' 
+                ? JSON.stringify(appData, null, 2)
+                : generateCSV();
+            
+            const blob = new Blob([dataStr], { 
+                type: format === 'json' ? 'application/json' : 'text/csv' 
+            });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ccm-data-${new Date().toISOString().split('T')[0]}.${format}`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function generateCSV() {
+            const headers = ['Date', 'Total Cost', 'Total Tokens', 'Input Tokens', 'Output Tokens'];
+            const rows = appData.daily.map(day => [
+                day.date,
+                day.totalCost.toFixed(2),
+                day.totalTokens,
+                day.inputTokens,
+                day.outputTokens
+            ]);
+            
+            return [headers, ...rows].map(row => row.join(',')).join('\n');
+        }
+
+        // Refresh data function
+        function refreshData() {
+            // Add loading states
+            document.querySelectorAll('.stat-value, .metric-value').forEach(el => {
+                el.classList.add('loading');
+            });
+            
+            // Simulate data refresh
+            setTimeout(() => {
+                document.querySelectorAll('.stat-value, .metric-value').forEach(el => {
+                    el.classList.remove('loading');
+                });
+                
+                // Re-initialize with updated data
+                initDashboard();
+            }, 1000);
+        }
+
+        // Action button handlers
+        function openAnalyzer() {
+            console.log('Opening analyzer...');
+        }
+
+        function backupData() {
+            console.log('Creating backup...');
+        }
+
+        function openSettings() {
+            console.log('Opening settings...');
+        }
+
         // Animate numbers on load
         function animateValue(id, start, end, duration) {
             const element = document.getElementById(id);
+            if (!element) return;
+            
             const range = end - start;
             const increment = range / (duration / 16);
             let current = start;
@@ -688,43 +1201,24 @@
                 }
                 
                 if (id === 'totalCost') {
-                    element.textContent = '$' + Math.floor(current).toLocaleString();
+                    element.textContent = formatCurrency(current);
                 } else {
-                    element.textContent = Math.floor(current).toLocaleString();
+                    element.textContent = Math.floor(current);
                 }
             }, 16);
         }
 
-        // Refresh data function
-        function refreshData() {
-            // Add loading animation
-            document.querySelectorAll('.stat-value, .metric-value').forEach(el => {
-                el.classList.add('loading');
-            });
-            
-            setTimeout(() => {
-                // Remove loading animation and update values
-                document.querySelectorAll('.stat-value, .metric-value').forEach(el => {
-                    el.classList.remove('loading');
-                });
-                
-                // Regenerate heatmap
-                generateHeatmap();
-                
-                // Update chart with new data
-                costChart.data.datasets[0].data = costChart.data.datasets[0].data.map(
-                    val => val + (Math.random() - 0.5) * 200
-                );
-                costChart.update();
-            }, 1000);
-        }
-
         // Initialize on load
         window.addEventListener('DOMContentLoaded', () => {
-            generateHeatmap();
-            animateValue('totalCost', 0, 2847, 1000);
-            animateValue('projectCount', 0, 124, 1000);
-            animateValue('sessionCount', 0, 847, 1000);
+            initHeaderStats();
+            initDashboard();
+            
+            // Animate values
+            if (appData) {
+                animateValue('totalCost', 0, appData.totals.totalCost, 1000);
+                animateValue('projectCount', 0, appData.metadata.totalProjects, 1000);
+                animateValue('sessionCount', 0, appData.metadata.totalSessions, 1000);
+            }
         });
     </script>
 </body>
