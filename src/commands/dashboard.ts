@@ -354,67 +354,27 @@ function loadProjectsData(): { projects: ProcessedProject[], executions: any[], 
           `);
           const totalCount = countStmt.get().total;
           
-          // Get executions ensuring we capture multiple repositories
-          // Get top 20 repositories to ensure we have at least 10 unique ones after feature branch consolidation
-          const topReposStmt = db.prepare(`
-            SELECT DISTINCT project_path, MAX(timestamp) as last_activity
+          // Get ALL executions from the last 30 days for complete repository activity
+          const stmt = db.prepare(`
+            SELECT 
+              session_id,
+              timestamp,
+              tool_name,
+              tool_input,
+              tool_response,
+              project_path,
+              success,
+              error_message,
+              created_at
             FROM executions 
             WHERE project_path IS NOT NULL
-            GROUP BY project_path
-            ORDER BY last_activity DESC
-            LIMIT 20
+              AND timestamp >= datetime('now', '-30 days')
+            ORDER BY timestamp DESC
           `);
-          const topRepos = topReposStmt.all();
-          console.log(chalk.gray(`  Loading executions from ${topRepos.length} repositories...`));
+          let executions = stmt.all();
+          console.log(chalk.gray(`  Loaded ${executions.length} executions from last 30 days`));
           
-          // Load executions from each repository individually to ensure balanced representation
-          let executions = [];
-          if (topRepos.length > 0) {
-            // Load up to 200 executions from each repository (200 * 20 = 4000 max)
-            const perRepoLimit = 200;
-            
-            for (const repo of topRepos) {
-              const stmt = db.prepare(`
-                SELECT 
-                  session_id,
-                  timestamp,
-                  tool_name,
-                  tool_input,
-                  tool_response,
-                  project_path,
-                  success,
-                  error_message,
-                  created_at
-                FROM executions 
-                WHERE project_path = ?
-                  AND timestamp >= datetime('now', '-90 days')
-                ORDER BY timestamp DESC
-                LIMIT ?
-              `);
-              const repoExecutions = stmt.all(repo.project_path, perRepoLimit);
-              executions.push(...repoExecutions);
-            }
-            
-            console.log(chalk.gray(`  Loaded ${executions.length} executions from ${topRepos.length} repositories`));
-          } else {
-            // Fallback if no repos found
-            const stmt = db.prepare(`
-              SELECT 
-                session_id,
-                timestamp,
-                tool_name,
-                tool_input,
-                tool_response,
-                project_path,
-                success,
-                error_message,
-                created_at
-              FROM executions 
-              ORDER BY timestamp DESC
-              LIMIT 500
-            `);
-            executions = stmt.all();
-          }
+          // No fallback needed - if there's no data in last 30 days, show empty
           
           executionData = {
             executions: executions,

@@ -367,28 +367,27 @@
         }
 
         .repo-heatmap-wrapper {
-            flex: 1;
             display: flex;
             flex-direction: row;
             gap: 0.75rem;
             padding: 0;
             min-height: 200px;
+            align-items: stretch;
         }
 
         .repo-labels {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-around;
+            display: grid;
             font-size: 0.75rem;
             color: var(--text-faded);
             padding: 0;
+            overflow: hidden;
+            gap: 1.5px; /* Match heatmap gap */
+            align-content: stretch;
             min-width: 120px;
             max-width: 180px;
-            overflow: hidden;
         }
 
         .repo-label {
-            flex: 1;
             display: flex;
             align-items: center;
             justify-content: flex-end;
@@ -396,7 +395,6 @@
             white-space: nowrap;
             overflow: hidden;
             padding-right: 0.5rem;
-            min-height: 18px;
         }
 
         .repo-heatmap-content {
@@ -1212,83 +1210,52 @@
             repoLabels.innerHTML = '';
             dateLabels.innerHTML = '';
             
-            // Get all executions
+            // Get all executions (should be last 30 days from backend)
             const executions = DATA?.executions || [];
             
             if (executions.length === 0) {
-                heatmap.innerHTML = '<div style="text-align: center; color: var(--text-faded); padding: 2rem;">No execution data available</div>';
+                heatmap.innerHTML = '<div style="text-align: center; color: var(--text-faded); padding: 2rem;">No execution data available in the last 30 days</div>';
                 return;
             }
             
-            // Get date range from database
-            const dates = executions.map(e => new Date(e.timestamp));
-            const dataMinDate = new Date(Math.min(...dates));
-            const dataMaxDate = new Date(Math.max(...dates));
-            
-            // Calculate the display range: last 3 months or all data, whichever is larger
+            // Fixed 30-day range (in local timezone)
             const today = new Date();
-            const threeMonthsAgo = new Date(today);
-            threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+            today.setHours(23, 59, 59, 999); // End of today
+            const thirtyDaysAgo = new Date(today);
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29); // 30 days total including today
+            thirtyDaysAgo.setHours(0, 0, 0, 0); // Start of day 30 days ago
             
-            // Use the larger range between (data range) and (last 3 months)
-            const minDate = new Date(Math.min(dataMinDate.getTime(), threeMonthsAgo.getTime()));
-            const maxDate = today; // Always extend to today
+            const minDate = thirtyDaysAgo;
+            const maxDate = today;
+            const numDays = 30; // Fixed 30 days
             
             // Debug info
-            console.log('Repository Activity Timeline Date Range:', {
-                dataMinDate: dataMinDate.toISOString().split('T')[0],
-                dataMaxDate: dataMaxDate.toISOString().split('T')[0],
-                displayMinDate: minDate.toISOString().split('T')[0],
-                displayMaxDate: maxDate.toISOString().split('T')[0],
-                executions: executions.length
+            console.log('Repository Activity (Last 30 Days):', {
+                localTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                localDateRange: `${minDate.toLocaleDateString()} to ${maxDate.toLocaleDateString()}`,
+                totalExecutions: executions.length,
+                days: numDays
             });
             
-            // Calculate time span in days
-            const daySpan = Math.ceil((maxDate - minDate) / (1000 * 60 * 60 * 24)) + 1;
-            
-            // Determine appropriate time buckets based on span
-            let bucketSize = 1; // days per bucket
-            let maxBuckets = 60; // increased max buckets for better granularity
-            
-            if (daySpan > 90) {
-                // More than 3 months: use weekly buckets
-                bucketSize = 7;
-            } else if (daySpan > maxBuckets) {
-                // Between maxBuckets and 90 days: use 2-day buckets
-                bucketSize = 2;
-            }
-            // Otherwise use daily buckets
-            
-            const numBuckets = Math.ceil(daySpan / bucketSize);
-            
-            // Get all repositories with activity
-            const repoActivity = new Map();
-            const repoLastActivity = new Map();
-            const repoExecutionCount = new Map();
+            // Aggregate all repositories with activity
+            const repoTotalCounts = new Map();
+            const repoDailyActivity = new Map(); // repo -> date -> count
             
             executions.forEach(exec => {
                 if (exec.project_path) {
                     // Extract repository name from path
-                    // The database stores paths with dashes instead of slashes
                     let repoName = exec.project_path;
                     
                     // Handle different path formats
                     if (repoName.startsWith('-Applications-')) {
-                        // Application paths: -Applications-WeChat-app -> WeChat-app
                         repoName = repoName.replace(/^-Applications-/, '');
                     } else if (repoName === '-Users-mark--claude') {
-                        // Special home directory case
                         repoName = '.claude';
                     } else if (repoName.startsWith('-Users-mark-')) {
-                        // Standard user paths
-                        // Remove the prefix for paths like "-Users-mark-projects-xxx" or "-Users-mark-repos-xxx"
                         repoName = repoName.replace(/^-Users-mark-(projects-|repos-)?/, '');
                         
-                        // Handle feature branches with double dashes
-                        // Consolidate feature branches into main repository
+                        // Consolidate feature branches
                         if (repoName.includes('--')) {
-                            // Remove feature branch suffix to consolidate
-                            // e.g., "video2ppt--feats-support-mac-extension" -> "video2ppt"
                             repoName = repoName.split('--')[0];
                         }
                     }
@@ -1299,101 +1266,130 @@
                     }
                     
                     // Clean up remaining artifacts
-                    repoName = repoName.replace(/^-+|-+$/g, ''); // Remove leading/trailing dashes
+                    repoName = repoName.replace(/^-+|-+$/g, '');
                     
-                    // Ensure we have a valid name
                     if (!repoName) {
                         repoName = 'Unknown';
                     }
                     
-                    const timestamp = new Date(exec.timestamp);
+                    // Count total executions per repo
+                    repoTotalCounts.set(repoName, (repoTotalCounts.get(repoName) || 0) + 1);
                     
-                    if (!repoActivity.has(repoName)) {
-                        repoActivity.set(repoName, []);
-                        repoLastActivity.set(repoName, timestamp);
-                        repoExecutionCount.set(repoName, 0);
-                    } else {
-                        const lastTime = repoLastActivity.get(repoName);
-                        if (timestamp > lastTime) {
-                            repoLastActivity.set(repoName, timestamp);
-                        }
+                    // Track daily activity (convert to local timezone)
+                    if (!repoDailyActivity.has(repoName)) {
+                        repoDailyActivity.set(repoName, new Map());
                     }
                     
-                    repoActivity.get(repoName).push(exec);
-                    repoExecutionCount.set(repoName, repoExecutionCount.get(repoName) + 1);
+                    const execDate = new Date(exec.timestamp);
+                    // Convert to local date string (respects user's timezone)
+                    const year = execDate.getFullYear();
+                    const month = String(execDate.getMonth() + 1).padStart(2, '0');
+                    const day = String(execDate.getDate()).padStart(2, '0');
+                    const dateKey = `${year}-${month}-${day}`;
+                    
+                    const dailyMap = repoDailyActivity.get(repoName);
+                    dailyMap.set(dateKey, (dailyMap.get(dateKey) || 0) + 1);
                 }
             });
             
-            console.log('Repository Analysis:', {
-                totalRepos: repoActivity.size,
-                repoExecutions: Array.from(repoExecutionCount.entries())
-                    .sort((a, b) => b[1] - a[1])
-                    .slice(0, 15)
-                    .map(([name, count]) => `${name}: ${count}`)
+            // Sort repositories by total count and select top 9
+            const sortedRepos = Array.from(repoTotalCounts.entries())
+                .sort((a, b) => b[1] - a[1]);
+            
+            const top9Repos = sortedRepos.slice(0, 9).map(([name]) => name);
+            const othersRepos = sortedRepos.slice(9).map(([name]) => name);
+            
+            // Prepare final repository list (top 9 + "Others")
+            const finalRepos = [...top9Repos];
+            if (othersRepos.length > 0) {
+                finalRepos.push('Others');
+                
+                // Aggregate "Others" daily activity
+                const othersDailyMap = new Map();
+                othersRepos.forEach(repoName => {
+                    const dailyMap = repoDailyActivity.get(repoName);
+                    if (dailyMap) {
+                        dailyMap.forEach((count, date) => {
+                            othersDailyMap.set(date, (othersDailyMap.get(date) || 0) + count);
+                        });
+                    }
+                });
+                repoDailyActivity.set('Others', othersDailyMap);
+            }
+            
+            console.log('Repository Analysis (30 days):', {
+                totalRepos: repoTotalCounts.size,
+                top9: top9Repos.map(r => `${r}: ${repoTotalCounts.get(r)}`),
+                othersCount: othersRepos.length,
+                othersTotal: othersRepos.reduce((sum, r) => sum + (repoTotalCounts.get(r) || 0), 0)
             });
             
-            // Sort repositories by most recent activity and take top 10
-            const topRepos = Array.from(repoLastActivity.entries())
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 10)
-                .map(([name]) => name);
-            
-            if (topRepos.length === 0) {
+            if (finalRepos.length === 0) {
                 heatmap.innerHTML = '<div style="text-align: center; color: var(--text-faded); padding: 2rem;">No repository data available</div>';
                 return;
             }
             
-            // Debug: Show selected repositories and bucket configuration
-            console.log('Heatmap Configuration:', {
-                repositories: topRepos,
-                daySpan: daySpan,
-                bucketSize: bucketSize,
-                numBuckets: numBuckets,
-                bucketType: bucketSize === 1 ? 'daily' : bucketSize === 7 ? 'weekly' : `${bucketSize}-day`
-            });
-            
-            // Create activity matrix
+            // Create 10x30 activity matrix
             const matrix = [];
             let maxCount = 0;
             
-            topRepos.forEach((repo, repoIdx) => {
-                matrix[repoIdx] = new Array(numBuckets).fill(0);
-                const repoExecs = repoActivity.get(repo) || [];
-                
-                repoExecs.forEach(exec => {
-                    const execDate = new Date(exec.timestamp);
-                    const daysSinceMin = Math.floor((execDate - minDate) / (1000 * 60 * 60 * 24));
-                    const bucketIdx = Math.floor(daysSinceMin / bucketSize);
-                    
-                    if (bucketIdx >= 0 && bucketIdx < numBuckets) {
-                        matrix[repoIdx][bucketIdx]++;
-                        maxCount = Math.max(maxCount, matrix[repoIdx][bucketIdx]);
-                    }
-                });
-            });
-            
-            // Set grid template
-            heatmap.style.gridTemplateColumns = `repeat(${numBuckets}, 1fr)`;
-            heatmap.style.gridTemplateRows = `repeat(${topRepos.length}, 1fr)`;
-            
-            // Ensure proper height for repo labels container
-            if (topRepos.length < 10) {
-                // Adjust spacing for fewer repos
-                repoLabels.style.justifyContent = 'space-evenly';
+            // Initialize matrix with zeros
+            for (let i = 0; i < finalRepos.length; i++) {
+                matrix[i] = new Array(numDays).fill(0);
             }
             
+            // Fill matrix with daily activity counts
+            finalRepos.forEach((repoName, repoIdx) => {
+                const dailyMap = repoDailyActivity.get(repoName);
+                if (dailyMap) {
+                    // For each day in the 30-day range
+                    for (let day = 0; day < numDays; day++) {
+                        const currentDate = new Date(minDate);
+                        currentDate.setDate(currentDate.getDate() + day);
+                        // Use local date format to match with the stored keys
+                        const year = currentDate.getFullYear();
+                        const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+                        const dayStr = String(currentDate.getDate()).padStart(2, '0');
+                        const dateKey = `${year}-${month}-${dayStr}`;
+                        
+                        const count = dailyMap.get(dateKey) || 0;
+                        matrix[repoIdx][day] = count;
+                        maxCount = Math.max(maxCount, count);
+                    }
+                }
+            });
+            
+            // Set grid template (10 rows x 30 columns)
+            heatmap.style.gridTemplateColumns = `repeat(${numDays}, 1fr)`;
+            heatmap.style.gridTemplateRows = `repeat(${finalRepos.length}, 1fr)`;
+            
+            // Create a matching grid structure for labels
+            // Must match heatmap exactly
+            repoLabels.innerHTML = ''; // Clear first
+            repoLabels.style.display = 'grid';
+            repoLabels.style.gridTemplateRows = heatmap.style.gridTemplateRows; // Use exact same value
+            repoLabels.style.gap = '1.5px'; // Match the heatmap gap
+            repoLabels.style.alignItems = 'stretch'; // Ensure full height usage
+            
             // Add repository labels
-            topRepos.forEach((repo, idx) => {
+            finalRepos.forEach((repoName, idx) => {
                 const label = document.createElement('div');
                 label.className = 'repo-label';
-                label.textContent = repo;
-                label.title = `${idx + 1}. ${repo} (${repoExecutionCount.get(repo)} executions)`;
+                label.textContent = repoName;
+                
+                if (repoName === 'Others') {
+                    const othersCount = othersRepos.reduce((sum, r) => sum + (repoTotalCounts.get(r) || 0), 0);
+                    label.title = `Others: ${othersRepos.length} repositories, ${othersCount} total executions`;
+                } else {
+                    const count = repoTotalCounts.get(repoName) || 0;
+                    label.title = `${idx + 1}. ${repoName}: ${count} executions`;
+                }
                 repoLabels.appendChild(label);
             });
             
-            // Create heatmap cells
-            for (let row = 0; row < topRepos.length; row++) {
-                for (let col = 0; col < numBuckets; col++) {
+            // Create heatmap cells (10 repos x 30 days)
+            for (let row = 0; row < finalRepos.length; row++) {
+                for (let col = 0; col < numDays; col++) {
                     const cell = document.createElement('div');
                     cell.className = 'heatmap-cell';
                     
@@ -1407,63 +1403,45 @@
                     
                     cell.classList.add(`level-${level}`);
                     
-                    // Calculate date range for this bucket
-                    const bucketStart = new Date(minDate);
-                    bucketStart.setDate(bucketStart.getDate() + (col * bucketSize));
-                    const bucketEnd = new Date(bucketStart);
-                    bucketEnd.setDate(bucketEnd.getDate() + bucketSize - 1);
+                    // Calculate date for this cell
+                    const cellDate = new Date(minDate);
+                    cellDate.setDate(cellDate.getDate() + col);
+                    const dateStr = cellDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                     
-                    const dateRangeStr = bucketSize === 1 
-                        ? bucketStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-                        : `${bucketStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${bucketEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
-                    
-                    cell.title = `${topRepos[row]}\n${dateRangeStr}\n${count} execution${count !== 1 ? 's' : ''}`;
+                    cell.title = `${finalRepos[row]}\n${dateStr}\n${count} action${count !== 1 ? 's' : ''}`;
                     
                     heatmap.appendChild(cell);
                 }
             }
             
-            // Add date labels
-            const labelCount = Math.min(6, numBuckets); // Show max 6 date labels for better coverage
-            
-            if (numBuckets <= 10) {
-                // For small number of buckets, show every few buckets
-                const interval = Math.max(1, Math.floor(numBuckets / labelCount));
-                for (let i = 0; i < numBuckets; i += interval) {
-                    const labelDate = new Date(minDate);
-                    labelDate.setDate(labelDate.getDate() + (i * bucketSize));
-                    
-                    const span = document.createElement('span');
-                    span.textContent = labelDate.toLocaleDateString('en-US', { 
-                        month: 'short', 
-                        day: bucketSize === 1 ? 'numeric' : undefined,
-                        year: labelDate.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined
-                    });
-                    dateLabels.appendChild(span);
-                }
-            } else {
-                // For larger number of buckets, distribute labels evenly
-                for (let i = 0; i <= labelCount; i++) {
-                    const bucketIdx = Math.floor((i / labelCount) * (numBuckets - 1));
-                    const labelDate = new Date(minDate);
-                    labelDate.setDate(labelDate.getDate() + (bucketIdx * bucketSize));
-                    
-                    const span = document.createElement('span');
-                    const formatOptions = {
-                        month: 'short',
-                        day: bucketSize <= 2 ? 'numeric' : undefined,
-                        year: undefined
-                    };
-                    
-                    // Add year for first and last labels or if year changes
-                    if (i === 0 || i === labelCount || labelDate.getFullYear() !== new Date().getFullYear()) {
-                        formatOptions.year = '2-digit';
-                    }
-                    
-                    span.textContent = labelDate.toLocaleDateString('en-US', formatOptions);
-                    dateLabels.appendChild(span);
-                }
+            // Add date labels for 30 days
+            const labelInterval = 5; // Show label every 5 days
+            for (let day = 0; day < numDays; day += labelInterval) {
+                const labelDate = new Date(minDate);
+                labelDate.setDate(labelDate.getDate() + day);
+                
+                const span = document.createElement('span');
+                span.textContent = labelDate.toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric'
+                });
+                dateLabels.appendChild(span);
             }
+            
+            // Add final date label
+            const finalSpan = document.createElement('span');
+            finalSpan.textContent = maxDate.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric'
+            });
+            dateLabels.appendChild(finalSpan);
+            
+            // After everything is rendered, ensure labels match heatmap height
+            requestAnimationFrame(() => {
+                if (heatmap.offsetHeight > 0) {
+                    repoLabels.style.height = heatmap.offsetHeight + 'px';
+                }
+            });
         }
 
         // Export data function
