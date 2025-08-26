@@ -259,75 +259,18 @@
             grid-row: span 2;
         }
         
-        /* Timeline card */
-        .timeline-card {
-            height: auto;
-            min-height: 400px;
-        }
-        
-        .timeline-container {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            height: 100%;
+        /* Heatmap months row */
+        .heatmap-months {
             position: relative;
-        }
-        
-        .timeline-section {
-            position: relative;
-        }
-        
-        .section-label {
-            font-size: 0.75rem;
-            font-weight: 600;
+            height: 20px;
+            font-size: 0.625rem;
             color: var(--text-faded);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 0.5rem;
+            margin-top: 0.5rem;
         }
         
-        .timeline-months {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.65rem;
-            color: var(--text-faded);
-            padding: 0.5rem 30px 0 30px;
-            border-top: 1px solid rgba(135, 134, 127, 0.2);
-            margin-top: 0.25rem;
-        }
-        
-        .timeline-months span {
-            flex: 1;
-            text-align: center;
-        }
-        
-        .timeline-card .cost-curve-container {
-            height: 180px;
-            max-height: 180px;
-        }
-        
-        .timeline-card .activity-container {
-            height: auto;
-            padding: 0;
-        }
-        
-        .timeline-card .heatmap-wrapper {
-            height: auto;
-            padding: 0;
-        }
-        
-        .timeline-card .heatmap-grid {
-            height: auto;
-            aspect-ratio: 52 / 7;
-        }
-        
-        .timeline-card .heatmap-legend {
-            margin-top: 0.25rem;
-        }
-        
-        .timeline-card .heatmap-days {
-            width: 30px;
-            font-size: 0.6rem;
+        .heatmap-months span {
+            position: absolute;
+            transform: translateX(-50%);
         }
 
         /* Hero Metric Card */
@@ -404,8 +347,8 @@
 
         /* Cost Curve Chart */
         .cost-curve-container {
-            height: 280px;
-            max-height: 280px;
+            height: calc(100% - 40px);
+            min-height: 200px;
             position: relative;
         }
 
@@ -451,6 +394,7 @@
             flex: 1;
             display: flex;
             flex-direction: column;
+            position: relative;
         }
 
         .heatmap-grid {
@@ -851,52 +795,11 @@
                 </div>
             </div>
 
-            <!-- Combined Cost & Activity Timeline -->
-            <div class="bento-card span-4 timeline-card">
-                <div class="card-label">Timeline Overview</div>
-                <div class="timeline-container">
-                    <!-- Cost Trend Section -->
-                    <div class="timeline-section">
-                        <div class="section-label">Cost Trend</div>
-                        <div class="cost-curve-container">
-                            <canvas id="costChart"></canvas>
-                        </div>
-                    </div>
-                    
-                    <!-- Activity Heatmap Section -->
-                    <div class="timeline-section">
-                        <div class="section-label">Contribution Activity</div>
-                        <div class="activity-container">
-                            <div class="heatmap-wrapper">
-                                <div class="heatmap-days">
-                                    <div class="day-label">Mon</div>
-                                    <div class="day-label">Tue</div>
-                                    <div class="day-label">Wed</div>
-                                    <div class="day-label">Thu</div>
-                                    <div class="day-label">Fri</div>
-                                    <div class="day-label">Sat</div>
-                                    <div class="day-label">Sun</div>
-                                </div>
-                                <div class="heatmap-content">
-                                    <div class="heatmap-grid" id="activityHeatmap"></div>
-                                </div>
-                            </div>
-                            <div class="heatmap-legend">
-                                <span class="heatmap-legend-label">Less</span>
-                                <div class="heatmap-legend-items">
-                                    <div class="heatmap-legend-item level-0"></div>
-                                    <div class="heatmap-legend-item level-1"></div>
-                                    <div class="heatmap-legend-item level-2"></div>
-                                    <div class="heatmap-legend-item level-3"></div>
-                                    <div class="heatmap-legend-item level-4"></div>
-                                </div>
-                                <span class="heatmap-legend-label">More</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Shared Timeline Months -->
-                    <div class="timeline-months" id="timelineMonths"></div>
+            <!-- Cost Trend Chart -->
+            <div class="bento-card span-2 row-2">
+                <div class="card-label">Cost Trend (30 Days)</div>
+                <div class="cost-curve-container">
+                    <canvas id="costChart"></canvas>
                 </div>
             </div>
 
@@ -932,6 +835,39 @@
                     <button class="action-btn" onclick="openSettings()">
                         <span>⚙️ Settings</span>
                     </button>
+                </div>
+            </div>
+
+            <!-- Activity Heatmap (Full Width) -->
+            <div class="bento-card span-4">
+                <div class="card-label">Contribution Activity (52 Weeks)</div>
+                <div class="activity-container">
+                    <div class="heatmap-wrapper">
+                        <div class="heatmap-days">
+                            <div class="day-label">Sun</div>
+                            <div class="day-label">Mon</div>
+                            <div class="day-label">Tue</div>
+                            <div class="day-label">Wed</div>
+                            <div class="day-label">Thu</div>
+                            <div class="day-label">Fri</div>
+                            <div class="day-label">Sat</div>
+                        </div>
+                        <div class="heatmap-content">
+                            <div class="heatmap-grid" id="activityHeatmap"></div>
+                            <div class="heatmap-months" id="heatmapMonths"></div>
+                        </div>
+                    </div>
+                    <div class="heatmap-legend">
+                        <span class="heatmap-legend-label">Less</span>
+                        <div class="heatmap-legend-items">
+                            <div class="heatmap-legend-item level-0"></div>
+                            <div class="heatmap-legend-item level-1"></div>
+                            <div class="heatmap-legend-item level-2"></div>
+                            <div class="heatmap-legend-item level-3"></div>
+                            <div class="heatmap-legend-item level-4"></div>
+                        </div>
+                        <span class="heatmap-legend-label">More</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -996,47 +932,23 @@
         // Data will be injected here by the backend
         const DATA = /*DATA_PLACEHOLDER*/;
 
-        // Fallback sample data for development/testing
-        const sampleData = {
-            totals: {
-                totalCost: 2847.56,
-                totalTokens: 15234567,
-                inputTokens: 8234567,
-                outputTokens: 5000000,
-                cacheReadTokens: 1500000,
-                cacheCreationTokens: 500000
-            },
-            metadata: {
-                totalDays: 30,
-                totalProjects: 124,
-                totalSessions: 847,
-                averageDaily: {
-                    cost: 94.92,
-                    tokens: 507819
-                },
-                models: ["claude-3-opus", "claude-3-sonnet", "claude-3-haiku"],
-                dateRange: {
-                    start: "2024-01-01",
-                    end: "2024-01-30"
-                }
-            },
-            daily: Array.from({ length: 30 }, (_, i) => {
-                const date = new Date();
-                date.setDate(date.getDate() - (29 - i));
-                return {
-                    date: date.toISOString().split('T')[0],
-                    totalCost: 80 + Math.random() * 40,
-                    totalTokens: 400000 + Math.random() * 200000,
-                    inputTokens: 200000 + Math.random() * 100000,
-                    outputTokens: 150000 + Math.random() * 75000,
-                    cacheReadTokens: 40000 + Math.random() * 20000,
-                    cacheCreationTokens: 10000 + Math.random() * 5000
-                };
-            })
-        };
-
-        // Use real data if available, otherwise use sample data
-        const appData = DATA?.usage || DATA || sampleData;
+        // Use only real data - no mocking allowed
+        const appData = DATA?.usage || null;
+        
+        // Check if data is available
+        if (!appData || !appData.totals) {
+            document.body.innerHTML = `
+                <div style="display: flex; justify-content: center; align-items: center; height: 100vh; background: var(--bg-main);">
+                    <div style="text-align: center; padding: 3rem;">
+                        <div style="font-size: 4rem; margin-bottom: 1rem;">📊</div>
+                        <h1 style="color: var(--text-main); margin-bottom: 1rem;">No Data Available</h1>
+                        <p style="color: var(--text-faded);">Please run 'ccm usage' first to generate usage data.</p>
+                        <a href="#" onclick="window.location.reload()" style="display: inline-block; margin-top: 2rem; padding: 0.75rem 2rem; background: var(--primary); color: white; text-decoration: none; border-radius: 8px;">Refresh</a>
+                    </div>
+                </div>
+            `;
+            throw new Error('No data available');
+        }
 
         // Format functions
         function formatCurrency(value) {
@@ -1088,14 +1000,18 @@
             document.getElementById('costTrend').textContent = `${trendPercent > 0 ? '↑' : '↓'} ${Math.abs(trendPercent)}% this week`;
 
             // Update project count
-            const projectCount = DATA?.projects?.metadata?.totalProjects || appData.metadata.totalProjects || 0;
+            const projectCount = DATA?.projects?.metadata?.totalProjects || 0;
             document.getElementById('projectCount').textContent = projectCount;
-            document.getElementById('projectTrend').innerHTML = '<span>↑ 8 new this week</span>';
+            document.getElementById('projectTrend').innerHTML = projectCount > 0 
+                ? '<span style="color: var(--cactus)">Active</span>' 
+                : '<span style="color: var(--text-faded)">No projects</span>';
 
             // Update session count  
-            const sessionCount = DATA?.projects?.metadata?.totalExecutions || appData.metadata.totalSessions || 0;
+            const sessionCount = DATA?.projects?.metadata?.totalExecutions || 0;
             document.getElementById('sessionCount').textContent = sessionCount;
-            document.getElementById('sessionTrend').innerHTML = '<span>↑ 23% active</span>';
+            document.getElementById('sessionTrend').innerHTML = sessionCount > 0 
+                ? '<span style="color: var(--cactus)">Tracked</span>' 
+                : '<span style="color: var(--text-faded)">No sessions</span>';
 
             // Initialize Tool Usage
             initToolUsage();
@@ -1111,11 +1027,38 @@
         // Initialize Tool Usage Progress Bars
         function initToolUsage() {
             const container = document.getElementById('toolUsage');
-            const tools = [
-                { name: 'Bash Commands', percentage: 68, color: 'var(--gradient-accent)' },
-                { name: 'File Operations', percentage: 22, color: 'var(--gradient-warm)' },
-                { name: 'Web Searches', percentage: 10, color: 'var(--gradient-cool)' }
-            ];
+            
+            // Calculate real tool usage from executions
+            const executions = DATA?.executions || [];
+            if (executions.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: var(--text-faded); padding: 2rem;">No execution data available</div>';
+                return;
+            }
+            
+            // Count tool usage
+            const toolCounts = {};
+            let totalCount = 0;
+            executions.forEach(exec => {
+                if (exec.tool_name) {
+                    toolCounts[exec.tool_name] = (toolCounts[exec.tool_name] || 0) + 1;
+                    totalCount++;
+                }
+            });
+            
+            // Get top 3 tools and calculate percentages
+            const tools = Object.entries(toolCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 3)
+                .map(([name, count], index) => ({
+                    name: name,
+                    percentage: Math.round((count / totalCount) * 100),
+                    color: ['var(--gradient-accent)', 'var(--gradient-warm)', 'var(--gradient-cool)'][index]
+                }));
+            
+            if (tools.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: var(--text-faded); padding: 2rem;">No tool usage data</div>';
+                return;
+            }
 
             container.innerHTML = tools.map(tool => `
                 <div>
@@ -1133,10 +1076,37 @@
         // Initialize Top Features
         function initTopFeatures() {
             const container = document.getElementById('topFeatures');
-            const features = ['Real-time Monitor', 'Analytics', 'Export', 'Backup', 'Memory'];
             
-            container.innerHTML = features.map(feature => 
-                `<span class="tag">${feature}</span>`
+            // Extract features from projects or executions
+            const projects = DATA?.projects?.projects || [];
+            const executions = DATA?.executions || [];
+            
+            if (projects.length === 0 && executions.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: var(--text-faded);">No feature data available</div>';
+                return;
+            }
+            
+            // Use project names as features (top 5 most active)
+            const projectCounts = {};
+            executions.forEach(exec => {
+                if (exec.project_path) {
+                    const projectName = exec.project_path.split('/').pop() || exec.project_path;
+                    projectCounts[projectName] = (projectCounts[projectName] || 0) + 1;
+                }
+            });
+            
+            const topProjects = Object.entries(projectCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5)
+                .map(([name]) => name);
+            
+            if (topProjects.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: var(--text-faded);">No active projects</div>';
+                return;
+            }
+            
+            container.innerHTML = topProjects.map(project => 
+                `<span class="tag">${project}</span>`
             ).join('');
         }
 
@@ -1147,29 +1117,19 @@
             gradient.addColorStop(0, 'rgba(217, 119, 87, 0.4)');
             gradient.addColorStop(1, 'rgba(217, 119, 87, 0.01)');
             
-            // Generate data for the same time period as heatmap
-            const today = new Date();
-            const startDate = new Date(today);
-            startDate.setDate(startDate.getDate() - 364);
+            // Show last 30 days of cost data
+            const last30Days = appData.daily.slice(-30);
             
-            const dates = [];
-            const costs = [];
-            
-            for (let i = 0; i < 365; i++) {
-                const currentDate = new Date(startDate);
-                currentDate.setDate(currentDate.getDate() + i);
-                
-                const dateStr = currentDate.toISOString().split('T')[0];
-                const dayData = appData.daily.find(d => d.date === dateStr);
-                
-                if (i % 7 === 0) { // Sample every week for labels
-                    dates.push((currentDate.getMonth() + 1) + '/' + currentDate.getDate());
-                } else {
-                    dates.push('');
+            const dates = last30Days.map((d, i) => {
+                const date = new Date(d.date);
+                // Show label every 5 days
+                if (i % 5 === 0) {
+                    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                 }
-                
-                costs.push(dayData ? dayData.totalCost : 80 + Math.random() * 40);
-            }
+                return '';
+            });
+            
+            const costs = last30Days.map(d => d.totalCost || 0);
 
             new Chart(ctx, {
                 type: 'line',
@@ -1243,7 +1203,7 @@
         // Generate Activity Heatmap
         function generateHeatmap() {
             const heatmap = document.getElementById('activityHeatmap');
-            const timelineMonths = document.getElementById('timelineMonths');
+            const monthsContainer = document.getElementById('heatmapMonths');
             heatmap.innerHTML = '';
             
             // Create a map for quick data lookup
@@ -1255,41 +1215,56 @@
             });
             
             // Calculate max tokens for scaling
-            const maxTokens = Math.max(...appData.daily.map(d => d.totalTokens));
+            const maxTokens = Math.max(...appData.daily.map(d => d.totalTokens), 1);
             
-            // Generate heatmap for last 52 weeks
+            // Calculate the starting Sunday (52 weeks ago from today)
             const today = new Date();
-            const startDate = new Date(today);
-            startDate.setDate(startDate.getDate() - 364); // 52 weeks ago
+            const endDate = new Date(today);
+            // Move to next Saturday
+            endDate.setDate(endDate.getDate() + (6 - endDate.getDay()));
             
-            // Generate shared month labels
-            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-                              'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            const monthsSet = new Set();
+            // Go back 52 weeks and find the Sunday
+            const startDate = new Date(endDate);
+            startDate.setDate(startDate.getDate() - (52 * 7 - 1));
             
-            // Clear and populate timeline months
-            if (timelineMonths && timelineMonths.innerHTML === '') {
-                for (let i = 0; i < 12; i++) {
-                    const monthDate = new Date(startDate);
-                    monthDate.setMonth(monthDate.getMonth() + i);
-                    const monthLabel = document.createElement('span');
-                    monthLabel.textContent = monthNames[monthDate.getMonth()];
-                    timelineMonths.appendChild(monthLabel);
-                }
+            // Create a 2D array to hold cells (7 rows x 52 columns)
+            const grid = [];
+            for (let day = 0; day < 7; day++) {
+                grid[day] = [];
             }
             
+            // Track months for labels
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                              'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const monthLabels = [];
+            let currentMonth = -1;
+            
+            // Fill the grid column by column (week by week)
+            const currentDate = new Date(startDate);
             for (let week = 0; week < 52; week++) {
-                for (let day = 0; day < 7; day++) {
+                // Track month changes
+                const month = currentDate.getMonth();
+                if (month !== currentMonth) {
+                    currentMonth = month;
+                    monthLabels.push({ 
+                        week: week, 
+                        month: monthNames[month] 
+                    });
+                }
+                
+                // Fill this week's column
+                for (let dayOfWeek = 0; dayOfWeek < 7; dayOfWeek++) {
                     const cell = document.createElement('div');
                     cell.className = 'heatmap-cell';
                     
-                    const cellDate = new Date(startDate);
-                    cellDate.setDate(cellDate.getDate() + (week * 7 + day));
+                    // Calculate the date for this cell
+                    const cellDate = new Date(currentDate);
+                    cellDate.setDate(cellDate.getDate() + dayOfWeek);
                     
                     // Skip future dates
                     if (cellDate > today) {
                         cell.style.visibility = 'hidden';
-                        heatmap.appendChild(cell);
+                        grid[dayOfWeek][week] = cell;
                         continue;
                     }
                     
@@ -1305,42 +1280,47 @@
                         const percentage = (tokens / maxTokens) * 100;
                         level = percentage > 80 ? 4 : percentage > 60 ? 3 : percentage > 40 ? 2 : percentage > 20 ? 1 : 0;
                     } else {
-                        // Generate realistic-looking activity for dates without data
-                        // More activity in recent weeks, less in older weeks
-                        const weeksAgo = Math.floor((today - cellDate) / (7 * 24 * 60 * 60 * 1000));
-                        const recencyFactor = Math.max(0, 1 - (weeksAgo / 52));
-                        
-                        // Random activity with bias towards weekdays
-                        const dayOfWeek = cellDate.getDay();
-                        const weekdayBonus = (dayOfWeek >= 1 && dayOfWeek <= 5) ? 0.3 : 0;
-                        
-                        // Generate activity level
-                        const random = Math.random();
-                        const activityChance = (recencyFactor * 0.6 + weekdayBonus + random * 0.4);
-                        
-                        if (activityChance > 0.7) {
-                            level = Math.floor(Math.random() * 3) + 2; // levels 2-4
-                            tokens = Math.floor((level / 4) * maxTokens * (0.5 + Math.random() * 0.5));
-                        } else if (activityChance > 0.4) {
-                            level = Math.floor(Math.random() * 2) + 1; // levels 1-2
-                            tokens = Math.floor((level / 4) * maxTokens * (0.3 + Math.random() * 0.3));
-                        } else if (activityChance > 0.2) {
-                            level = 1;
-                            tokens = Math.floor(maxTokens * 0.1 * Math.random());
-                        } else {
-                            level = 0;
-                            tokens = 0;
-                        }
+                        // No data for this date - show empty cell
+                        level = 0;
+                        tokens = 0;
                     }
                     
                     cell.classList.add(`level-${level}`);
                     
-                    const dateStr = cellDate.toLocaleDateString();
-                    const tokenStr = tokens > 0 ? formatNumber(tokens) : '0';
+                    const dateStr = cellDate.toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric',
+                        year: 'numeric'
+                    });
+                    const tokenStr = tokens > 0 ? formatNumber(tokens) : 'No activity';
                     cell.title = `${dateStr}: ${tokenStr} tokens`;
                     
-                    heatmap.appendChild(cell);
+                    grid[dayOfWeek][week] = cell;
                 }
+                
+                // Move to next week's Sunday
+                currentDate.setDate(currentDate.getDate() + 7);
+            }
+            
+            // Append cells to DOM row by row
+            for (let day = 0; day < 7; day++) {
+                for (let week = 0; week < 52; week++) {
+                    if (grid[day][week]) {
+                        heatmap.appendChild(grid[day][week]);
+                    }
+                }
+            }
+            
+            // Add month labels below heatmap
+            if (monthsContainer) {
+                monthsContainer.innerHTML = '';
+                monthLabels.forEach((label) => {
+                    const span = document.createElement('span');
+                    span.textContent = label.month;
+                    span.style.position = 'absolute';
+                    span.style.left = `${(label.week / 52) * 100}%`;
+                    monthsContainer.appendChild(span);
+                });
             }
         }
 
@@ -1440,8 +1420,8 @@
             // Animate values
             if (appData && appData.totals) {
                 animateValue('totalCost', 0, appData.totals.totalCost, 1000);
-                animateValue('projectCount', 0, DATA?.projects?.metadata?.totalProjects || appData.metadata.totalProjects || 0, 1000);
-                animateValue('sessionCount', 0, DATA?.projects?.metadata?.totalExecutions || appData.metadata.totalSessions || 0, 1000);
+                animateValue('projectCount', 0, DATA?.projects?.metadata?.totalProjects || 0, 1000);
+                animateValue('sessionCount', 0, DATA?.projects?.metadata?.totalExecutions || 0, 1000);
             }
         });
     </script>
