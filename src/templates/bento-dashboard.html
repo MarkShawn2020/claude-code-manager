@@ -398,6 +398,23 @@
             display: flex;
             flex-direction: column;
             gap: 0.5rem;
+            position: relative;
+        }
+
+        .heatmap-legend-corner {
+            position: absolute;
+            top: 0;
+            right: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.65rem;
+            color: var(--text-faded);
+            background: rgba(255, 255, 255, 0.9);
+            padding: 0.3rem 0.6rem;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            z-index: 10;
         }
 
         /* Shared Date Axis */
@@ -422,21 +439,15 @@
             padding: 0 2px;
         }
 
+
         .data-note {
-            margin-top: 0.5rem;
-            padding-top: 0.5rem;
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
             text-align: center;
             font-size: 0.7rem;
             color: var(--text-faded);
             opacity: 0.5;
             font-style: italic;
-        }
-
-        .temporal-legend {
-            display: flex;
-            justify-content: center;
-            margin-top: 0.75rem;
-            padding-top: 0.75rem;
             border-top: 1px solid var(--border);
         }
 
@@ -518,15 +529,6 @@
         .heatmap-cell.level-3 { background: #997A5F; }
         .heatmap-cell.level-4 { background: var(--primary); }
 
-        .heatmap-legend {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            margin-top: 0.5rem;
-            font-size: 0.7rem;
-            color: var(--text-faded);
-        }
 
         .heatmap-legend-label {
             font-size: 0.7rem;
@@ -805,6 +807,16 @@
                 max-width: 120px;
             }
             
+            .heatmap-legend-corner {
+                font-size: 0.6rem;
+                padding: 0.2rem 0.4rem;
+            }
+            
+            .heatmap-legend-item {
+                width: 7px;
+                height: 7px;
+            }
+            
             .header-title {
                 font-size: 1.25rem;
             }
@@ -918,6 +930,18 @@
                             Repository Activity
                             <span class="scope-indicator">• Local machine data</span>
                         </div>
+                        <!-- Activity Legend (positioned top-right) -->
+                        <div class="heatmap-legend-corner">
+                            <span class="heatmap-legend-label">Less</span>
+                            <div class="heatmap-legend-items">
+                                <div class="heatmap-legend-item level-0"></div>
+                                <div class="heatmap-legend-item level-1"></div>
+                                <div class="heatmap-legend-item level-2"></div>
+                                <div class="heatmap-legend-item level-3"></div>
+                                <div class="heatmap-legend-item level-4"></div>
+                            </div>
+                            <span class="heatmap-legend-label">More</span>
+                        </div>
                         <div class="repo-heatmap-wrapper">
                             <div class="repo-labels" id="repoLabels">
                                 <!-- Repository names will be added dynamically -->
@@ -941,22 +965,7 @@
                     <div class="data-note">
                         <span>Note: Cost reflects account usage across all machines. Activity shows local executions only.</span>
                     </div>
-                    
-                    <!-- Activity Legend -->
-                    <div class="temporal-legend">
-                        <div class="heatmap-legend">
-                            <span class="heatmap-legend-label">Activity:</span>
-                            <span class="heatmap-legend-label" style="margin-left: 0.5rem;">Less</span>
-                            <div class="heatmap-legend-items">
-                                <div class="heatmap-legend-item level-0"></div>
-                                <div class="heatmap-legend-item level-1"></div>
-                                <div class="heatmap-legend-item level-2"></div>
-                                <div class="heatmap-legend-item level-3"></div>
-                                <div class="heatmap-legend-item level-4"></div>
-                            </div>
-                            <span class="heatmap-legend-label">More</span>
-                        </div>
-                    </div>
+
                 </div>
             </div>
 
