@@ -260,19 +260,6 @@
         }
         
         /* Heatmap date labels row */
-        .repo-heatmap-dates {
-            position: relative;
-            height: 20px;
-            font-size: 0.625rem;
-            color: var(--text-faded);
-            margin-top: 0.5rem;
-            display: flex;
-            justify-content: space-between;
-        }
-        
-        .repo-heatmap-dates span {
-            text-align: center;
-        }
 
         /* Hero Metric Card */
         .hero-metric {
@@ -346,16 +333,111 @@
             color: var(--cactus);
         }
 
-        /* Cost Curve Chart */
-        .cost-curve-container {
-            height: calc(100% - 40px);
-            min-height: 200px;
+        /* Temporal Visualization Styles */
+        .temporal-viz {
+            padding: 1.5rem;
+        }
+
+        .temporal-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            height: 100%;
+        }
+
+        .cost-trend-section {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .section-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-faded);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .scope-indicator {
+            font-size: 0.7rem;
+            font-weight: 400;
+            color: var(--text-faded);
+            opacity: 0.6;
+            text-transform: none;
+            letter-spacing: normal;
+        }
+
+        .cost-chart-wrapper {
+            height: 120px;
             position: relative;
+            display: flex;
+            gap: 0;
+        }
+
+        .chart-y-axis {
+            min-width: calc(120px + 0.75rem); /* Match repo-labels width + gap */
+            max-width: calc(180px + 0.75rem);
+        }
+
+        .chart-content {
+            flex: 1;
+            position: relative;
+            height: 100%;
         }
 
         #costChart {
             width: 100%;
             height: 100%;
+        }
+
+        .repo-activity-section {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        /* Shared Date Axis */
+        .shared-date-axis {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 0.5rem;
+        }
+
+        .date-axis-spacer {
+            min-width: calc(120px + 0.75rem); /* Match repo-labels width + gap */
+            max-width: calc(180px + 0.75rem);
+            flex-shrink: 0;
+        }
+
+        .date-axis-labels {
+            flex: 1;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            color: var(--text-faded);
+            padding: 0 2px;
+        }
+
+        .data-note {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            text-align: center;
+            font-size: 0.7rem;
+            color: var(--text-faded);
+            opacity: 0.5;
+            font-style: italic;
+        }
+
+        .temporal-legend {
+            display: flex;
+            justify-content: center;
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--border);
         }
 
         /* Repository Activity Heatmap */
@@ -678,6 +760,9 @@
             .header-stats {
                 display: none;
             }
+            .cost-chart-wrapper {
+                height: 100px;
+            }
         }
 
         @media (max-width: 900px) {
@@ -687,6 +772,9 @@
             .span-3, .span-4 { grid-column: span 2; }
             .footer-content {
                 grid-template-columns: 1fr 1fr;
+            }
+            .date-axis-labels {
+                font-size: 0.6rem;
             }
         }
 
@@ -708,8 +796,13 @@
                 font-size: 0.65rem;
             }
             
-            .repo-heatmap-dates {
+            .date-axis-labels {
                 font-size: 0.55rem;
+            }
+            
+            .date-axis-spacer {
+                min-width: 80px;
+                max-width: 120px;
             }
             
             .header-title {
@@ -801,11 +894,69 @@
                 </div>
             </div>
 
-            <!-- Cost Trend Chart -->
-            <div class="bento-card span-2 row-2">
-                <div class="card-label">Cost Trend (30 Days)</div>
-                <div class="cost-curve-container">
-                    <canvas id="costChart"></canvas>
+            <!-- Combined Temporal Visualization (30 Days) - Moved up after Total Cost -->
+            <div class="bento-card span-4 temporal-viz">
+                <div class="card-label">30-Day Temporal Analysis</div>
+                <div class="temporal-container">
+                    <!-- Cost Trend Section -->
+                    <div class="cost-trend-section">
+                        <div class="section-label">
+                            Daily Cost
+                            <span class="scope-indicator">• Account data</span>
+                        </div>
+                        <div class="cost-chart-wrapper">
+                            <div class="chart-y-axis"></div>
+                            <div class="chart-content">
+                                <canvas id="costChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Repository Activity Section -->
+                    <div class="repo-activity-section">
+                        <div class="section-label">
+                            Repository Activity
+                            <span class="scope-indicator">• Local machine data</span>
+                        </div>
+                        <div class="repo-heatmap-wrapper">
+                            <div class="repo-labels" id="repoLabels">
+                                <!-- Repository names will be added dynamically -->
+                            </div>
+                            <div class="repo-heatmap-content">
+                                <div class="repo-heatmap-grid" id="activityHeatmap"></div>
+                                <!-- Shared date axis will be below heatmap -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Shared Date Axis -->
+                    <div class="shared-date-axis">
+                        <div class="date-axis-spacer"></div>
+                        <div class="date-axis-labels" id="sharedDateAxis">
+                            <!-- Date labels will be added dynamically -->
+                        </div>
+                    </div>
+                    
+                    <!-- Data Note -->
+                    <div class="data-note">
+                        <span>Note: Cost reflects account usage across all machines. Activity shows local executions only.</span>
+                    </div>
+                    
+                    <!-- Activity Legend -->
+                    <div class="temporal-legend">
+                        <div class="heatmap-legend">
+                            <span class="heatmap-legend-label">Activity:</span>
+                            <span class="heatmap-legend-label" style="margin-left: 0.5rem;">Less</span>
+                            <div class="heatmap-legend-items">
+                                <div class="heatmap-legend-item level-0"></div>
+                                <div class="heatmap-legend-item level-1"></div>
+                                <div class="heatmap-legend-item level-2"></div>
+                                <div class="heatmap-legend-item level-3"></div>
+                                <div class="heatmap-legend-item level-4"></div>
+                            </div>
+                            <span class="heatmap-legend-label">More</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -841,33 +992,6 @@
                     <button class="action-btn" onclick="openSettings()">
                         <span>⚙️ Settings</span>
                     </button>
-                </div>
-            </div>
-
-            <!-- Repository Activity Heatmap (Full Width) -->
-            <div class="bento-card span-4">
-                <div class="card-label">Repository Activity Timeline</div>
-                <div class="activity-container">
-                    <div class="repo-heatmap-wrapper">
-                        <div class="repo-labels" id="repoLabels">
-                            <!-- Repository names will be added dynamically -->
-                        </div>
-                        <div class="repo-heatmap-content">
-                            <div class="repo-heatmap-grid" id="activityHeatmap"></div>
-                            <div class="repo-heatmap-dates" id="heatmapDates"></div>
-                        </div>
-                    </div>
-                    <div class="heatmap-legend">
-                        <span class="heatmap-legend-label">Less</span>
-                        <div class="heatmap-legend-items">
-                            <div class="heatmap-legend-item level-0"></div>
-                            <div class="heatmap-legend-item level-1"></div>
-                            <div class="heatmap-legend-item level-2"></div>
-                            <div class="heatmap-legend-item level-3"></div>
-                            <div class="heatmap-legend-item level-4"></div>
-                        </div>
-                        <span class="heatmap-legend-label">More</span>
-                    </div>
                 </div>
             </div>
         </div>
@@ -1113,21 +1237,15 @@
         // Initialize Cost Chart
         function initCostChart() {
             const ctx = document.getElementById('costChart').getContext('2d');
-            const gradient = ctx.createLinearGradient(0, 0, 0, 180);
-            gradient.addColorStop(0, 'rgba(217, 119, 87, 0.4)');
+            const gradient = ctx.createLinearGradient(0, 0, 0, 120);
+            gradient.addColorStop(0, 'rgba(217, 119, 87, 0.3)');
             gradient.addColorStop(1, 'rgba(217, 119, 87, 0.01)');
             
             // Show last 30 days of cost data
             const last30Days = appData.daily.slice(-30);
             
-            const dates = last30Days.map((d, i) => {
-                const date = new Date(d.date);
-                // Show label every 5 days
-                if (i % 5 === 0) {
-                    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                }
-                return '';
-            });
+            // Create labels for all 30 days (but will be hidden)
+            const dates = last30Days.map(d => '');
             
             const costs = last30Days.map(d => d.totalCost || 0);
 
@@ -1140,11 +1258,11 @@
                         data: costs,
                         borderColor: '#D97757',
                         backgroundColor: gradient,
-                        borderWidth: 3,
+                        borderWidth: 2,
                         fill: true,
                         tension: 0.4,
                         pointRadius: 0,
-                        pointHoverRadius: 6,
+                        pointHoverRadius: 5,
                         pointHoverBackgroundColor: '#D97757',
                         pointHoverBorderColor: '#fff',
                         pointHoverBorderWidth: 2
@@ -1156,7 +1274,9 @@
                     layout: {
                         padding: {
                             top: 5,
-                            bottom: 0
+                            bottom: 0,
+                            left: 0,
+                            right: 0
                         }
                     },
                     plugins: {
@@ -1169,27 +1289,40 @@
                             cornerRadius: 8,
                             displayColors: false,
                             callbacks: {
+                                title: function(tooltipItems) {
+                                    const index = tooltipItems[0].dataIndex;
+                                    const date = new Date(last30Days[index].date);
+                                    return date.toLocaleDateString('en-US', { 
+                                        month: 'short', 
+                                        day: 'numeric',
+                                        year: 'numeric'
+                                    });
+                                },
                                 label: function(context) {
-                                    return '$' + context.parsed.y.toFixed(2);
+                                    return 'Cost: $' + context.parsed.y.toFixed(2);
                                 }
                             }
                         }
                     },
                     scales: {
                         x: {
-                            grid: { display: false },
+                            grid: { 
+                                display: false,
+                                drawBorder: false
+                            },
                             ticks: { 
                                 display: false
                             }
                         },
                         y: {
                             grid: { 
-                                color: 'rgba(0, 0, 0, 0.05)',
+                                color: 'rgba(0, 0, 0, 0.03)',
                                 drawBorder: false
                             },
                             ticks: { 
                                 color: '#87867F',
-                                font: { size: 10 },
+                                font: { size: 9 },
+                                padding: 4,
                                 callback: function(value) {
                                     return '$' + value;
                                 }
@@ -1204,11 +1337,11 @@
         function generateHeatmap() {
             const heatmap = document.getElementById('activityHeatmap');
             const repoLabels = document.getElementById('repoLabels');
-            const dateLabels = document.getElementById('heatmapDates');
+            const sharedDateAxis = document.getElementById('sharedDateAxis');
             
             heatmap.innerHTML = '';
             repoLabels.innerHTML = '';
-            dateLabels.innerHTML = '';
+            sharedDateAxis.innerHTML = '';
             
             // Get all executions (should be last 30 days from backend)
             const executions = DATA?.executions || [];
@@ -1414,9 +1547,26 @@
                 }
             }
             
-            // Add date labels for 30 days
-            const labelInterval = 5; // Show label every 5 days
-            for (let day = 0; day < numDays; day += labelInterval) {
+            // Generate shared date axis labels (for both cost chart and heatmap)
+            generateSharedDateAxis(minDate, maxDate, numDays);
+            
+            // After everything is rendered, ensure labels match heatmap height
+            requestAnimationFrame(() => {
+                if (heatmap.offsetHeight > 0) {
+                    repoLabels.style.height = heatmap.offsetHeight + 'px';
+                }
+            });
+        }
+
+        // Generate shared date axis for both visualizations
+        function generateSharedDateAxis(minDate, maxDate, numDays) {
+            const sharedDateAxis = document.getElementById('sharedDateAxis');
+            sharedDateAxis.innerHTML = '';
+            
+            // Add date labels at regular intervals
+            const labelPositions = [0, 6, 12, 18, 24, 29]; // Days to show labels
+            
+            labelPositions.forEach(day => {
                 const labelDate = new Date(minDate);
                 labelDate.setDate(labelDate.getDate() + day);
                 
@@ -1425,22 +1575,17 @@
                     month: 'short',
                     day: 'numeric'
                 });
-                dateLabels.appendChild(span);
-            }
-            
-            // Add final date label
-            const finalSpan = document.createElement('span');
-            finalSpan.textContent = maxDate.toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric'
-            });
-            dateLabels.appendChild(finalSpan);
-            
-            // After everything is rendered, ensure labels match heatmap height
-            requestAnimationFrame(() => {
-                if (heatmap.offsetHeight > 0) {
-                    repoLabels.style.height = heatmap.offsetHeight + 'px';
+                
+                // Add year for first and last label if different years
+                if (day === 0 || day === 29) {
+                    const year = labelDate.getFullYear();
+                    const currentYear = new Date().getFullYear();
+                    if (year !== currentYear) {
+                        span.textContent += ', ' + year;
+                    }
                 }
+                
+                sharedDateAxis.appendChild(span);
             });
         }
 
