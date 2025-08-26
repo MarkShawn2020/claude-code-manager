@@ -288,33 +288,94 @@
             position: absolute;
             top: -50%;
             right: -10%;
-            width: 200px;
-            height: 200px;
+            width: 150px;
+            height: 150px;
             background: rgba(255, 255, 255, 0.1);
             border-radius: 50%;
         }
 
         .hero-metric .metric-value {
-            font-size: 3.5rem;
+            font-size: 2.5rem;
             font-weight: 900;
             line-height: 1;
             margin: 0.5rem 0;
         }
 
         .hero-metric .metric-label {
-            font-size: 0.95rem;
+            font-size: 0.85rem;
             font-weight: 500;
             opacity: 0.9;
         }
 
         .hero-metric .metric-change {
             display: inline-block;
-            margin-top: 1rem;
-            padding: 0.35rem 0.75rem;
+            margin-top: 0.75rem;
+            padding: 0.3rem 0.6rem;
             background: rgba(255, 255, 255, 0.2);
             border-radius: 20px;
-            font-size: 0.85rem;
+            font-size: 0.75rem;
             font-weight: 600;
+        }
+
+        /* Top Repositories List */
+        .top-repos-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+
+        .repo-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 0.75rem;
+            background: var(--bg-oat);
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            font-size: 0.85rem;
+        }
+
+        .repo-item:hover {
+            background: linear-gradient(90deg, var(--bg-oat) 0%, var(--cloud-light) 100%);
+            transform: translateX(4px);
+        }
+
+        .repo-rank {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            background: var(--primary);
+            color: white;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            margin-right: 0.5rem;
+            flex-shrink: 0;
+        }
+        
+        .repo-item:nth-child(1) .repo-rank { background: linear-gradient(135deg, #FFD700, #FFA500); }
+        .repo-item:nth-child(2) .repo-rank { background: linear-gradient(135deg, #C0C0C0, #A8A8A8); }
+        .repo-item:nth-child(3) .repo-rank { background: linear-gradient(135deg, #CD7F32, #B87333); }
+        .repo-item:nth-child(4) .repo-rank { background: var(--sky); }
+        .repo-item:nth-child(5) .repo-rank { background: var(--cactus); }
+
+        .repo-name {
+            flex: 1;
+            font-weight: 500;
+            color: var(--text-main);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .repo-percentage {
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 0.85rem;
+            margin-left: 0.5rem;
         }
 
         /* Stats Cards */
@@ -350,19 +411,46 @@
         /* Temporal Visualization Styles */
         .temporal-viz {
             padding: 1.5rem;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.5) 0%, transparent 100%);
+            position: relative;
+        }
+
+        .temporal-viz::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, 
+                var(--primary) 0%, 
+                var(--sky) 25%, 
+                var(--cactus) 50%, 
+                var(--fig) 75%, 
+                var(--primary) 100%);
+            border-radius: var(--radius) var(--radius) 0 0;
+            opacity: 0.3;
         }
 
         .temporal-container {
             display: flex;
             flex-direction: column;
-            gap: 1rem;
+            gap: 1.25rem;
             height: 100%;
+        }
+
+        /* Shared left margin for alignment */
+        :root {
+            --temporal-left-width: 0px;  /* No left spacing, charts handle their own */
+            --temporal-gap: 0px;
         }
 
         .cost-trend-section {
             display: flex;
             flex-direction: column;
             gap: 0.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
         }
 
         .section-label {
@@ -374,6 +462,12 @@
             display: flex;
             align-items: center;
             gap: 0.75rem;
+            margin-bottom: 0.25rem;
+            transition: color 0.3s ease;
+        }
+        
+        .section-label:hover {
+            color: var(--text-main);
         }
 
         .scope-indicator {
@@ -388,19 +482,13 @@
         .cost-chart-wrapper {
             height: 120px;
             position: relative;
-            display: flex;
-            gap: 0;
-        }
 
-        .chart-y-axis {
-            min-width: calc(120px + 0.75rem); /* Match repo-labels width + gap */
-            max-width: calc(180px + 0.75rem);
         }
 
         .chart-content {
-            flex: 1;
-            position: relative;
+            width: 100%;
             height: 100%;
+            position: relative;
         }
 
         #costChart {
@@ -434,14 +522,7 @@
         /* Shared Date Axis */
         .shared-date-axis {
             display: flex;
-            gap: 0.75rem;
-            margin-top: 0.5rem;
-        }
-
-        .date-axis-spacer {
-            min-width: calc(120px + 0.75rem); /* Match repo-labels width + gap */
-            max-width: calc(180px + 0.75rem);
-            flex-shrink: 0;
+            margin-top: 0.75rem;
         }
 
         .date-axis-labels {
@@ -455,14 +536,24 @@
 
 
         .data-note {
-            margin-top: 0.75rem;
-            padding-top: 0.75rem;
+            margin-top: 1rem;
+            padding: 0.75rem 1rem;
             text-align: center;
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             color: var(--text-faded);
-            opacity: 0.5;
-            font-style: italic;
-            border-top: 1px solid var(--border);
+            opacity: 0.6;
+            font-style: normal;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                var(--bg-oat) 20%, 
+                var(--bg-oat) 80%, 
+                transparent 100%);
+            border-radius: 12px;
+            transition: opacity 0.3s ease;
+        }
+        
+        .data-note:hover {
+            opacity: 0.8;
         }
 
         /* Repository Activity Heatmap */
@@ -476,10 +567,10 @@
         .repo-heatmap-wrapper {
             display: flex;
             flex-direction: row;
-            gap: 0.75rem;
             padding: 0;
             min-height: 200px;
             align-items: stretch;
+            padding-left: 50px;  /* Match cost chart padding */
         }
 
         .repo-labels {
@@ -490,18 +581,27 @@
             overflow: hidden;
             gap: 1.5px; /* Match heatmap gap */
             align-content: stretch;
-            min-width: 120px;
-            max-width: 180px;
+            width: 55px;
+            margin-left: -55px;  /* Pull back into padding space */
+            flex-shrink: 0;
         }
 
         .repo-label {
             display: flex;
             align-items: center;
-            justify-content: flex-end;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            overflow: hidden;
-            padding-right: 0.5rem;
+            justify-content: center;
+            text-align: center;
+            padding: 0 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--primary);
+            opacity: 0.9;
+            transition: all 0.2s ease;
+        }
+        
+        .repo-label:hover {
+            opacity: 1;
+            transform: scale(1.1);
         }
 
         .repo-heatmap-content {
@@ -523,25 +623,41 @@
             height: 100%;
             background: var(--bg-oat);
             border-radius: 2px;
-            transition: all 0.2s;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
             min-width: 0;
             min-height: 0;
-        }
-
-        .heatmap-cell:hover {
-            transform: scale(1.5);
-            border-radius: 3px;
-            box-shadow: 0 0 0 2px var(--primary);
-            z-index: 10;
             position: relative;
         }
 
-        .heatmap-cell.level-0 { background: #F0EEE6; }
-        .heatmap-cell.level-1 { background: #D6C5A7; }
-        .heatmap-cell.level-2 { background: #B8A787; }
-        .heatmap-cell.level-3 { background: #997A5F; }
-        .heatmap-cell.level-4 { background: var(--primary); }
+        .heatmap-cell:hover {
+            transform: scale(1.4);
+            border-radius: 4px;
+            box-shadow: 0 0 0 2px var(--primary), 0 4px 12px rgba(217, 119, 87, 0.3);
+            z-index: 10;
+        }
+
+        .heatmap-cell.level-0 { 
+            background: #F0EEE6;
+            opacity: 0.5;
+        }
+        .heatmap-cell.level-1 { 
+            background: #D6C5A7;
+            opacity: 0.7;
+        }
+        .heatmap-cell.level-2 { 
+            background: #B8A787;
+            opacity: 0.85;
+        }
+        .heatmap-cell.level-3 { 
+            background: #997A5F;
+            opacity: 1;
+        }
+        .heatmap-cell.level-4 { 
+            background: var(--primary);
+            opacity: 1;
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+        }
 
 
         .heatmap-legend-label {
@@ -562,11 +678,26 @@
             border-radius: 2px;
         }
         
-        .heatmap-legend-item.level-0 { background: #F0EEE6; }
-        .heatmap-legend-item.level-1 { background: #D6C5A7; }
-        .heatmap-legend-item.level-2 { background: #B8A787; }
-        .heatmap-legend-item.level-3 { background: #997A5F; }
-        .heatmap-legend-item.level-4 { background: var(--primary); }
+        .heatmap-legend-item.level-0 { 
+            background: #F0EEE6;
+            opacity: 0.5;
+        }
+        .heatmap-legend-item.level-1 { 
+            background: #D6C5A7;
+            opacity: 0.7;
+        }
+        .heatmap-legend-item.level-2 { 
+            background: #B8A787;
+            opacity: 0.85;
+        }
+        .heatmap-legend-item.level-3 { 
+            background: #997A5F;
+            opacity: 1;
+        }
+        .heatmap-legend-item.level-4 { 
+            background: var(--primary);
+            opacity: 1;
+        }
 
         /* Chart Cards */
         .chart-card {
@@ -911,6 +1042,7 @@
         }
 
         @media (max-width: 600px) {
+            
             .dashboard-container {
                 padding: 1rem;
             }
@@ -922,19 +1054,26 @@
             
             .span-2, .span-3, .span-4 { grid-column: span 1; }
             
+            .cost-chart-wrapper {
+                padding-left: 40px;
+            }
+            
+            .repo-heatmap-wrapper {
+                padding-left: 40px;
+            }
+            
             .repo-labels {
-                min-width: 80px;
-                max-width: 120px;
                 font-size: 0.65rem;
+                width: 40px;
+                margin-left: -40px;
+            }
+            
+            .shared-date-axis {
+                padding-left: 40px;
             }
             
             .date-axis-labels {
                 font-size: 0.55rem;
-            }
-            
-            .date-axis-spacer {
-                min-width: 80px;
-                max-width: 120px;
             }
             
             .heatmap-legend-corner {
@@ -958,7 +1097,7 @@
             }
             
             .hero-metric .metric-value {
-                font-size: 2.5rem;
+                font-size: 2rem;
             }
             
             .footer-content {
@@ -1002,6 +1141,34 @@
             0% { background-position: -200% 0; }
             100% { background-position: 200% 0; }
         }
+        
+        /* Temporal Viz Entry Animation */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .temporal-viz {
+            animation: fadeInUp 0.8s ease-out;
+        }
+        
+        .cost-trend-section {
+            animation: fadeInUp 0.8s ease-out 0.1s backwards;
+        }
+        
+        .repo-activity-section {
+            animation: fadeInUp 0.8s ease-out 0.2s backwards;
+        }
+        
+        .shared-date-axis {
+            animation: fadeInUp 0.8s ease-out 0.3s backwards;
+        }
     </style>
 </head>
 <body>
@@ -1043,7 +1210,7 @@
         <!-- Bento Grid Layout -->
         <div class="bento-grid">
             <!-- Hero Metric: Total Cost -->
-            <div class="bento-card hero-metric span-2">
+            <div class="bento-card hero-metric">
                 <div class="metric-label">TOTAL COST</div>
                 <div class="metric-value" id="totalCost">--</div>
                 <span class="metric-change" id="costTrend">Calculating...</span>
@@ -1071,9 +1238,17 @@
                 </div>
             </div>
 
+            <!-- Top 5 Repositories -->
+            <div class="bento-card">
+                <div class="card-label">Top Repositories</div>
+                <div class="top-repos-list" id="topReposList">
+                    <!-- Will be populated dynamically -->
+                </div>
+            </div>
+
             <!-- Combined Temporal Visualization (30 Days) - Moved up after Total Cost -->
             <div class="bento-card span-4 temporal-viz">
-                <div class="card-label">30-Day Temporal Analysis</div>
+                <div class="card-label">📊 30-Day Temporal Analysis</div>
                 <div class="temporal-container">
                     <!-- Cost Trend Section -->
                     <div class="cost-trend-section">
@@ -1082,7 +1257,6 @@
                             <span class="scope-indicator">• Account data</span>
                         </div>
                         <div class="cost-chart-wrapper">
-                            <div class="chart-y-axis"></div>
                             <div class="chart-content">
                                 <canvas id="costChart"></canvas>
                             </div>
@@ -1120,7 +1294,6 @@
                     
                     <!-- Shared Date Axis -->
                     <div class="shared-date-axis">
-                        <div class="date-axis-spacer"></div>
                         <div class="date-axis-labels" id="sharedDateAxis">
                             <!-- Date labels will be added dynamically -->
                         </div>
@@ -1349,6 +1522,9 @@
             // Initialize Top Features
             initTopFeatures();
             
+            // Initialize Top Repositories
+            initTopRepositories();
+            
             // Initialize Charts (only if data available)
             if (appData && appData.daily) {
                 initCostChart();
@@ -1534,6 +1710,77 @@
             ).join('');
         }
 
+        // Initialize Top Repositories
+        function initTopRepositories() {
+            const container = document.getElementById('topReposList');
+            const executions = DATA?.executions || [];
+            
+            if (executions.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: var(--text-faded); padding: 1rem;">No repository data available</div>';
+                return;
+            }
+            
+            // Count repository executions
+            const repoCounts = new Map();
+            let totalCount = 0;
+            
+            executions.forEach(exec => {
+                if (exec.project_path) {
+                    // Extract repository name (same logic as heatmap)
+                    let repoName = exec.project_path;
+                    
+                    if (repoName.startsWith('-Applications-')) {
+                        repoName = repoName.replace(/^-Applications-/, '');
+                    } else if (repoName === '-Users-mark--claude') {
+                        repoName = '.claude';
+                    } else if (repoName.startsWith('-Users-mark-')) {
+                        repoName = repoName.replace(/^-Users-mark-(projects-|repos-)?/, '');
+                        
+                        if (repoName.includes('--')) {
+                            repoName = repoName.split('--')[0];
+                        }
+                    }
+                    
+                    if (repoName.includes('---')) {
+                        repoName = repoName.split('---').pop().replace(/^-+/, '');
+                    }
+                    
+                    repoName = repoName.replace(/^-+|-+$/g, '');
+                    
+                    if (!repoName) {
+                        repoName = 'Unknown';
+                    }
+                    
+                    repoCounts.set(repoName, (repoCounts.get(repoName) || 0) + 1);
+                    totalCount++;
+                }
+            });
+            
+            // Sort and get top 5
+            const topRepos = Array.from(repoCounts.entries())
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5);
+            
+            if (topRepos.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: var(--text-faded); padding: 1rem;">No repositories found</div>';
+                return;
+            }
+            
+            // Generate HTML
+            container.innerHTML = topRepos.map(([name, count], index) => {
+                const percentage = ((count / totalCount) * 100).toFixed(1);
+                return `
+                    <div class="repo-item" title="${count} executions">
+                        <div style="display: flex; align-items: center; flex: 1;">
+                            <span class="repo-rank">${index + 1}</span>
+                            <span class="repo-name">${name}</span>
+                        </div>
+                        <span class="repo-percentage">${percentage}%</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
         // Initialize Cost Chart
         function initCostChart() {
             const ctx = document.getElementById('costChart').getContext('2d');
@@ -1615,6 +1862,7 @@
                             }
                         },
                         y: {
+                            position: 'left',
                             grid: { 
                                 color: 'rgba(0, 0, 0, 0.03)',
                                 drawBorder: false
@@ -1626,6 +1874,9 @@
                                 callback: function(value) {
                                     return '$' + value;
                                 }
+                            },
+                            afterFit: function(axis) {
+                                axis.width = 50;  // Fixed width for Y-axis
                             }
                         }
                     }
@@ -1804,19 +2055,26 @@
             repoLabels.style.gap = '1.5px'; // Match the heatmap gap
             repoLabels.style.alignItems = 'stretch'; // Ensure full height usage
             
-            // Add repository labels
+            // Calculate total executions for percentage
+            const totalExecutions = Array.from(repoTotalCounts.values()).reduce((sum, count) => sum + count, 0);
+            
+            // Add repository percentage labels only
             finalRepos.forEach((repoName, idx) => {
                 const label = document.createElement('div');
                 label.className = 'repo-label';
-                label.textContent = repoName;
                 
+                let count, percentage;
                 if (repoName === 'Others') {
-                    const othersCount = othersRepos.reduce((sum, r) => sum + (repoTotalCounts.get(r) || 0), 0);
-                    label.title = `Others: ${othersRepos.length} repositories, ${othersCount} total executions`;
+                    count = othersRepos.reduce((sum, r) => sum + (repoTotalCounts.get(r) || 0), 0);
+                    percentage = totalExecutions > 0 ? ((count / totalExecutions) * 100).toFixed(0) : '0';
+                    label.title = `Others: ${othersRepos.length} repositories, ${count} executions (${percentage}%)`;
                 } else {
-                    const count = repoTotalCounts.get(repoName) || 0;
-                    label.title = `${idx + 1}. ${repoName}: ${count} executions`;
+                    count = repoTotalCounts.get(repoName) || 0;
+                    percentage = totalExecutions > 0 ? ((count / totalExecutions) * 100).toFixed(0) : '0';
+                    label.title = `${idx + 1}. ${repoName}: ${count} executions (${percentage}%)`;
                 }
+                
+                label.textContent = `${percentage}%`;
                 repoLabels.appendChild(label);
             });
             
