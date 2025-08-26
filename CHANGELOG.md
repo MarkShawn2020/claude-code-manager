@@ -1,3 +1,10 @@
+# [2.7.0](https://github.com/MarkShawn2020/claude-code-manager/compare/v2.6.0...v2.7.0) (2025-08-26)
+
+
+### Features
+
+* better settings ([b8ab24c](https://github.com/MarkShawn2020/claude-code-manager/commit/b8ab24c2519e09f9ae95dd1af2450cfa84e94d0b))
+
 # [2.6.0](https://github.com/MarkShawn2020/claude-code-manager/compare/v2.5.0...v2.6.0) (2025-08-26)
 
 
