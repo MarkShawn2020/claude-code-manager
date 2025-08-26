@@ -4,123 +4,104 @@
 [![License](https://img.shields.io/npm/l/claude-code-manager)](LICENSE)
 [![Node](https://img.shields.io/node/v/claude-code-manager)](package.json)
 
-Professional CLI toolkit for Claude Code power users. Automatic execution tracking, real-time monitoring, and advanced analytics with zero configuration.
-
+**Analytics & workflow automation for Claude Code power users.** Track executions, monitor costs, and manage parallel development with zero configuration.
 
 <div align="center">
-  <img src="./assets/demo-2.7.0.png" alt="Claude Code Manager Dashboard Demo">
+  <img src="./assets/demo-2.7.0.png" alt="Claude Code Manager Dashboard" width="100%">
   <br>
-  <em><code>ccm dashboard</code> - Interactive analytics dashboard with real-time metrics</em>
+  <em><code>ccm dashboard</code> - Real-time analytics with hot-reload support</em>
 </div>
 
-## ✨ Features
+## Quick Start
 
-- **🌳 Git Worktrees** - Parallel feature development without context switching
-- **📊 Analytics Dashboard** - Interactive web dashboard with cost tracking and usage metrics  
-- **🔍 Real-time Monitor** - htop-style terminal UI for active Claude sessions
-- **💾 Zero-Config Tracking** - Automatic execution tracking via PostInstall hooks
-- **🧠 Memory Discovery** - Find and manage all CLAUDE.md files across projects
-
-## 🚀 Quick Start
-
-```bash
-# Install globally
-npm install -g claude-code-manager
-
-# Auto-setup tracking (runs on install)
-ccm init
-
-# Create feature branch
-ccm feat add payment-api
-
-# Open dashboard
-ccm dashboard
-```
-
-## 📦 Installation
-
-### npm
 ```bash
 npm install -g claude-code-manager
+ccm init                    # Auto-setup tracking
+ccm dashboard --hot-reload   # Open analytics dashboard
 ```
 
-### pnpm (recommended)
-```bash
-pnpm add -g claude-code-manager
-```
+## Key Features
 
-### yarn
-```bash
-yarn global add claude-code-manager
-```
-
-## 🎯 Core Commands
-
-### Feature Management (`ccm feat`)
-Manage parallel development with Git worktrees.
-
-```bash
-ccm feat add <name>     # Create worktree in .feats/
-ccm feat list          # Interactive worktree manager  
-ccm feat merge         # Merge completed features
-```
-
-**Status Icons:**
-- `✎` Uncommitted changes
-- `↑N` Ahead of main
-- `↓N` Behind main
-- `✓` Fully merged
-
-### Analytics Dashboard (`ccm dashboard`)
-Web-based analytics with real-time data visualization.
+### 📊 Analytics Dashboard
+Interactive web dashboard with cost tracking, usage metrics, and execution heatmaps. Features hot-reload for real-time updates.
 
 ```bash
 ccm dashboard               # Open dashboard
-ccm dashboard --refresh     # Force refresh
-ccm dashboard --export json # Export data
+ccm dashboard --hot-reload  # Auto-refresh on data changes
 ```
 
-### Real-time Monitor (`ccm monitor`)
-Live terminal UI for active Claude sessions.
+### 🌳 Git Worktrees
+Manage parallel feature development without context switching.
 
 ```bash
-ccm monitor  # Tab: filter, Space: expand, Q: quit
+ccm feat add payment-api    # Create feature branch
+ccm feat list              # Interactive branch manager
+ccm feat merge             # Merge completed features
 ```
 
-### Session Statistics (`ccm stat`)
-Analyze Claude Code session data.
+### 🔍 Real-Time Monitor
+Live terminal UI showing active Claude sessions, hierarchical task views, and execution status.
 
 ```bash
-ccm stat --analyzer     # Timeline visualization
-ccm stat --current      # Current project only
-ccm stat --output-path  # Export sessions
+ccm monitor                # Tab: filter, Space: expand, Q: quit
 ```
 
-### Memory Discovery (`ccm memory`)
-Find all CLAUDE.md configuration files.
+### 💾 Zero-Config Tracking
+Automatic execution tracking via PostInstall hooks. All tool usage is captured in SQLite database.
 
 ```bash
-ccm memory              # Show with preview
-ccm memory --paths-only # List paths only
-ccm memory --full       # Full content
+ccm init                   # Setup automatic tracking
+ccm stat                   # View session statistics
 ```
 
-## 📋 All Commands
+### 🧠 Memory Discovery
+Find and manage all CLAUDE.md configuration files across your projects.
 
-| Command | Description |
-|---------|-------------|
-| `init` | Setup automatic tracking |
-| `feat` | Git worktree management |
-| `dashboard` | Web analytics dashboard |
-| `monitor` | Real-time session monitor |
-| `stat` | Session statistics |
-| `memory` | Memory file discovery |
-| `usage` | Token usage reports |
-| `backup` | Backup configurations |
-| `slim` | Clean old entries |
-| `track` | Manual tracking |
+```bash
+ccm memory                 # Show with preview
+ccm memory --full          # Display full content
+```
 
-## 🗄️ Data Storage
+## Installation
+
+### Package Managers
+
+```bash
+# npm
+npm install -g claude-code-manager
+
+# pnpm (recommended)
+pnpm add -g claude-code-manager
+
+# yarn
+yarn global add claude-code-manager
+```
+
+### Development Setup
+
+```bash
+git clone https://github.com/markshawn2020/claude-code-manager
+cd claude-code-manager
+pnpm install
+pnpm build
+pnpm link --global
+```
+
+## Command Reference
+
+| Command | Description | Key Options |
+|---------|-------------|-------------|
+| `dashboard` | Web analytics dashboard | `--hot-reload`, `--skip-usage` |
+| `feat` | Git worktree management | `add`, `list`, `merge` |
+| `monitor` | Real-time session monitor | Interactive UI |
+| `stat` | Session statistics | `--current`, `--project` |
+| `memory` | Memory file discovery | `--paths-only`, `--full` |
+| `usage` | Token usage reports | `--json`, `--csv` |
+| `init` | Setup tracking | Auto-configures hooks |
+| `backup` | Backup configurations | `--output` |
+| `slim` | Clean old entries | `--days`, `--force` |
+
+## Data Storage
 
 | Location | Purpose |
 |----------|---------|
@@ -129,43 +110,27 @@ ccm memory --full       # Full content
 | `.feats/` | Feature branch worktrees |
 | `.data/usage.json` | Usage cache (1hr TTL) |
 
-## 🛠️ Development
+## Requirements
 
-```bash
-# Clone repository
-git clone https://github.com/markshawn2020/claude-code-manager
-cd claude-code-manager
-
-# Install dependencies
-pnpm install
-
-# Build project
-pnpm build
-
-# Link for development
-pnpm link --global
-```
-
-### Requirements
 - Node.js ≥ 18.0.0
 - Git (for worktree features)
 - Claude Code CLI
 
-## 🤝 Contributing
+## Contributing
 
-Contributions welcome! Please read our [Contributing Guide](CONTRIBUTING.md).
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md).
 
 1. Fork the repository
-2. Create feature branch (`git checkout -b feature/amazing`)
-3. Commit changes (`git commit -am 'Add feature'`)
-4. Push to branch (`git push origin feature/amazing`)
+2. Create feature branch (`ccm feat add your-feature`)
+3. Commit changes with conventional commits
+4. Push to branch
 5. Open Pull Request
 
-## 📄 License
+## License
 
-ISC License - see [LICENSE](LICENSE) for details.
+ISC © 2024 - See [LICENSE](LICENSE) for details
 
-## 🔗 Links
+## Links
 
 - [NPM Package](https://www.npmjs.com/package/claude-code-manager)
 - [GitHub Repository](https://github.com/markshawn2020/claude-code-manager)
@@ -174,8 +139,8 @@ ISC License - see [LICENSE](LICENSE) for details.
 
 ---
 
-<p align="center">
-  Built for the Claude Code community
+<div align="center">
+  <sub>Built for the Claude Code community</sub>
   <br>
-  <sub>Star ⭐ this repo if you find it useful!</sub>
-</p>
+  <sub>⭐ Star this repo if you find it useful!</sub>
+</div>
