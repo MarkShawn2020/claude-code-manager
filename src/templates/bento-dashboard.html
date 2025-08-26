@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Code Manager - Bento Dashboard</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        
+        :root {
+            /* Design Palette Colors */
+            --primary: #D97757;
+            --text-main: #181818;
+            --text-faded: #87867F;
+            --bg-main: #F9F9F7;
+            --bg-dark: #141413;
+            --bg-ivory: #F0EEE6;
+            --bg-oat: #F7F4EC;
+            --bg-clay: #CC785C;
+            --bg-faded: #3D3D3A;
+            --border: #E8E6DC;
+            --cloud-light: #E8E6DC;
+            --fig: #B49FD8;
+            --olive: #C2C07D;
+            --cactus: #629A90;
+            --sky: #97B5D5;
+            --heather: #D2BEDF;
+            
+            /* Gradients */
+            --gradient-primary: linear-gradient(135deg, #D97757 0%, #CC785C 50%, #B49FD8 100%);
+            --gradient-accent: linear-gradient(135deg, #629A90 0%, #97B5D5 100%);
+            --gradient-warm: linear-gradient(135deg, #D97757 0%, #C2C07D 100%);
+            --gradient-cool: linear-gradient(135deg, #97B5D5 0%, #B49FD8 100%);
+            
+            /* Spacing */
+            --gap: 1.25rem;
+            --radius: 20px;
+            
+            /* Shadows */
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+            --shadow-hover: 0 12px 40px rgba(217, 119, 87, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-main);
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Main Container */
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Header */
+        .dashboard-header {
+            margin-bottom: 2.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
+        }
+
+        .header-subtitle {
+            font-size: 0.95rem;
+            color: var(--text-faded);
+            margin-top: 0.25rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .refresh-btn {
+            padding: 0.75rem 1.5rem;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* Bento Grid */
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-auto-rows: minmax(120px, max-content);
+            gap: var(--gap);
+            margin-bottom: 2rem;
+        }
+
+        /* Card Base Styles */
+        .bento-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 1.75rem;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            min-height: 120px;
+        }
+
+        .bento-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .card-label {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-faded);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.75rem;
+        }
+
+        /* Grid Item Sizes */
+        .span-2 { grid-column: span 2; }
+        .span-3 { grid-column: span 3; }
+        .span-4 { grid-column: span 4; }
+        .row-2 { 
+            grid-row: span 2;
+            height: 350px;
+        }
+        
+        /* Ensure chart and heatmap cards don't grow */
+        .bento-card:has(.cost-curve-container),
+        .bento-card:has(.activity-container) {
+            height: 350px;
+            overflow: hidden;
+        }
+
+        /* Hero Metric Card */
+        .hero-metric {
+            background: var(--gradient-primary);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-metric::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+
+        .hero-metric .metric-value {
+            font-size: 3.5rem;
+            font-weight: 900;
+            line-height: 1;
+            margin: 0.5rem 0;
+        }
+
+        .hero-metric .metric-label {
+            font-size: 0.95rem;
+            font-weight: 500;
+            opacity: 0.9;
+        }
+
+        .hero-metric .metric-change {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.35rem 0.75rem;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        /* Stats Cards */
+        .stat-card {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .stat-value {
+            font-size: 2.25rem;
+            font-weight: 700;
+            background: var(--gradient-warm);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0.5rem 0;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-faded);
+        }
+
+        .stat-trend {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            font-size: 0.85rem;
+            color: var(--cactus);
+        }
+
+        /* Cost Curve Chart */
+        .cost-curve-container {
+            height: 280px;
+            max-height: 280px;
+            position: relative;
+        }
+
+        #costChart {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Activity Heatmap */
+        .activity-container {
+            display: flex;
+            flex-direction: column;
+            height: 220px;
+            max-height: 220px;
+        }
+
+        .heatmap-grid {
+            display: grid;
+            grid-template-columns: repeat(52, 1fr);
+            grid-template-rows: repeat(7, 1fr);
+            gap: 3px;
+            margin-top: 1rem;
+            height: 140px;
+            max-height: 140px;
+        }
+
+        .heatmap-cell {
+            aspect-ratio: 1;
+            background: var(--bg-oat);
+            border-radius: 3px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .heatmap-cell:hover {
+            transform: scale(1.3);
+            border-radius: 4px;
+            box-shadow: 0 0 0 2px var(--primary);
+        }
+
+        .heatmap-cell.level-0 { background: var(--bg-oat); }
+        .heatmap-cell.level-1 { background: #D6C5A7; }
+        .heatmap-cell.level-2 { background: #B8A787; }
+        .heatmap-cell.level-3 { background: #997A5F; }
+        .heatmap-cell.level-4 { background: var(--primary); }
+
+        .heatmap-legend {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            font-size: 0.8rem;
+            color: var(--text-faded);
+        }
+
+        .heatmap-legend-item {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+        }
+
+        /* Progress Cards */
+        .progress-card {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--bg-oat);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--gradient-accent);
+            border-radius: 10px;
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .progress-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--text-faded);
+        }
+
+        /* Feature Tags */
+        .feature-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .tag {
+            padding: 0.4rem 0.9rem;
+            background: var(--bg-oat);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-main);
+            transition: all 0.2s;
+        }
+
+        .tag:hover {
+            background: var(--gradient-cool);
+            color: white;
+            transform: scale(1.05);
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .action-btn {
+            padding: 1rem;
+            background: var(--bg-oat);
+            border: none;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .action-btn:hover {
+            background: var(--gradient-primary);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .bento-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            .span-4 { grid-column: span 3; }
+        }
+
+        @media (max-width: 900px) {
+            .bento-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .span-3, .span-4 { grid-column: span 2; }
+        }
+
+        @media (max-width: 600px) {
+            .dashboard-container {
+                padding: 1rem;
+            }
+            
+            .bento-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .span-2, .span-3, .span-4 { grid-column: span 1; }
+            
+            .row-2,
+            .bento-card:has(.cost-curve-container),
+            .bento-card:has(.activity-container) {
+                height: auto;
+                min-height: 250px;
+                max-height: 350px;
+            }
+            
+            .header-title {
+                font-size: 1.75rem;
+            }
+            
+            .hero-metric .metric-value {
+                font-size: 2.5rem;
+            }
+        }
+
+        /* Loading Animation */
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        .loading {
+            background: linear-gradient(90deg, 
+                var(--bg-oat) 25%, 
+                var(--cloud-light) 50%, 
+                var(--bg-oat) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 2s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div>
+                <h1 class="header-title">Claude Code Manager</h1>
+                <p class="header-subtitle">Real-time analytics and insights</p>
+            </div>
+            <div class="header-actions">
+                <button class="refresh-btn" onclick="refreshData()">
+                    <span>↻ Refresh</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Bento Grid Layout -->
+        <div class="bento-grid">
+            <!-- Hero Metric: Total Cost -->
+            <div class="bento-card hero-metric span-2">
+                <div class="metric-label">TOTAL COST</div>
+                <div class="metric-value" id="totalCost">$2,847</div>
+                <span class="metric-change">↑ 12% this month</span>
+            </div>
+
+            <!-- Projects Count -->
+            <div class="bento-card stat-card">
+                <div>
+                    <div class="card-label">Projects</div>
+                    <div class="stat-value" id="projectCount">124</div>
+                </div>
+                <div class="stat-trend">
+                    <span>↑ 8 new</span>
+                </div>
+            </div>
+
+            <!-- Active Sessions -->
+            <div class="bento-card stat-card">
+                <div>
+                    <div class="card-label">Sessions</div>
+                    <div class="stat-value" id="sessionCount">847</div>
+                </div>
+                <div class="stat-trend">
+                    <span>↑ 23% active</span>
+                </div>
+            </div>
+
+            <!-- Cost Curve Chart -->
+            <div class="bento-card span-2 row-2">
+                <div class="card-label">Cost Trend</div>
+                <div class="cost-curve-container">
+                    <canvas id="costChart"></canvas>
+                </div>
+            </div>
+
+            <!-- GitHub-style Activity Heatmap -->
+            <div class="bento-card span-2 row-2">
+                <div class="card-label">Contribution Activity</div>
+                <div class="activity-container">
+                    <div class="heatmap-grid" id="activityHeatmap"></div>
+                    <div class="heatmap-legend">
+                        <span>Less</span>
+                        <div class="heatmap-legend-item level-0"></div>
+                        <div class="heatmap-legend-item level-1"></div>
+                        <div class="heatmap-legend-item level-2"></div>
+                        <div class="heatmap-legend-item level-3"></div>
+                        <div class="heatmap-legend-item level-4"></div>
+                        <span>More</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tool Usage -->
+            <div class="bento-card span-2">
+                <div class="card-label">Tool Usage Breakdown</div>
+                <div class="progress-card">
+                    <div>
+                        <div class="progress-stats">
+                            <span>Bash Commands</span>
+                            <span>68%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 68%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="progress-stats">
+                            <span>File Operations</span>
+                            <span>22%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 22%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="progress-stats">
+                            <span>Web Searches</span>
+                            <span>10%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 10%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Features -->
+            <div class="bento-card">
+                <div class="card-label">Top Features</div>
+                <div class="feature-tags">
+                    <span class="tag">Real-time Monitor</span>
+                    <span class="tag">Analytics</span>
+                    <span class="tag">Export</span>
+                    <span class="tag">Backup</span>
+                    <span class="tag">Memory</span>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="bento-card">
+                <div class="card-label">Quick Actions</div>
+                <div class="quick-actions">
+                    <button class="action-btn">
+                        <span>📊 Export</span>
+                    </button>
+                    <button class="action-btn">
+                        <span>🔍 Analyze</span>
+                    </button>
+                    <button class="action-btn">
+                        <span>💾 Backup</span>
+                    </button>
+                    <button class="action-btn">
+                        <span>⚙️ Settings</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Initialize Cost Chart
+        const ctx = document.getElementById('costChart').getContext('2d');
+        const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+        gradient.addColorStop(0, 'rgba(217, 119, 87, 0.4)');
+        gradient.addColorStop(1, 'rgba(217, 119, 87, 0.01)');
+
+        const costChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                datasets: [{
+                    label: 'Monthly Cost',
+                    data: [1200, 1900, 1700, 2100, 2400, 2200, 2600, 2847, 2900, 3100, 2950, 3200],
+                    borderColor: '#D97757',
+                    backgroundColor: gradient,
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 0,
+                    pointHoverRadius: 6,
+                    pointHoverBackgroundColor: '#D97757',
+                    pointHoverBorderColor: '#fff',
+                    pointHoverBorderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#141413',
+                        titleColor: '#fff',
+                        bodyColor: '#fff',
+                        padding: 12,
+                        cornerRadius: 8,
+                        displayColors: false,
+                        callbacks: {
+                            label: function(context) {
+                                return '$' + context.parsed.y.toLocaleString();
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#87867F', font: { size: 11 } }
+                    },
+                    y: {
+                        grid: { 
+                            color: 'rgba(0, 0, 0, 0.05)',
+                            drawBorder: false
+                        },
+                        ticks: { 
+                            color: '#87867F',
+                            font: { size: 11 },
+                            callback: function(value) {
+                                return '$' + value.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Generate Activity Heatmap
+        function generateHeatmap() {
+            const heatmap = document.getElementById('activityHeatmap');
+            heatmap.innerHTML = '';
+            
+            for (let week = 0; week < 52; week++) {
+                for (let day = 0; day < 7; day++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'heatmap-cell';
+                    
+                    // Generate random activity level with bias towards recent weeks
+                    const recencyBias = week > 40 ? 2 : 1;
+                    const level = Math.floor(Math.random() * 5 * recencyBias) % 5;
+                    cell.classList.add(`level-${level}`);
+                    
+                    // Add tooltip
+                    const date = new Date();
+                    date.setDate(date.getDate() - ((51 - week) * 7 + (6 - day)));
+                    const contributions = level > 0 ? Math.floor(Math.random() * 20) + 1 : 0;
+                    
+                    cell.title = `${date.toLocaleDateString()}: ${contributions} contributions`;
+                    
+                    heatmap.appendChild(cell);
+                }
+            }
+        }
+
+        // Animate numbers on load
+        function animateValue(id, start, end, duration) {
+            const element = document.getElementById(id);
+            const range = end - start;
+            const increment = range / (duration / 16);
+            let current = start;
+            
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= end) {
+                    current = end;
+                    clearInterval(timer);
+                }
+                
+                if (id === 'totalCost') {
+                    element.textContent = '$' + Math.floor(current).toLocaleString();
+                } else {
+                    element.textContent = Math.floor(current).toLocaleString();
+                }
+            }, 16);
+        }
+
+        // Refresh data function
+        function refreshData() {
+            // Add loading animation
+            document.querySelectorAll('.stat-value, .metric-value').forEach(el => {
+                el.classList.add('loading');
+            });
+            
+            setTimeout(() => {
+                // Remove loading animation and update values
+                document.querySelectorAll('.stat-value, .metric-value').forEach(el => {
+                    el.classList.remove('loading');
+                });
+                
+                // Regenerate heatmap
+                generateHeatmap();
+                
+                // Update chart with new data
+                costChart.data.datasets[0].data = costChart.data.datasets[0].data.map(
+                    val => val + (Math.random() - 0.5) * 200
+                );
+                costChart.update();
+            }, 1000);
+        }
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', () => {
+            generateHeatmap();
+            animateValue('totalCost', 0, 2847, 1000);
+            animateValue('projectCount', 0, 124, 1000);
+            animateValue('sessionCount', 0, 847, 1000);
+        });
+    </script>
+</body>
+</html>
