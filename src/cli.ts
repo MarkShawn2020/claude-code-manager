@@ -101,6 +101,7 @@ program
   .option('--format <format>', 'Export format: json, csv (requires --export)', 'json')
   .option('--refresh', 'Force refresh usage data from ccusage before showing dashboard')
   .option('--skip-usage', 'Skip loading usage data for faster dashboard launch')
+  .option('--hot-reload', 'Enable hot-reload for automatic dashboard refresh on data changes')
   .action(dashboardCommand);
 
 program.addCommand(featCommand());

@@ -426,7 +426,7 @@ function loadProjectsData(): { projects: ProcessedProject[], executions: any[], 
   }
 }
 
-async function generateDashboard(data: UnifiedDashboardData): Promise<void> {
+async function generateDashboard(data: UnifiedDashboardData, enableHotReload: boolean = false, options?: any): Promise<void> {
   // Read the bento HTML template
   const templatePath = path.join(__dirname, '../templates/bento-dashboard.html');
   let template: string;
@@ -443,11 +443,59 @@ async function generateDashboard(data: UnifiedDashboardData): Promise<void> {
   const jsonData = JSON.stringify(data);
   const base64Data = Buffer.from(jsonData).toString('base64');
   
-  // Inject the base64 data that will be decoded in the browser
-  const htmlContent = template.replace(
+  // Add hot-reload script if enabled
+  let hotReloadScript = '';
+  if (enableHotReload) {
+    hotReloadScript = `
+      // Hot-reload functionality
+      (function() {
+        let lastModified = ${Date.now()};
+        const checkInterval = 1000; // Check every second
+        
+        function checkForReload() {
+          fetch(window.location.href + '?check=' + Date.now(), { method: 'HEAD' })
+            .then(response => {
+              const newModified = response.headers.get('last-modified');
+              if (newModified && new Date(newModified).getTime() > lastModified) {
+                console.log('🔄 Reloading dashboard...');
+                window.location.reload();
+              }
+            })
+            .catch(() => {
+              // Ignore errors
+            });
+        }
+        
+        // Auto-reload on file changes
+        setInterval(checkForReload, checkInterval);
+        
+        // Also check for WebSocket connection for faster updates
+        if (typeof WebSocket !== 'undefined') {
+          try {
+            const ws = new WebSocket('ws://localhost:3456');
+            ws.onmessage = (event) => {
+              if (event.data === 'reload') {
+                console.log('🔄 Hot-reload triggered!');
+                window.location.reload();
+              }
+            };
+            ws.onerror = () => { /* Ignore WebSocket errors */ };
+          } catch (e) { /* Ignore WebSocket errors */ }
+        }
+      })();
+    `;
+  }
+  
+  // Inject the base64 data and hot-reload script
+  let htmlContent = template.replace(
     '/*DATA_PLACEHOLDER*/', 
     `JSON.parse(atob('${base64Data}'))`
   );
+  
+  if (enableHotReload) {
+    // Add hot-reload script before closing body tag
+    htmlContent = htmlContent.replace('</body>', `<script>${hotReloadScript}</script></body>`);
+  }
 
   // Generate output file path
   const outputDir = os.tmpdir();
@@ -539,6 +587,90 @@ async function generateDashboard(data: UnifiedDashboardData): Promise<void> {
 
     console.log(chalk.cyan('🔍 Dashboard is ready! Press Ctrl+C to exit'));
     
+    // Start file watcher for hot-reload if enabled
+    if (enableHotReload) {
+      console.log(chalk.magenta('🔥 Hot-reload enabled - dashboard will refresh automatically on changes'));
+      
+      const homeDir = os.homedir();
+      const watchPaths = [
+        path.join(__dirname, '../templates/bento-dashboard.html'),
+        path.join(homeDir, '.claude.json'),
+        path.join(homeDir, '.claude', 'db.sql'),
+        path.join(process.cwd(), '.data', 'usage.json')
+      ];
+      
+      // Simple WebSocket server for hot-reload
+      try {
+        const WebSocket = await import('ws');
+        const wss = new WebSocket.WebSocketServer({ port: 3456 });
+        
+        // Store options for re-collection
+        const collectionOptions = options;
+        
+        // Watch for file changes
+        const watchers = watchPaths.map(watchPath => {
+          if (fs.existsSync(watchPath)) {
+            return fs.watch(watchPath, async (eventType) => {
+              if (eventType === 'change') {
+                console.log(chalk.yellow(`📝 Detected change in ${path.basename(watchPath)}...`));
+                
+                // Regenerate the dashboard
+                try {
+                  // Re-read template if it changed
+                  const newTemplate = fs.readFileSync(templatePath, 'utf8');
+                  
+                  // Re-collect data
+                  const newData = await collectDashboardData(collectionOptions);
+                  
+                  // Generate new content
+                  const newJsonData = JSON.stringify(newData);
+                  const newBase64Data = Buffer.from(newJsonData).toString('base64');
+                  
+                  // Recreate hot-reload script with current timestamp
+                  const newHotReloadScript = hotReloadScript.replace(`lastModified = ${Date.now()}`, `lastModified = ${Date.now()}`);
+                  
+                  let newHtmlContent = newTemplate.replace(
+                    '/*DATA_PLACEHOLDER*/', 
+                    `JSON.parse(atob('${newBase64Data}'))`
+                  );
+                  
+                  if (enableHotReload) {
+                    newHtmlContent = newHtmlContent.replace('</body>', `<script>${newHotReloadScript}</script></body>`);
+                  }
+                  
+                  // Write updated file
+                  fs.writeFileSync(outputFile, newHtmlContent);
+                  
+                  // Notify all connected clients
+                  wss.clients.forEach(client => {
+                    if (client.readyState === WebSocket.OPEN) {
+                      client.send('reload');
+                    }
+                  });
+                  
+                  console.log(chalk.green('✅ Dashboard updated!'));
+                } catch (error) {
+                  console.error(chalk.red('Failed to update dashboard:'), error);
+                }
+              }
+            });
+          }
+          return null;
+        }).filter(Boolean);
+        
+        // Cleanup watchers on exit
+        const cleanupWatchers = () => {
+          watchers.forEach(watcher => watcher?.close());
+          wss.close();
+        };
+        
+        process.on('SIGINT', cleanupWatchers);
+        process.on('SIGTERM', cleanupWatchers);
+      } catch (error) {
+        console.log(chalk.yellow('⚠️  WebSocket not available, hot-reload will use polling only'));
+      }
+    }
+    
     // Setup cleanup function
     const cleanup = () => {
       console.log(chalk.yellow('\n🧹 Cleaning up...'));
@@ -568,68 +700,75 @@ async function generateDashboard(data: UnifiedDashboardData): Promise<void> {
   }
 }
 
-export async function dashboardCommand(options: { export?: string; format?: string; refresh?: boolean; view?: string; skipUsage?: boolean }) {
+// Helper function to collect dashboard data
+async function collectDashboardData(options: { export?: string; format?: string; refresh?: boolean; view?: string; skipUsage?: boolean }): Promise<UnifiedDashboardData> {
+  const unifiedData: UnifiedDashboardData = {};
+  
+  // Load package.json version
   try {
-    // Create unified dashboard data
-    const unifiedData: UnifiedDashboardData = {};
+    const packageJsonPath = path.join(__dirname, '../../package.json');
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+    unifiedData.version = packageJson.version;
+  } catch (error) {
+    console.warn(chalk.yellow('Warning: Could not read package.json version'));
+  }
+  
+  // Load data in parallel for better performance
+  console.log(chalk.cyan('📊 Loading dashboard data...'));
+  
+  // Start operations in parallel (skip usage if requested)
+  const loadPromises: Promise<any>[] = [
+    // Load projects data (synchronous, wrapped in Promise)
+    Promise.resolve(loadProjectsData())
+  ];
+  
+  // Only load usage data if not skipped
+  if (!options.skipUsage) {
+    loadPromises.push(getUsageData(options.refresh));
+  } else {
+    console.log(chalk.gray('  Skipping usage data (--skip-usage)'));
+    loadPromises.push(Promise.resolve(null));
+  }
+  
+  const [projectsResult, usageResult] = await Promise.all(loadPromises);
+  
+  // Process projects data
+  if (projectsResult) {
+    const { projects, executions } = projectsResult;
     
-    // Load package.json version
-    try {
-      const packageJsonPath = path.join(__dirname, '../../package.json');
-      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-      unifiedData.version = packageJson.version;
-    } catch (error) {
-      console.warn(chalk.yellow('Warning: Could not read package.json version'));
-    }
-    
-    // Load data in parallel for better performance
-    console.log(chalk.cyan('📊 Loading dashboard data...'));
-    
-    // Start operations in parallel (skip usage if requested)
-    const loadPromises: Promise<any>[] = [
-      // Load projects data (synchronous, wrapped in Promise)
-      Promise.resolve(loadProjectsData())
-    ];
-    
-    // Only load usage data if not skipped
-    if (!options.skipUsage) {
-      loadPromises.push(getUsageData(options.refresh));
-    } else {
-      console.log(chalk.gray('  Skipping usage data (--skip-usage)'));
-      loadPromises.push(Promise.resolve(null));
-    }
-    
-    const [projectsResult, usageResult] = await Promise.all(loadPromises);
-    
-    // Process projects data
-    if (projectsResult) {
-      const { projects, executions } = projectsResult;
-      
-      unifiedData.projects = {
-        projects,
-        executions,
-        metadata: {
-          generatedAt: new Date().toISOString(),
-          totalProjects: projects.length,
-          totalSize: projects.reduce((sum: number, p: ProcessedProject) => sum + p.totalSize, 0),
-          totalEntries: projects.reduce((sum: number, p: ProcessedProject) => sum + p.historyItems.length, 0),
-          totalExecutions: (projectsResult as any).executionStats?.totalCount || executions.length
-        }
-      };
-      unifiedData.executions = executions;
-      unifiedData.executionStats = (projectsResult as any).executionStats;
-    }
-    
-    // Process usage data
-    if (usageResult) {
-      const { data: usageData } = usageResult;
-      
-      if (usageData.daily && usageData.daily.length > 0) {
-        // Process the usage data
-        const processedUsageData = processUsageData(usageData);
-        unifiedData.usage = processedUsageData;
+    unifiedData.projects = {
+      projects,
+      executions,
+      metadata: {
+        generatedAt: new Date().toISOString(),
+        totalProjects: projects.length,
+        totalSize: projects.reduce((sum: number, p: ProcessedProject) => sum + p.totalSize, 0),
+        totalEntries: projects.reduce((sum: number, p: ProcessedProject) => sum + p.historyItems.length, 0),
+        totalExecutions: (projectsResult as any).executionStats?.totalCount || executions.length
       }
+    };
+    unifiedData.executions = executions;
+    unifiedData.executionStats = (projectsResult as any).executionStats;
+  }
+  
+  // Process usage data
+  if (usageResult) {
+    const { data: usageData } = usageResult;
+    
+    if (usageData.daily && usageData.daily.length > 0) {
+      // Process the usage data
+      const processedUsageData = processUsageData(usageData);
+      unifiedData.usage = processedUsageData;
     }
+  }
+  
+  return unifiedData;
+}
+
+export async function dashboardCommand(options: { export?: string; format?: string; refresh?: boolean; view?: string; skipUsage?: boolean; hotReload?: boolean }) {
+  try {
+    // Collect dashboard data
+    const unifiedData = await collectDashboardData(options);
     
     // Check if we have any data
     if (!unifiedData.projects && !unifiedData.usage) {
@@ -681,8 +820,8 @@ export async function dashboardCommand(options: { export?: string; format?: stri
     
     console.log();
     
-    // Generate and open dashboard
-    await generateDashboard(unifiedData);
+    // Generate and open dashboard with hot-reload if requested
+    await generateDashboard(unifiedData, options.hotReload || false, options);
     
   } catch (error) {
     if (error instanceof SyntaxError) {

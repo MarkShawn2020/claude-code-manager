@@ -186,6 +186,22 @@
             background: var(--gradient-primary);
             border: none;
         }
+        
+        .header-btn.github-star-btn {
+            background: linear-gradient(135deg, #24292e 0%, #40454a 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem 1.25rem;
+            margin-left: 0.75rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .header-btn.github-star-btn:hover {
+            background: linear-gradient(135deg, #2ea043 0%, #56d364 100%);
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 6px 20px rgba(46, 160, 67, 0.4);
+        }
 
         /* Main Dashboard Container */
         .dashboard-container {
@@ -1263,6 +1279,193 @@
         .shared-date-axis {
             animation: fadeInUp 0.8s ease-out 0.3s backwards;
         }
+        /* Settings Modal Styles */
+        .settings-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            backdrop-filter: blur(4px);
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from { 
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .settings-modal {
+            background: white;
+            border-radius: var(--radius);
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease-out;
+        }
+        
+        .settings-modal-header {
+            padding: 1.5rem 2rem;
+            background: var(--gradient-dark);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .settings-modal-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+        
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: rotate(90deg);
+        }
+        
+        .settings-modal-body {
+            padding: 2rem;
+            overflow-y: auto;
+            max-height: calc(80vh - 140px);
+        }
+        
+        .settings-section {
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .settings-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        
+        .settings-section h3 {
+            margin: 0 0 1rem 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+        
+        .settings-section p {
+            color: var(--text-faded);
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+        
+        .export-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .export-btn {
+            flex: 1;
+            min-width: 180px;
+            padding: 0.875rem 1.5rem;
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(217, 119, 87, 0.2);
+        }
+        
+        .export-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(217, 119, 87, 0.3);
+        }
+        
+        .export-btn:active {
+            transform: translateY(0);
+        }
+        
+        .settings-checkbox {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+        
+        .settings-checkbox input[type="checkbox"] {
+            margin-right: 0.75rem;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        
+        .settings-checkbox span {
+            color: var(--text-main);
+        }
+        
+        .settings-modal-footer {
+            padding: 1.5rem 2rem;
+            background: var(--bg-oat);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+        }
+        
+        .settings-btn-close {
+            padding: 0.75rem 2rem;
+            background: white;
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .settings-btn-close:hover {
+            background: var(--bg-main);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
     </style>
 </head>
 <body>
@@ -1284,8 +1487,16 @@
                     <!-- Stats will be populated dynamically -->
                 </div>
                 <div class="header-actions">
-                    <button class="header-btn" onclick="exportData()">Export</button>
                     <button class="header-btn primary" onclick="openSettings()">Settings</button>
+                    <button class="header-btn github-star-btn" onclick="window.open('https://github.com/markshawn2020/claude-code-manager', '_blank')">
+                        <svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 6px;" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+                        </svg>
+                        <span style="margin-right: 8px;">Star on GitHub</span>
+                        <svg style="width: 14px; height: 14px; vertical-align: middle; opacity: 0.8;" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z"/>
+                        </svg>
+                    </button>
                 </div>
             </nav>
         </div>
@@ -1447,7 +1658,7 @@
                 <div class="footer-column">
                     <h4>Connect</h4>
                     <div class="footer-links">
-                        <a href="#" class="footer-link">GitHub</a>
+                        <a href="https://github.com/markshawn2020/claude-code-manager" target="_blank" class="footer-link">GitHub</a>
                         <a href="#" class="footer-link">Discord</a>
                         <a href="#" class="footer-link">Twitter</a>
                         <a href="#" class="footer-link">LinkedIn</a>
@@ -1458,9 +1669,13 @@
             <div class="footer-bottom">
                 <div>&copy; 2024 Claude Code Manager. All rights reserved.</div>
                 <div class="footer-social">
+                    <a href="https://github.com/markshawn2020/claude-code-manager" target="_blank" class="social-link" title="GitHub">
+                        <svg style="width: 20px; height: 20px;" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+                        </svg>
+                    </a>
                     <a href="#" class="social-link">𝕏</a>
                     <a href="#" class="social-link">◻</a>
-                    <a href="#" class="social-link">▶</a>
                 </div>
             </div>
         </div>
@@ -2482,9 +2697,85 @@
         // Action button handlers
 
         function openSettings() {
-            // Could open a settings modal or redirect to settings page
-            console.log('Opening settings...');
-            alert('Settings functionality will be implemented here');
+            // Create modal overlay
+            const modalOverlay = document.createElement('div');
+            modalOverlay.className = 'settings-modal-overlay';
+            
+            // Create modal content
+            const modal = document.createElement('div');
+            modal.className = 'settings-modal';
+            
+            modal.innerHTML = `
+                <div class="settings-modal-header">
+                    <h2>Settings</h2>
+                    <button class="close-btn" onclick="this.closest('.settings-modal-overlay').remove()">&times;</button>
+                </div>
+                <div class="settings-modal-body">
+                    <div class="settings-section">
+                        <h3>Export Data</h3>
+                        <p>Export dashboard data in various formats for analysis or backup.</p>
+                        <div class="export-buttons">
+                            <button class="export-btn" onclick="exportData('json'); this.closest('.settings-modal-overlay').remove()">
+                                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 8px;">
+                                    <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                                    <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+                                </svg>
+                                Export as JSON
+                            </button>
+                            <button class="export-btn" onclick="exportData('csv'); this.closest('.settings-modal-overlay').remove()">
+                                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 8px;">
+                                    <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                                    <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+                                </svg>
+                                Export as CSV
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-section">
+                        <h3>Dashboard Options</h3>
+                        <label class="settings-checkbox">
+                            <input type="checkbox" id="autoRefresh" checked>
+                            <span>Auto-refresh data every hour</span>
+                        </label>
+                        <label class="settings-checkbox">
+                            <input type="checkbox" id="showAnimations" checked>
+                            <span>Enable animations</span>
+                        </label>
+                    </div>
+                    
+                    <div class="settings-section">
+                        <h3>About</h3>
+                        <p style="color: var(--text-faded); font-size: 0.9rem;">
+                            Claude Code Manager v${DATA?.version || '2.6.0'}<br>
+                            Professional analytics dashboard for Claude Code workflows<br>
+                            <a href="https://github.com/markshawn2020/claude-code-manager" target="_blank" style="color: var(--primary);">View on GitHub</a>
+                        </p>
+                    </div>
+                </div>
+                <div class="settings-modal-footer">
+                    <button class="settings-btn-close" onclick="this.closest('.settings-modal-overlay').remove()">Close</button>
+                </div>
+            `;
+            
+            modalOverlay.appendChild(modal);
+            document.body.appendChild(modalOverlay);
+            
+            // Close on overlay click
+            modalOverlay.addEventListener('click', (e) => {
+                if (e.target === modalOverlay) {
+                    modalOverlay.remove();
+                }
+            });
+            
+            // Close on Escape key
+            const handleEsc = (e) => {
+                if (e.key === 'Escape') {
+                    modalOverlay.remove();
+                    document.removeEventListener('keydown', handleEsc);
+                }
+            };
+            document.addEventListener('keydown', handleEsc);
         }
 
         // Animate numbers on load
