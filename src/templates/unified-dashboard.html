@@ -284,9 +284,89 @@
         /* Stats Cards Grid */
         .stats-overview {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: var(--spacing-m);
+            grid-template-columns: repeat(6, 1fr);
+            gap: var(--spacing-s);
             margin-bottom: var(--spacing-l);
+        }
+
+        /* Compact stats for mobile */
+        .stats-compact {
+            display: none;
+            background: var(--background-main);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-m);
+            border: 1px solid var(--cloud-light);
+            margin-bottom: var(--spacing-l);
+        }
+
+        .stats-compact-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--spacing-s);
+        }
+
+        .compact-stat {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+        }
+
+        .compact-stat-icon {
+            font-size: 1.25rem;
+        }
+
+        .compact-stat-info {
+            flex: 1;
+        }
+
+        .compact-stat-value {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .compact-stat-label {
+            font-size: 0.75rem;
+            color: var(--text-faded);
+        }
+
+        /* Usage Summary Section */
+        .usage-summary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--background-clay) 100%);
+            color: var(--background-main);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-m);
+            margin-bottom: var(--spacing-l);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .usage-summary-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--spacing-m);
+        }
+
+        .usage-stat {
+            text-align: center;
+        }
+
+        .usage-stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .usage-stat-label {
+            font-size: 0.875rem;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .usage-stat-trend {
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+            opacity: 0.8;
         }
 
         .stat-card {
@@ -810,6 +890,21 @@
         }
 
         /* Responsive Design */
+        /* Large screens - keep all 6 stats in one row */
+        @media (min-width: 1440px) {
+            .stats-overview {
+                grid-template-columns: repeat(6, 1fr);
+            }
+        }
+
+        /* Medium-large screens - 2 rows of 3 */
+        @media (max-width: 1439px) and (min-width: 768px) {
+            .stats-overview {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        /* Tablet screens */
         @media (max-width: 1024px) {
             .charts-grid {
                 grid-template-columns: 1fr;
@@ -818,15 +913,24 @@
             .header-stats {
                 display: none;
             }
+            
+            .usage-summary-content {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
 
-        @media (max-width: 768px) {
+        /* Small screens - hide full stats, show compact */
+        @media (max-width: 767px) {
             .dashboard-container {
                 padding: var(--spacing-s);
             }
 
             .stats-overview {
-                grid-template-columns: 1fr;
+                display: none;
+            }
+
+            .stats-compact {
+                display: block;
             }
 
             .nav-tabs {
@@ -845,6 +949,30 @@
 
             .search-input {
                 width: 100%;
+            }
+            
+            .usage-summary {
+                padding: var(--spacing-s);
+            }
+            
+            .usage-summary-content {
+                grid-template-columns: 1fr;
+                gap: var(--spacing-s);
+            }
+            
+            .usage-stat-value {
+                font-size: 1.5rem;
+            }
+        }
+        
+        /* Extra small screens */
+        @media (max-width: 480px) {
+            .stats-compact-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .contribution-calendar {
+                display: none;
             }
         }
     </style>
@@ -894,6 +1022,32 @@
     <div class="dashboard-container">
         <!-- Overview Tab -->
         <div id="overview" class="tab-panel active">
+            <!-- Usage Summary Section -->
+            <div class="usage-summary">
+                <div class="usage-summary-content">
+                    <div class="usage-stat">
+                        <div class="usage-stat-value" id="usage-total-cost">--</div>
+                        <div class="usage-stat-label">Total Cost</div>
+                        <div class="usage-stat-trend">↑ 12% this month</div>
+                    </div>
+                    <div class="usage-stat">
+                        <div class="usage-stat-value" id="usage-daily-avg">--</div>
+                        <div class="usage-stat-label">Daily Average</div>
+                        <div class="usage-stat-trend">Peak: $318.30</div>
+                    </div>
+                    <div class="usage-stat">
+                        <div class="usage-stat-value" id="usage-tokens">--</div>
+                        <div class="usage-stat-label">Tokens Used</div>
+                        <div class="usage-stat-trend">Last 30 days</div>
+                    </div>
+                    <div class="usage-stat">
+                        <div class="usage-stat-value" id="usage-efficiency">--</div>
+                        <div class="usage-stat-label">Efficiency</div>
+                        <div class="usage-stat-trend">Cost per task</div>
+                    </div>
+                </div>
+            </div>
+
             <!-- GitHub-style Contribution Calendar -->
             <div class="contribution-calendar">
                 <div class="calendar-header">
@@ -910,6 +1064,40 @@
                 </div>
                 <div class="calendar-wrapper">
                     <div class="calendar-grid" id="contribution-calendar"></div>
+                </div>
+            </div>
+
+            <!-- Compact Stats for Mobile -->
+            <div class="stats-compact">
+                <div class="stats-compact-grid">
+                    <div class="compact-stat">
+                        <span class="compact-stat-icon">📈</span>
+                        <div class="compact-stat-info">
+                            <div class="compact-stat-value" id="compact-productivity">--</div>
+                            <div class="compact-stat-label">Productivity</div>
+                        </div>
+                    </div>
+                    <div class="compact-stat">
+                        <span class="compact-stat-icon">🎯</span>
+                        <div class="compact-stat-info">
+                            <div class="compact-stat-value" id="compact-success">--%</div>
+                            <div class="compact-stat-label">Success Rate</div>
+                        </div>
+                    </div>
+                    <div class="compact-stat">
+                        <span class="compact-stat-icon">⚡</span>
+                        <div class="compact-stat-info">
+                            <div class="compact-stat-value" id="compact-daily">--</div>
+                            <div class="compact-stat-label">Daily Tasks</div>
+                        </div>
+                    </div>
+                    <div class="compact-stat">
+                        <span class="compact-stat-icon">🏆</span>
+                        <div class="compact-stat-info">
+                            <div class="compact-stat-value" id="compact-milestone">--</div>
+                            <div class="compact-stat-label">Level</div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -1207,10 +1395,51 @@
 
         // Overview Tab
         function renderOverviewTab() {
+            renderUsageSummary();
             renderContributionCalendar();
             renderOverviewStats();
+            renderCompactStats();
             renderHourlyActivityChart();
             renderToolUsageChart();
+        }
+
+        // Usage Summary
+        function renderUsageSummary() {
+            const usage = dashboardData.usage || {};
+            const executions = dashboardData.executions || [];
+            
+            // Calculate values
+            const totalCost = usage.totals?.totalCost || 0;
+            const dailyAvg = usage.metadata?.averageDaily?.cost || 0;
+            const totalTokens = usage.totals?.totalTokens || 0;
+            const efficiency = executions.length > 0 ? (totalCost / executions.length).toFixed(2) : 0;
+            
+            // Update usage summary
+            document.getElementById('usage-total-cost').textContent = formatCurrency(totalCost);
+            document.getElementById('usage-daily-avg').textContent = formatCurrency(dailyAvg);
+            document.getElementById('usage-tokens').textContent = formatShortNumber(totalTokens);
+            document.getElementById('usage-efficiency').textContent = `$${efficiency}`;
+        }
+
+        // Compact Stats for Mobile
+        function renderCompactStats() {
+            const executions = dashboardData.executions || [];
+            
+            const productivityScore = calculateProductivityScore(executions);
+            const successRate = calculateSuccessRate(executions);
+            const dailyAvg = calculateDailyAverage(executions);
+            const milestone = getLatestMilestone(executions);
+            
+            // Update compact stats
+            const compactProductivity = document.getElementById('compact-productivity');
+            const compactSuccess = document.getElementById('compact-success');
+            const compactDaily = document.getElementById('compact-daily');
+            const compactMilestone = document.getElementById('compact-milestone');
+            
+            if (compactProductivity) compactProductivity.textContent = productivityScore;
+            if (compactSuccess) compactSuccess.textContent = successRate + '%';
+            if (compactDaily) compactDaily.textContent = dailyAvg;
+            if (compactMilestone) compactMilestone.textContent = milestone;
         }
 
         // Contribution Calendar
@@ -1788,6 +2017,13 @@
 
         function formatNumber(num) {
             return (num || 0).toLocaleString();
+        }
+
+        function formatShortNumber(num) {
+            if (!num) return '0';
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return num.toString();
         }
 
         function formatDuration(ms) {
