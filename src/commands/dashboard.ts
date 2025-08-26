@@ -340,7 +340,7 @@ function loadProjectsData(): { projects: ProcessedProject[], executions: any[], 
               date(timestamp) as day,
               COUNT(*) as count
             FROM executions 
-            WHERE timestamp >= datetime('now', '-90 days')
+            WHERE timestamp >= datetime('now', '-365 days')
             GROUP BY day
           `);
           
@@ -350,7 +350,7 @@ function loadProjectsData(): { projects: ProcessedProject[], executions: any[], 
           const countStmt = db.prepare(`
             SELECT COUNT(*) as total
             FROM executions
-            WHERE timestamp >= datetime('now', '-90 days')
+            WHERE timestamp >= datetime('now', '-365 days')
           `);
           const totalCount = countStmt.get().total;
           

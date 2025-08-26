@@ -1206,16 +1206,31 @@
             const monthsContainer = document.getElementById('heatmapMonths');
             heatmap.innerHTML = '';
             
-            // Create a map for quick data lookup
-            const dataMap = new Map();
-            appData.daily.forEach(d => {
-                const date = new Date(d.date);
+            // Use execution stats for activity (more accurate than tokens)
+            const executionStats = DATA?.executionStats?.dailyStats || [];
+            const activityMap = new Map();
+            
+            // Create activity map from execution stats
+            executionStats.forEach(stat => {
+                const date = new Date(stat.day + ' 00:00:00');
                 const dateKey = date.toDateString();
-                dataMap.set(dateKey, d);
+                activityMap.set(dateKey, stat.count);
             });
             
-            // Calculate max tokens for scaling
-            const maxTokens = Math.max(...appData.daily.map(d => d.totalTokens), 1);
+            // Also add token data as fallback
+            if (appData && appData.daily) {
+                appData.daily.forEach(d => {
+                    const date = new Date(d.date);
+                    const dateKey = date.toDateString();
+                    if (!activityMap.has(dateKey) && d.totalTokens > 0) {
+                        // Use a normalized count based on tokens (rough estimate)
+                        activityMap.set(dateKey, Math.ceil(d.totalTokens / 100000));
+                    }
+                });
+            }
+            
+            // Calculate max activity for scaling
+            const maxActivity = Math.max(...Array.from(activityMap.values()), 1);
             
             // Calculate the starting Sunday (52 weeks ago from today)
             const today = new Date();
@@ -1269,20 +1284,17 @@
                     }
                     
                     const dateKey = cellDate.toDateString();
-                    const dayData = dataMap.get(dateKey);
+                    const activityCount = activityMap.get(dateKey) || 0;
                     
                     let level = 0;
-                    let tokens = 0;
                     
-                    if (dayData) {
-                        // Use real data if available
-                        tokens = dayData.totalTokens;
-                        const percentage = (tokens / maxTokens) * 100;
+                    if (activityCount > 0) {
+                        // Calculate level based on activity
+                        const percentage = (activityCount / maxActivity) * 100;
                         level = percentage > 80 ? 4 : percentage > 60 ? 3 : percentage > 40 ? 2 : percentage > 20 ? 1 : 0;
                     } else {
-                        // No data for this date - show empty cell
+                        // No activity for this date
                         level = 0;
-                        tokens = 0;
                     }
                     
                     cell.classList.add(`level-${level}`);
@@ -1292,8 +1304,8 @@
                         day: 'numeric',
                         year: 'numeric'
                     });
-                    const tokenStr = tokens > 0 ? formatNumber(tokens) : 'No activity';
-                    cell.title = `${dateStr}: ${tokenStr} tokens`;
+                    const activityStr = activityCount > 0 ? `${activityCount} execution${activityCount > 1 ? 's' : ''}` : 'No activity';
+                    cell.title = `${dateStr}: ${activityStr}`;
                     
                     grid[dayOfWeek][week] = cell;
                 }
