@@ -538,7 +538,7 @@
         .cost-chart-wrapper {
             height: 120px;
             position: relative;
-
+            cursor: crosshair;
         }
 
         .chart-content {
@@ -1356,7 +1356,7 @@
                     <div class="cost-trend-section">
                         <div class="section-label">
                             Daily Cost
-                            <span class="scope-indicator">• Account data</span>
+                            <span class="scope-indicator">• Hover for details</span>
                         </div>
                         <div class="cost-chart-wrapper">
                             <div class="chart-content">
@@ -1907,9 +1907,6 @@
         // Initialize Cost Chart
         function initCostChart() {
             const ctx = document.getElementById('costChart').getContext('2d');
-            const gradient = ctx.createLinearGradient(0, 0, 0, 120);
-            gradient.addColorStop(0, 'rgba(217, 119, 87, 0.3)');
-            gradient.addColorStop(1, 'rgba(217, 119, 87, 0.01)');
             
             // Show data for selected date range
             const rangedData = appData.daily;
@@ -1924,31 +1921,35 @@
                 window.costChartInstance.destroy();
             }
             
+            // Use bar chart for better hover interaction
             window.costChartInstance = new Chart(ctx, {
-                type: 'line',
+                type: 'bar',
                 data: {
                     labels: dates,
                     datasets: [{
                         label: 'Daily Cost',
                         data: costs,
-                        borderColor: '#D97757',
-                        backgroundColor: gradient,
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.4,
-                        pointRadius: 0,
-                        pointHoverRadius: 5,
-                        pointHoverBackgroundColor: '#D97757',
-                        pointHoverBorderColor: '#fff',
-                        pointHoverBorderWidth: 2
+                        backgroundColor: 'rgba(217, 119, 87, 0.3)',
+                        borderColor: 'transparent',
+                        hoverBackgroundColor: '#D97757',
+                        hoverBorderColor: '#D97757',
+                        borderWidth: 0,
+                        borderRadius: 4,
+                        borderSkipped: false,
+                        barPercentage: 0.9,
+                        categoryPercentage: 1.0
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
                     layout: {
                         padding: {
-                            top: 5,
+                            top: 25,  // Extra padding for value labels
                             bottom: 0,
                             left: 0,
                             right: 0
@@ -1957,12 +1958,14 @@
                     plugins: {
                         legend: { display: false },
                         tooltip: {
+                            enabled: true,
                             backgroundColor: '#141413',
                             titleColor: '#fff',
                             bodyColor: '#fff',
-                            padding: 12,
+                            padding: 10,
                             cornerRadius: 8,
                             displayColors: false,
+                            position: 'nearest',
                             callbacks: {
                                 title: function(tooltipItems) {
                                     const index = tooltipItems[0].dataIndex;
@@ -1974,10 +1977,20 @@
                                     });
                                 },
                                 label: function(context) {
-                                    return 'Cost: $' + context.parsed.y.toFixed(2);
+                                    const dayData = rangedData[context.dataIndex];
+                                    const labels = [];
+                                    labels.push('Cost: $' + context.parsed.y.toFixed(2));
+                                    if (dayData.totalTokens) {
+                                        labels.push('Tokens: ' + dayData.totalTokens.toLocaleString());
+                                    }
+                                    return labels;
                                 }
                             }
                         }
+                    },
+                    onHover: (event, activeElements) => {
+                        // Update cursor style
+                        event.native.target.style.cursor = activeElements.length > 0 ? 'pointer' : 'default';
                     },
                     scales: {
                         x: {
@@ -1991,6 +2004,7 @@
                         },
                         y: {
                             position: 'left',
+                            beginAtZero: true,
                             grid: { 
                                 color: 'rgba(0, 0, 0, 0.03)',
                                 drawBorder: false
@@ -2007,8 +2021,70 @@
                                 axis.width = 50;  // Fixed width for Y-axis
                             }
                         }
+                    },
+                    animation: {
+                        duration: 500
                     }
-                }
+                },
+                plugins: [{
+                    id: 'customHover',
+                    afterDatasetsDraw: function(chart) {
+                        const activeElements = chart.getActiveElements();
+                        if (activeElements.length > 0) {
+                            const activePoint = activeElements[0];
+                            const index = activePoint.index;
+                            const dataset = chart.data.datasets[0];
+                            const value = dataset.data[index];
+                            const x = activePoint.element.x;
+                            const y = activePoint.element.y;
+                            
+                            const ctx = chart.ctx;
+                            ctx.save();
+                            
+                            // Draw value label above bar
+                            const text = '$' + value.toFixed(2);
+                            ctx.font = 'bold 10px Inter';
+                            const textWidth = ctx.measureText(text).width;
+                            
+                            // Draw background pill for better visibility
+                            ctx.fillStyle = 'rgba(20, 20, 19, 0.9)';
+                            const pillY = y - 20;
+                            const pillHeight = 16;
+                            const pillX = x - textWidth/2 - 5;
+                            const pillWidth = textWidth + 10;
+                            
+                            // Draw rounded rectangle manually for compatibility
+                            ctx.beginPath();
+                            ctx.moveTo(pillX + 6, pillY - pillHeight/2);
+                            ctx.lineTo(pillX + pillWidth - 6, pillY - pillHeight/2);
+                            ctx.quadraticCurveTo(pillX + pillWidth, pillY - pillHeight/2, pillX + pillWidth, pillY - pillHeight/2 + 6);
+                            ctx.lineTo(pillX + pillWidth, pillY + pillHeight/2 - 6);
+                            ctx.quadraticCurveTo(pillX + pillWidth, pillY + pillHeight/2, pillX + pillWidth - 6, pillY + pillHeight/2);
+                            ctx.lineTo(pillX + 6, pillY + pillHeight/2);
+                            ctx.quadraticCurveTo(pillX, pillY + pillHeight/2, pillX, pillY + pillHeight/2 - 6);
+                            ctx.lineTo(pillX, pillY - pillHeight/2 + 6);
+                            ctx.quadraticCurveTo(pillX, pillY - pillHeight/2, pillX + 6, pillY - pillHeight/2);
+                            ctx.closePath();
+                            ctx.fill();
+                            
+                            // Draw triangle pointer
+                            ctx.beginPath();
+                            ctx.moveTo(x - 4, pillY + pillHeight/2);
+                            ctx.lineTo(x, pillY + pillHeight/2 + 4);
+                            ctx.lineTo(x + 4, pillY + pillHeight/2);
+                            ctx.closePath();
+                            ctx.fill();
+                            
+                            // Draw value text
+                            ctx.fillStyle = '#fff';
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillText(text, x, pillY);
+                            
+                            ctx.restore();
+                        }
+                    }
+                }]
             });
         }
 
