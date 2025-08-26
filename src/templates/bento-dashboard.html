@@ -1191,7 +1191,7 @@
                 </div>
                 <div class="header-actions">
                     <button class="header-btn" onclick="exportData()">Export</button>
-                    <button class="header-btn primary" onclick="refreshData()">Refresh</button>
+                    <button class="header-btn primary" onclick="openSettings()">Settings</button>
                 </div>
             </nav>
         </div>
@@ -1307,32 +1307,6 @@
                 </div>
             </div>
 
-            <!-- Top Features -->
-            <div class="bento-card">
-                <div class="card-label">Top Features</div>
-                <div class="feature-tags" id="topFeatures">
-                    <!-- Will be populated dynamically -->
-                </div>
-            </div>
-
-            <!-- Quick Actions -->
-            <div class="bento-card">
-                <div class="card-label">Quick Actions</div>
-                <div class="quick-actions">
-                    <button class="action-btn" onclick="exportData('json')">
-                        <span>📊 Export</span>
-                    </button>
-                    <button class="action-btn" onclick="openAnalyzer()">
-                        <span>🔍 Analyze</span>
-                    </button>
-                    <button class="action-btn" onclick="backupData()">
-                        <span>💾 Backup</span>
-                    </button>
-                    <button class="action-btn" onclick="openSettings()">
-                        <span>⚙️ Settings</span>
-                    </button>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -1491,7 +1465,7 @@
                 document.getElementById('costTrend').textContent = 'Usage data not loaded';
             }
 
-            // Update total tokens
+            // Update total tokens with human-readable formatting
             if (appData && appData.totals) {
                 const totalTokens = appData.totals.totalTokens || 0;
                 document.getElementById('totalTokens').textContent = formatNumber(totalTokens);
@@ -1505,9 +1479,6 @@
 
             // Initialize Tool Usage
             initToolUsage();
-            
-            // Initialize Top Features
-            initTopFeatures();
             
             // Initialize Top Projects
             initTopProjects();
@@ -1658,43 +1629,6 @@
                 <div class="chart-center-text">Tools Used</div>
             `;
             chartContainer.appendChild(totalInfo);
-        }
-
-        // Initialize Top Features
-        function initTopFeatures() {
-            const container = document.getElementById('topFeatures');
-            
-            // Extract features from projects or executions
-            const projects = DATA?.projects?.projects || [];
-            const executions = DATA?.executions || [];
-            
-            if (projects.length === 0 && executions.length === 0) {
-                container.innerHTML = '<div style="text-align: center; color: var(--text-faded);">No feature data available</div>';
-                return;
-            }
-            
-            // Use project names as features (top 5 most active)
-            const projectCounts = {};
-            executions.forEach(exec => {
-                if (exec.project_path) {
-                    const projectName = exec.project_path.split('/').pop() || exec.project_path;
-                    projectCounts[projectName] = (projectCounts[projectName] || 0) + 1;
-                }
-            });
-            
-            const topProjects = Object.entries(projectCounts)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 5)
-                .map(([name]) => name);
-            
-            if (topProjects.length === 0) {
-                container.innerHTML = '<div style="text-align: center; color: var(--text-faded);">No active projects</div>';
-                return;
-            }
-            
-            container.innerHTML = topProjects.map(project => 
-                `<span class="tag">${project}</span>`
-            ).join('');
         }
 
         // Initialize Top Projects
@@ -2178,35 +2112,12 @@
             return [headers, ...rows].map(row => row.join(',')).join('\n');
         }
 
-        // Refresh data function
-        function refreshData() {
-            // Add loading states
-            document.querySelectorAll('.stat-value, .metric-value').forEach(el => {
-                el.classList.add('loading');
-            });
-            
-            // Simulate data refresh
-            setTimeout(() => {
-                document.querySelectorAll('.stat-value, .metric-value').forEach(el => {
-                    el.classList.remove('loading');
-                });
-                
-                // Re-initialize with updated data
-                initDashboard();
-            }, 1000);
-        }
-
         // Action button handlers
-        function openAnalyzer() {
-            console.log('Opening analyzer...');
-        }
-
-        function backupData() {
-            console.log('Creating backup...');
-        }
 
         function openSettings() {
+            // Could open a settings modal or redirect to settings page
             console.log('Opening settings...');
+            alert('Settings functionality will be implemented here');
         }
 
         // Animate numbers on load
@@ -2243,7 +2154,8 @@
                 animateValue('totalCost', 0, appData.totals.totalCost, 1000);
             }
             if (appData && appData.totals) {
-                animateValue('totalTokens', 0, appData.totals.totalTokens || 0, 1000);
+                // Don't animate tokens - just set the formatted value directly
+                document.getElementById('totalTokens').textContent = formatNumber(appData.totals.totalTokens || 0);
             }
         });
     </script>
