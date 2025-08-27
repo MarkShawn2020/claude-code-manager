@@ -14,6 +14,7 @@ import { monitorCommand } from './commands/monitor';
 import { memoryCommand } from './commands/memory';
 import { dashboardCommand } from './commands/dashboard';
 import { featCommand } from './commands/feat';
+import { createStatuslineCommand } from './commands/statusline';
 
 const packageJsonPath = path.join(__dirname, '../package.json');
 const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
@@ -105,5 +106,6 @@ program
   .action(dashboardCommand);
 
 program.addCommand(featCommand());
+program.addCommand(createStatuslineCommand());
 
 program.parse();
