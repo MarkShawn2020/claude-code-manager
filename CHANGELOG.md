@@ -1,3 +1,10 @@
+# [2.9.0](https://github.com/MarkShawn2020/claude-code-manager/compare/v2.8.0...v2.9.0) (2025-08-27)
+
+
+### Features
+
+* support multiple statusline config ([d8281f2](https://github.com/MarkShawn2020/claude-code-manager/commit/d8281f248a754f2b916cbd88e8ddc34cf69c73c7))
+
 # [2.8.0](https://github.com/MarkShawn2020/claude-code-manager/compare/v2.7.0...v2.8.0) (2025-08-27)
 
 
