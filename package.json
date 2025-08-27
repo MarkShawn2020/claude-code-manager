@@ -23,7 +23,7 @@
     "ai-assisted-coding"
   ],
   "author": "",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "packageManager": "pnpm@10.12.1",
   "dependencies": {
     "@types/inquirer": "^9.0.9",
