@@ -6,11 +6,6 @@
 
 **Analytics & workflow automation for Claude Code power users.** Track executions, monitor costs, and streamline AI-assisted development with zero configuration.
 
-<div align="center">
-  <img src="./assets/demo-2.7.0.png" alt="Claude Code Manager Dashboard" width="100%">
-  <br>
-  <em>Real-time analytics dashboard with execution tracking and cost monitoring</em>
-</div>
 
 ## Quick Start
 
@@ -25,6 +20,12 @@ ccm dashboard --hot-reload  # Open analytics dashboard
 ### 📊 Analytics Dashboard
 Real-time web dashboard with cost tracking, usage metrics, and execution heatmaps.
 
+<div align="center">
+  <img src="./assets/demo-2.7.0.png" alt="Claude Code Manager Dashboard" width="100%">
+  <br>
+  <em>Real-time analytics dashboard with execution tracking and cost monitoring</em>
+</div>
+
 ```bash
 ccm dashboard               # Open dashboard
 ccm dashboard --hot-reload  # Auto-refresh on data changes
@@ -33,6 +34,8 @@ ccm dashboard --export data.json  # Export analytics data
 
 ### 🎨 Custom Statusline
 Install and manage custom statuslines for Claude Code with real-time session metrics.
+
+![screenshot_statusline_vibe-genius.png](./asset/screenshot_statusline_vibe-genius.png)
 
 ```bash
 ccm statusline init         # Install statusline script
