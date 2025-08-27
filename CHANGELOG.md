@@ -1,3 +1,11 @@
+# [2.8.0](https://github.com/MarkShawn2020/claude-code-manager/compare/v2.7.0...v2.8.0) (2025-08-27)
+
+
+### Features
+
+* add modules ([ae2ab2b](https://github.com/MarkShawn2020/claude-code-manager/commit/ae2ab2b78c4e838b862b0666a0483a28eaebcb66))
+* add statusline ([9408992](https://github.com/MarkShawn2020/claude-code-manager/commit/9408992f086540fec027798b7e6440d87eff5f05))
+
 # [2.7.0](https://github.com/MarkShawn2020/claude-code-manager/compare/v2.6.0...v2.7.0) (2025-08-26)
 
 
