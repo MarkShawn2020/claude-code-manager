@@ -1,20 +1,19 @@
-Claude Code Manager v2.10.0 重大更新！🚀
+Claude Code Manager v2.10.1 紧急修复！🔧
 
-新特性：Dashboard 服务器模式 + API
-📊 默认服务器模式，端口 3000
-🔌 REST API 数据接口
-✨ 恢复精美 bento 界面
-⚡ 实时动态数据更新
+修复内容：
+🐛 解决 ESM 模块兼容性问题
+✅ 修复 ccm init 报错 ERR_REQUIRE_ESM
+🔄 降级 open 包至 v8.4.2
+💯 完全兼容 CommonJS
 
-快速体验：
-npm i -g claude-code-manager
-ccm dashboard
+问题描述：
+v2.10.0 使用了 ESM-only 的 open v10
+导致全局安装后运行报错
 
-API 端点：
-/api/stats 统计数据
-/api/executions 执行历史
-/api/dashboard 完整数据
+立即更新：
+npm i -g claude-code-manager@latest
+ccm init # 现在正常工作了！
 
-感谢 radonx、追逐清风 贡献！
+感谢用户反馈！快速响应，稳定至上。
 
 源码：github.com/markshawn2020/claude-code-manager

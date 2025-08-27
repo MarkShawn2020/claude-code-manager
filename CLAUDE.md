@@ -89,3 +89,4 @@ pnpm install
 - Web analyzer opens in default browser using 'open' package
 - Real-time features use blessed for terminal UI
 - 每次更新pr的时候要同时更新微信朋友圈版本
+- 每次完成一个任务自动conventional commit，push的时候应该需要先pull（github 上有auto version management）
