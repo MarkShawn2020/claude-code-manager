@@ -88,3 +88,4 @@ pnpm install
 - CLI uses Commander.js with comprehensive option parsing
 - Web analyzer opens in default browser using 'open' package
 - Real-time features use blessed for terminal UI
+- 每次更新pr的时候要同时更新微信朋友圈版本

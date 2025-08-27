@@ -1,30 +1,39 @@
 # Claude Code Manager PR 文档
 
 <!-- metadata for LLM updates
-version: 2.9.0
+version: 2.10.0
 last_updated: 2025-08-27
-main_feature: multi-statusline-support
+main_feature: dashboard-server-api
 -->
 
 ## 🎯 核心信息
 
 **产品名称**: Claude Code Manager (ccm)  
-**最新版本**: v2.9.0  
+**最新版本**: v2.10.0  
 **核心功能**: 增强 Claude Code 开发体验的集成工具  
 **GitHub**: https://github.com/markshawn2020/claude-code-manager
 
-## 🚀 最新更新：多状态栏支持
+## 🚀 最新更新：Dashboard 服务器模式 + API
 
 ```bash
 npm i -g claude-code-manager
-ccm sl init              # 一键安装
-ccm sl select <name>     # 切换风格
+ccm dashboard            # 默认启动服务器模式
+ccm dashboard --port 8080    # 自定义端口
+ccm dashboard --api      # API-only 模式
 ```
 
-内置三种状态栏风格：
-- **vibe-genius**: 全功能版
-- **vibe-genius-wind**: 随机表情版
-- **minimal**: 极简版
+### 核心升级
+- **服务器模式默认开启**: `ccm dashboard` 现在默认启动服务器（端口 3000）
+- **REST API 接口**: 提供完整的数据访问 API
+- **原版界面回归**: 恢复广受好评的 bento 风格界面
+- **实时数据更新**: 动态生成最新数据，非静态文件
+
+### API 端点
+- `/api/executions` - 执行历史查询
+- `/api/stats` - 聚合统计数据
+- `/api/sessions` - 会话信息
+- `/api/projects` - 项目列表
+- `/api/dashboard` - 完整仪表板数据
 
 ---
 
@@ -44,6 +53,7 @@ ccm sl select <name>     # 切换风格
 
 ## 📅 版本历史
 
+- **v2.10.0** (08-27): Dashboard 服务器模式 + REST API，恢复原版精美界面
 - **v2.9.0** (08-27): 多状态栏支持，可自由切换风格
 - **v2.6.0** (08-26): 全新 dashboard，集成项目分析
 - **v2.4.0** (08-20): 支持 worktree 开发
