@@ -1,125 +1,147 @@
-# Claude Code Manager
+# Claude Code Manager (CCM)
+
+<div align="center">
 
 [![NPM Version](https://img.shields.io/npm/v/claude-code-manager)](https://www.npmjs.com/package/claude-code-manager)
 [![License](https://img.shields.io/npm/l/claude-code-manager)](LICENSE)
 [![Node](https://img.shields.io/node/v/claude-code-manager)](package.json)
+[![Downloads](https://img.shields.io/npm/dm/claude-code-manager)](https://www.npmjs.com/package/claude-code-manager)
 
-**Analytics & workflow automation for Claude Code power users.** Track executions, monitor costs, and streamline AI-assisted development with zero configuration.
+**Professional analytics and workflow automation for Claude Code power users**
 
+[Installation](#installation) • [Quick Start](#quick-start) • [Features](#features) • [Documentation](#commands)
+
+</div>
+
+## Overview
+
+Claude Code Manager (CCM) is a comprehensive CLI toolkit that transforms your AI-assisted development workflow. Track execution metrics, monitor costs, manage feature branches, and gain insights through a beautiful analytics dashboard—all with zero configuration.
+
+## Installation
+
+```bash
+# Using npm
+npm install -g claude-code-manager
+
+# Using pnpm (recommended)
+pnpm add -g claude-code-manager
+
+# Using yarn
+yarn global add claude-code-manager
+```
 
 ## Quick Start
 
 ```bash
-npm install -g claude-code-manager
-ccm init                    # Auto-setup tracking
-ccm dashboard --hot-reload  # Open analytics dashboard
+# Initialize tracking (one-time setup)
+ccm init
+
+# Launch analytics dashboard
+ccm dashboard
+
+# Monitor active sessions
+ccm monitor
+
+# Manage feature branches
+ccm feat add new-feature
 ```
 
 ## Features
 
-### 📊 Analytics Dashboard
-Real-time web dashboard with cost tracking, usage metrics, and execution heatmaps.
-
-<div align="center">
-  <img src="./assets/demo-2.7.0.png" alt="Claude Code Manager Dashboard" width="100%">
-  <br>
-  <em>Real-time analytics dashboard with execution tracking and cost monitoring</em>
-</div>
+### 📊 **Analytics Dashboard**
+Beautiful web-based dashboard with real-time metrics, cost tracking, and execution heatmaps. Now serves as both a static viewer and API server.
 
 ```bash
-ccm dashboard               # Open dashboard
-ccm dashboard --hot-reload  # Auto-refresh on data changes
-ccm dashboard --export data.json  # Export analytics data
+ccm dashboard              # Launch dashboard server (default: port 3000)
+ccm dashboard --port 8080  # Custom port
+ccm dashboard --api        # API-only mode
+ccm dashboard --no-server  # Static HTML mode (legacy)
 ```
 
-### 🎨 Custom Statusline
-Install and manage custom statuslines for Claude Code with real-time session metrics.
+<img src="./assets/demo-2.7.0.png" alt="Dashboard Preview" width="100%">
 
-![screenshot_statusline_vibe-genius.png](./assets/screenshot_statusline_vibe-genius.png)
+### 🎨 **Custom Statusline**
+Enhance Claude Code with customizable statuslines showing real-time session metrics.
 
 ```bash
-ccm statusline init         # Install statusline script
-ccm statusline enable       # Activate in Claude Code
-ccm statusline test         # Preview with mock data
-ccm statusline status       # Check configuration
+ccm statusline init    # Install statusline
+ccm statusline enable  # Activate in Claude Code
+ccm statusline test    # Preview with mock data
 ```
 
-### 🌳 Git Worktrees
-Manage parallel feature development without context switching.
+### 🌳 **Git Worktree Management**
+Parallel feature development without context switching using Git worktrees.
 
 ```bash
-ccm feat add payment-api    # Create feature branch & worktree
-ccm feat list              # Interactive branch manager
-ccm feat merge             # Merge completed features
-ccm feat clean             # Remove merged worktrees
+ccm feat add payment-api   # Create feature branch & worktree
+ccm feat list             # Interactive branch manager
+ccm feat merge            # Merge completed features
+ccm feat clean            # Remove merged worktrees
 ```
 
-### 🔍 Real-Time Monitor
-Live terminal UI showing active Claude sessions with hierarchical task views.
+### 🔍 **Real-Time Monitor**
+Live terminal UI displaying active Claude sessions with hierarchical task views.
 
 ```bash
-ccm monitor                # Interactive monitor (Tab: filter, Space: expand, Q: quit)
-ccm monitor --filter active --order modified
+ccm monitor               # Launch interactive monitor
+# Controls: Tab (filter), Space (expand), Q (quit)
 ```
 
-### 🧠 Memory Discovery
-Find and manage all CLAUDE.md configuration files across your projects.
+### 🧠 **Memory Discovery**
+Locate and manage CLAUDE.md configuration files across your entire workspace.
 
 ```bash
-ccm memory                 # Show all memory files
-ccm memory --full          # Display full content
-ccm memory --paths-only    # List paths only
+ccm memory                # Display all memory files
+ccm memory --full         # Show complete content
+ccm memory --paths-only   # List paths only
 ```
 
-### 💾 Zero-Config Tracking
-Automatic execution tracking via PostToolUse hooks - captures all tool usage in SQLite.
+### 💾 **Zero-Config Tracking**
+Automatic execution tracking via PostToolUse hooks—captures all tool usage seamlessly.
 
 ```bash
-ccm init                   # Setup automatic tracking
-ccm stat                   # View session statistics
-ccm stat --analyzer        # Web-based analyzer (redirects to dashboard)
-```
-
-## Installation
-
-### Global Installation (Recommended)
-
-```bash
-# npm
-npm install -g claude-code-manager
-
-# pnpm (recommended)
-pnpm add -g claude-code-manager
-
-# yarn
-yarn global add claude-code-manager
-```
-
-### Development Setup
-
-```bash
-git clone https://github.com/markshawn2020/claude-code-manager
-cd claude-code-manager
-pnpm install
-pnpm build
-pnpm link --global
+ccm init                  # One-time setup
+ccm stat                  # View statistics
+ccm stat --current        # Current project only
 ```
 
 ## Commands
 
+### Core Commands
+
 | Command | Description | Key Options |
 |---------|-------------|-------------|
-| `dashboard` | Web analytics dashboard | `--hot-reload`, `--skip-usage`, `--export` |
-| `statusline` | Manage Claude Code statusline | `init`, `enable`, `disable`, `test`, `status` |
-| `feat` | Git worktree management | `add`, `list`, `merge`, `clean`, `sync` |
+| `dashboard` | Web analytics dashboard & API server | `--port`, `--api`, `--no-server` |
 | `monitor` | Real-time session monitor | `--filter`, `--order`, `--refresh-interval` |
-| `stat` | Session statistics | `--current`, `--analyzer`, `--output-path` |
-| `memory` | Memory file discovery | `--paths-only`, `--full`, `--exclude` |
-| `usage` | Token usage reports | `daily`, `monthly`, `session`, `--json` |
-| `init` | Setup tracking | `--force`, `--check` |
-| `track` | Record execution (hook) | Used by PostToolUse hook |
-| `backup` | Backup configurations | Creates timestamped backups |
-| `slim` | Clean old entries | `--force`, `--include-current` |
+| `stat` | Session statistics viewer | `--current`, `--analyzer`, `--export` |
+| `init` | Initialize tracking | `--force`, `--check` |
+
+### Workflow Commands
+
+| Command | Description | Key Options |
+|---------|-------------|-------------|
+| `feat` | Git worktree management | `add`, `list`, `merge`, `clean` |
+| `statusline` | Custom statusline management | `init`, `enable`, `test`, `status` |
+| `memory` | Memory file discovery | `--full`, `--paths-only`, `--exclude` |
+| `usage` | Token usage & cost reports | `daily`, `monthly`, `--json` |
+
+### Maintenance Commands
+
+| Command | Description |
+|---------|-------------|
+| `backup` | Create configuration backups |
+| `slim` | Clean old database entries |
+| `track` | Internal hook command |
+
+## API Endpoints
+
+When running `ccm dashboard`, the following REST API endpoints are available:
+
+- `GET /api/executions` - Query execution history
+- `GET /api/stats` - Aggregated statistics
+- `GET /api/sessions` - Session information
+- `GET /api/projects` - Project listings
+- `GET /api/dashboard` - Complete dashboard data
 
 ## Data Storage
 
@@ -128,41 +150,59 @@ pnpm link --global
 | `~/.claude/db.sql` | Execution tracking database |
 | `~/.claude/settings.json` | Claude Code configuration |
 | `~/.claude/statusline.sh` | Custom statusline script |
+| `~/.claude/CLAUDE.md` | Global memory file |
 | `.feats/` | Feature branch worktrees |
-| `.data/usage.json` | Usage cache (1hr TTL) |
+
+## Development
+
+```bash
+# Clone repository
+git clone https://github.com/markshawn2020/claude-code-manager
+cd claude-code-manager
+
+# Install dependencies
+pnpm install
+
+# Build project
+pnpm build
+
+# Link for development
+pnpm link --global
+```
 
 ## Requirements
 
-- Node.js ≥ 18.0.0
-- Git (for worktree features)
-- Claude Code CLI
-- jq (for statusline script)
+- **Node.js** ≥ 18.0.0
+- **Git** (for worktree features)
+- **Claude Code CLI**
+- **jq** (for statusline features)
 
 ## Contributing
 
 We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md).
 
 1. Fork the repository
-2. Create feature branch (`ccm feat add your-feature`)
-3. Commit changes with conventional commits
-4. Push to branch
-5. Open Pull Request
+2. Create your feature branch (`ccm feat add your-feature`)
+3. Commit changes using conventional commits
+4. Push to your branch
+5. Open a Pull Request
 
 ## License
 
-ISC © 2024 - See [LICENSE](LICENSE) for details
+Apache-2.0 © 2024 - See [LICENSE](LICENSE) for details
 
 ## Links
 
-- [NPM Package](https://www.npmjs.com/package/claude-code-manager)
-- [GitHub Repository](https://github.com/markshawn2020/claude-code-manager)
-- [Issue Tracker](https://github.com/markshawn2020/claude-code-manager/issues)
-- [Changelog](CHANGELOG.md)
+<div align="center">
+
+[NPM Package](https://www.npmjs.com/package/claude-code-manager) • 
+[GitHub Repository](https://github.com/markshawn2020/claude-code-manager) • 
+[Issue Tracker](https://github.com/markshawn2020/claude-code-manager/issues) • 
+[Changelog](CHANGELOG.md)
 
 ---
 
-<div align="center">
-  <sub>Built for the Claude Code community</sub>
-  <br>
-  <sub>⭐ Star this repo if you find it useful!</sub>
+**Built with ❤️ for the Claude Code community**  
+⭐ Star this repo if you find it useful!
+
 </div>

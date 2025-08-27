@@ -15,6 +15,7 @@ import { memoryCommand } from './commands/memory';
 import { dashboardCommand } from './commands/dashboard';
 import { featCommand } from './commands/feat';
 import { createStatuslineCommand } from './commands/statusline';
+import { serverCommand } from './commands/server';
 
 const packageJsonPath = path.join(__dirname, '../package.json');
 const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
@@ -97,13 +98,25 @@ program
 
 program
   .command('dashboard')
-  .description('Unified analytics dashboard for Claude Code (projects, usage, costs, and executions)')
+  .description('Start dashboard server with API endpoints (default: server mode on port 3000)')
+  .option('--port <number>', 'Server port number', '3000')
+  .option('--no-server', 'Use static HTML mode instead of server')
+  .option('--api', 'Start API-only mode without frontend')
+  .option('--no-open', 'Do not open browser automatically')
   .option('--export <path>', 'Export data to file instead of opening dashboard')
   .option('--format <format>', 'Export format: json, csv (requires --export)', 'json')
   .option('--refresh', 'Force refresh usage data from ccusage before showing dashboard')
   .option('--skip-usage', 'Skip loading usage data for faster dashboard launch')
   .option('--hot-reload', 'Enable hot-reload for automatic dashboard refresh on data changes')
   .action(dashboardCommand);
+
+program
+  .command('server')
+  .description('Start dashboard server with API endpoints for Claude Code data')
+  .option('--port <number>', 'Server port number', '3000')
+  .option('--api', 'Start API-only mode without frontend')
+  .option('--no-open', 'Do not open browser automatically')
+  .action(serverCommand);
 
 program.addCommand(featCommand());
 program.addCommand(createStatuslineCommand());

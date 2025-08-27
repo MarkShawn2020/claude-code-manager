@@ -701,7 +701,7 @@ async function generateDashboard(data: UnifiedDashboardData, enableHotReload: bo
 }
 
 // Helper function to collect dashboard data
-async function collectDashboardData(options: { export?: string; format?: string; refresh?: boolean; view?: string; skipUsage?: boolean }): Promise<UnifiedDashboardData> {
+export async function collectDashboardData(options: { export?: string; format?: string; refresh?: boolean; view?: string; skipUsage?: boolean }): Promise<UnifiedDashboardData> {
   const unifiedData: UnifiedDashboardData = {};
   
   // Load package.json version
@@ -765,8 +765,23 @@ async function collectDashboardData(options: { export?: string; format?: string;
   return unifiedData;
 }
 
-export async function dashboardCommand(options: { export?: string; format?: string; refresh?: boolean; view?: string; skipUsage?: boolean; hotReload?: boolean }) {
+export async function dashboardCommand(options: { export?: string; format?: string; refresh?: boolean; view?: string; skipUsage?: boolean; hotReload?: boolean; server?: boolean; port?: number; api?: boolean; open?: boolean }) {
   try {
+    // Default to server mode with port 3000
+    const serverMode = options.server !== false;
+    const port = options.port || 3000;
+    
+    // If in server mode, import and run the server command
+    if (serverMode) {
+      const { serverCommand } = await import('./server');
+      return serverCommand({
+        port,
+        api: options.api,
+        open: options.open !== false
+      });
+    }
+    
+    // Otherwise, run the original static dashboard logic
     // Collect dashboard data
     const unifiedData = await collectDashboardData(options);
     
