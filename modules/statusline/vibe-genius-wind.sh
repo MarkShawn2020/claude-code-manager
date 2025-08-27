@@ -1,10 +1,11 @@
 #!/bin/bash
+# Description: Dynamic statusline with random emojis and full metrics
 # =============================================================================
 # Claude Code Custom Statusline
 # =============================================================================
-# Author: Mark Shawn (https://github.com/markshawn2020)
+# Authors: markShawn2020, 追逐清风
 # Community: Vibe Genius
-# Version: 1.0.0
+# Version: 1.0.2
 # Date: 2025-08-27
 # 
 # Description:
@@ -137,9 +138,15 @@ else
     LINES_STR=""
 fi
 
+# Select a random symbol using a portable method
+SYMBOLS="💥 ✨ 🚀 💡 🧩 😀 😊 😂 😍 😎 🤩 😴 👨‍💻 👩‍💻 👍 👌 ✌️ 🙏 👋 🙌 🤡 👾 🥂 🍻 🍾 🍹 🎉 🥳 🎊 🎈 🎁 🎤"
+SYMBOL_COUNT=32
+RANDOM_INDEX=$(( $(od -An -N2 -i /dev/urandom | tr -d ' ') % SYMBOL_COUNT + 1 ))
+RANDOM_SYMBOL=$(echo "$SYMBOLS" | cut -d' ' -f$RANDOM_INDEX)
+
 # Output with colors (using ANSI escape codes)
-# Format: 💥 HH:MM:SS (today: $X.XX) │ directory (branch) │ ⏱ Xm Xs 💰 $X.XXX 📊 +X/-X │ [Model]
-echo -e "💥 \033[37m$CURRENT_TIME\033[0m \033[90m(today: $DAILY_COST_STR)\033[0m \033[36m│\033[0m \033[96m$DIR_NAME\033[0m$GIT_BRANCH \033[36m│\033[0m \033[33m⏱ $DURATION_STR\033[0m \033[32m💰 $COST_STR\033[0m$LINES_STR \033[36m│\033[0m \033[35m[$MODEL]\033[0m"
+# Format: <RANDOM_SYMBOL> HH:MM:SS (today: $X.XX) │ directory (branch) │ ⏱ Xm Xs 💰 $X.XXX 📊 +X/-X │ [Model]
+echo -e "$RANDOM_SYMBOL \033[37m$CURRENT_TIME\033[0m \033[90m(today: $DAILY_COST_STR)\033[0m \033[36m│\033[0m \033[96m$DIR_NAME\033[0m$GIT_BRANCH \033[36m│\033[0m \033[33m⏱ $DURATION_STR\033[0m \033[32m💰 $COST_STR\033[0m$LINES_STR \033[36m│\033[0m \033[35m[$MODEL]\033[0m"
 
 # End of statusline script
 # Shared with love by Mark Shawn for the Vibe Genius community 💜
