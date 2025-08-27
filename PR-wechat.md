@@ -1,6 +1,4 @@
-ccm v2.8.0 更新
-
-## v2.8.0 新功能：自定义状态栏
+ccm v2.8.0 更新（支持自定义状态栏）
 
 ```bash
 npm i -g claude-code-manager 
