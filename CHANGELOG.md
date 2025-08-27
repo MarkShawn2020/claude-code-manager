@@ -1,3 +1,10 @@
+## [2.10.1](https://github.com/MarkShawn2020/claude-code-manager/compare/v2.10.0...v2.10.1) (2025-08-27)
+
+
+### Bug Fixes
+
+* downgrade open package to v8.4.2 for CommonJS compatibility ([47e9908](https://github.com/MarkShawn2020/claude-code-manager/commit/47e990819d6c9fff24737a7f59efc069f3e8d48a))
+
 # [2.10.0](https://github.com/MarkShawn2020/claude-code-manager/compare/v2.9.0...v2.10.0) (2025-08-27)
 
 
