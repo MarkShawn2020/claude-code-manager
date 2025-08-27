@@ -35,7 +35,7 @@ ccm dashboard --export data.json  # Export analytics data
 ### 🎨 Custom Statusline
 Install and manage custom statuslines for Claude Code with real-time session metrics.
 
-![screenshot_statusline_vibe-genius.png](./asset/screenshot_statusline_vibe-genius.png)
+![screenshot_statusline_vibe-genius.png](./assets/screenshot_statusline_vibe-genius.png)
 
 ```bash
 ccm statusline init         # Install statusline script
