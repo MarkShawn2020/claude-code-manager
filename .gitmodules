@@ -1,0 +1,3 @@
+[submodule "third-parties/ccstatusline"]
+	path = third-parties/ccstatusline
+	url = git@github.com:MarkShawn2020/ccstatusline.git
