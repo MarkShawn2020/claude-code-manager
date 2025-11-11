@@ -46,26 +46,21 @@ ccm monitor
 ccm feat add new-feature
 ```
 
-### Shell Completion (Optional)
+### Tab Completion
 
-Enable tab auto-completion for all ccm commands and options:
+Enable shell auto-completion for all commands and options:
 
 ```bash
-# Install completion (bash/zsh/fish)
-ccm completion install
-
-# Then restart your shell or source the config:
-source ~/.bashrc   # for bash
-source ~/.zshrc    # for zsh
-
-# To remove
-ccm completion uninstall
+ccm completion install    # Install for bash/zsh/fish
+source ~/.zshrc          # Reload shell (or restart terminal)
 ```
 
-After installation, you can use Tab to auto-complete commands, subcommands, and options:
-- `ccm <Tab>` → shows all available commands
-- `ccm stat --<Tab>` → shows all stat command options
-- `ccm usage <Tab>` → shows subcommands (daily, monthly, etc.)
+Now tab completion works everywhere:
+```bash
+ccm <Tab>              # List all commands
+ccm stat --<Tab>       # Show stat options
+ccm statusline <Tab>   # Show statusline subcommands
+```
 
 ## Features
 
@@ -85,9 +80,10 @@ ccm dashboard --no-server  # Static HTML mode (legacy)
 Enhance Claude Code with customizable statuslines showing real-time session metrics.
 
 ```bash
-ccm statusline init    # Install statusline
-ccm statusline enable  # Activate in Claude Code
-ccm statusline test    # Preview with mock data
+ccm statusline list              # Show all available statuslines
+ccm statusline select vibe-genius # Activate a statusline
+ccm statusline config            # Configure ccstatusline (interactive TUI)
+ccm statusline test              # Preview with mock data
 ```
 
 ### 🌳 **Git Worktree Management**
@@ -142,9 +138,10 @@ ccm stat --current        # Current project only
 | Command | Description | Key Options |
 |---------|-------------|-------------|
 | `feat` | Git worktree management | `add`, `list`, `merge`, `clean` |
-| `statusline` | Custom statusline management | `init`, `enable`, `test`, `status` |
+| `statusline` | Custom statusline management | `list`, `select`, `config`, `test` |
 | `memory` | Memory file discovery | `--full`, `--paths-only`, `--exclude` |
 | `usage` | Token usage & cost reports | `daily`, `monthly`, `--json` |
+| `completion` | Shell tab completion | `install`, `uninstall` |
 
 ### Maintenance Commands
 
