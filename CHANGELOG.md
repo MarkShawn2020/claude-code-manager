@@ -1,3 +1,12 @@
+# [2.11.0](https://github.com/MarkShawn2020/claude-code-manager/compare/v2.10.1...v2.11.0) (2025-11-11)
+
+
+### Features
+
+* **completion:** add tab auto-completion support for ccm ([cff3221](https://github.com/MarkShawn2020/claude-code-manager/commit/cff3221e654f11f0edf72d7a7a28ac5b24f6bd61))
+* **statusline:** add stacked context visualization to vibe-genius ([62d146b](https://github.com/MarkShawn2020/claude-code-manager/commit/62d146bc815b9bc47dab6d638c7ec36ef1b55e53))
+* **statusline:** unify API with ccm for all statusline types ([d7c11cf](https://github.com/MarkShawn2020/claude-code-manager/commit/d7c11cfc9acba436ca7f638011e9ac87abb15bce))
+
 ## [2.10.1](https://github.com/MarkShawn2020/claude-code-manager/compare/v2.10.0...v2.10.1) (2025-08-27)
 
 
