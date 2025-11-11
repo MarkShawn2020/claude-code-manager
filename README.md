@@ -46,6 +46,27 @@ ccm monitor
 ccm feat add new-feature
 ```
 
+### Shell Completion (Optional)
+
+Enable tab auto-completion for all ccm commands and options:
+
+```bash
+# Install completion (bash/zsh/fish)
+ccm completion install
+
+# Then restart your shell or source the config:
+source ~/.bashrc   # for bash
+source ~/.zshrc    # for zsh
+
+# To remove
+ccm completion uninstall
+```
+
+After installation, you can use Tab to auto-complete commands, subcommands, and options:
+- `ccm <Tab>` → shows all available commands
+- `ccm stat --<Tab>` → shows all stat command options
+- `ccm usage <Tab>` → shows subcommands (daily, monthly, etc.)
+
 ## Features
 
 ### 📊 **Analytics Dashboard**

@@ -16,6 +16,7 @@ import { dashboardCommand } from './commands/dashboard';
 import { featCommand } from './commands/feat';
 import { createStatuslineCommand } from './commands/statusline';
 import { serverCommand } from './commands/server';
+import { completionCommand } from './commands/completion';
 
 const packageJsonPath = path.join(__dirname, '../package.json');
 const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
@@ -117,6 +118,12 @@ program
   .option('--api', 'Start API-only mode without frontend')
   .option('--no-open', 'Do not open browser automatically')
   .action(serverCommand);
+
+program
+  .command('completion')
+  .description('Manage shell completion (install/uninstall)')
+  .argument('[action]', 'Action to perform: install, uninstall')
+  .action(completionCommand);
 
 program.addCommand(featCommand());
 program.addCommand(createStatuslineCommand());
