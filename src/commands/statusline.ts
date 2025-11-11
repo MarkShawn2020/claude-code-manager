@@ -31,20 +31,30 @@ function getModulesDir(): string {
 }
 
 // Function to list available statuslines
-function getAvailableStatuslines(): { name: string; path: string; description?: string }[] {
+function getAvailableStatuslines(): { name: string; path: string; description?: string; type?: string }[] {
   const modulesDir = getModulesDir();
-  
+
+  const statuslines: { name: string; path: string; description?: string; type?: string }[] = [];
+
+  // Add ccstatusline (advanced configurator)
+  statuslines.push({
+    name: 'ccstatusline',
+    path: 'npx ccstatusline@latest',
+    description: 'Interactive TUI configurator with 20+ widgets, Powerline mode, and themes',
+    type: 'advanced'
+  });
+
   if (!fs.existsSync(modulesDir)) {
-    return [];
+    return statuslines;
   }
 
   const files = fs.readdirSync(modulesDir);
-  const statuslines = files
+  const bashStatuslines = files
     .filter(file => file.endsWith('.sh'))
     .map(file => {
       const filePath = path.join(modulesDir, file);
       const name = path.basename(file, '.sh');
-      
+
       // Try to extract description from the file (look for first comment after shebang)
       let description = '';
       try {
@@ -63,11 +73,12 @@ function getAvailableStatuslines(): { name: string; path: string; description?: 
       return {
         name,
         path: filePath,
-        description
+        description,
+        type: 'bash'
       };
     });
 
-  return statuslines;
+  return [...statuslines, ...bashStatuslines];
 }
 
 export function createStatuslineCommand() {
@@ -114,18 +125,40 @@ export function createStatuslineCommand() {
         }
 
         console.log(chalk.cyan('📊 Available Statuslines:\n'));
-        
-        statuslines.forEach(sl => {
-          const isActive = sl.name === activeStatusline;
-          const marker = isActive ? chalk.green('✓') : ' ';
-          const name = isActive ? chalk.green(sl.name) : chalk.white(sl.name);
-          
-          console.log(`  ${marker} ${name}`);
-          if (sl.description) {
-            console.log(chalk.gray(`    ${sl.description}`));
-          }
-          console.log(chalk.gray(`    Path: ${sl.path}`));
-        });
+
+        // Group by type
+        const advanced = statuslines.filter(sl => sl.type === 'advanced');
+        const bash = statuslines.filter(sl => sl.type === 'bash');
+
+        if (advanced.length > 0) {
+          console.log(chalk.magenta('  ⚡ Advanced (Interactive TUI):\n'));
+          advanced.forEach(sl => {
+            const isActive = sl.name === activeStatusline;
+            const marker = isActive ? chalk.green('✓') : ' ';
+            const name = isActive ? chalk.green(sl.name) : chalk.white(sl.name);
+
+            console.log(`    ${marker} ${name}`);
+            if (sl.description) {
+              console.log(chalk.gray(`      ${sl.description}`));
+            }
+          });
+          console.log('');
+        }
+
+        if (bash.length > 0) {
+          console.log(chalk.blue('  🚀 Bash Scripts (Fast & Simple):\n'));
+          bash.forEach(sl => {
+            const isActive = sl.name === activeStatusline;
+            const marker = isActive ? chalk.green('✓') : ' ';
+            const name = isActive ? chalk.green(sl.name) : chalk.white(sl.name);
+
+            console.log(`    ${marker} ${name}`);
+            if (sl.description) {
+              console.log(chalk.gray(`      ${sl.description}`));
+            }
+            console.log(chalk.gray(`      ${sl.path}`));
+          });
+        }
 
         if (activeStatusline && !statuslines.find(sl => sl.name === activeStatusline)) {
           console.log(chalk.yellow('\n⚠️  Active statusline is custom or modified'));
@@ -151,9 +184,37 @@ export function createStatuslineCommand() {
           console.log(chalk.red(`✗ Statusline '${name}' not found`));
           console.log(chalk.gray('\nAvailable statuslines:'));
           statuslines.forEach(sl => {
-            console.log(chalk.gray(`  - ${sl.name}`));
+            console.log(chalk.gray(`  - ${sl.name} (${sl.type})`));
           });
           process.exit(1);
+        }
+
+        // Handle ccstatusline (advanced type)
+        if (selected.type === 'advanced') {
+          // Ensure Claude directory exists
+          if (!fs.existsSync(CLAUDE_DIR)) {
+            fs.mkdirSync(CLAUDE_DIR, { recursive: true });
+          }
+
+          // Update settings.json
+          let settings: any = {};
+          if (fs.existsSync(SETTINGS_PATH)) {
+            try {
+              const content = fs.readFileSync(SETTINGS_PATH, 'utf-8');
+              settings = JSON.parse(content);
+            } catch (error) {
+              console.log(chalk.yellow('⚠️  Could not parse existing settings.json, creating new one'));
+            }
+          }
+
+          settings.statusLine = selected.path;
+
+          fs.writeFileSync(SETTINGS_PATH, JSON.stringify(settings, null, 2));
+          console.log(chalk.green(`✓ Selected '${name}' statusline`));
+          console.log(chalk.gray(`  Configured: ${selected.path}`));
+          console.log(chalk.gray(`  Settings: ${SETTINGS_PATH}`));
+          console.log(chalk.cyan('\n💡 Tip: Run `ccm statusline config` to customize your ccstatusline'));
+          return;
         }
 
         // Ensure Claude directory exists
@@ -582,6 +643,44 @@ export function createStatuslineCommand() {
         }
       } catch (error) {
         console.error(chalk.red('✗ Failed to check statusline status:'), error);
+        process.exit(1);
+      }
+    });
+
+  // Config subcommand - Open ccstatusline TUI configurator
+  statusline
+    .command('config')
+    .description('Open ccstatusline interactive configurator')
+    .option('--bun', 'Use bunx instead of npx (faster)')
+    .action((options) => {
+      try {
+        console.log(chalk.cyan('🎨 Opening ccstatusline configurator...\n'));
+
+        const command = options.bun ? 'bunx' : 'npx';
+        const args = ['ccstatusline@latest'];
+
+        console.log(chalk.gray(`  Running: ${command} ${args.join(' ')}\n`));
+
+        // Use spawn to run the command in the current terminal
+        const { spawn } = require('child_process');
+        const proc = spawn(command, args, {
+          stdio: 'inherit',
+          shell: true
+        });
+
+        proc.on('error', (error: Error) => {
+          console.error(chalk.red('✗ Failed to launch ccstatusline:'), error.message);
+          console.log(chalk.yellow('\n💡 Tip: Make sure Node.js or Bun is installed'));
+          process.exit(1);
+        });
+
+        proc.on('exit', (code: number) => {
+          if (code !== 0) {
+            console.log(chalk.yellow('\n⚠️  ccstatusline exited with code ' + code));
+          }
+        });
+      } catch (error) {
+        console.error(chalk.red('✗ Failed to run config:'), error);
         process.exit(1);
       }
     });

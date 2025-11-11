@@ -30,49 +30,48 @@ Customizable statuslines for Claude Code displaying real-time session metrics, c
 
 ## Quick Start
 
-### Option 1: Bash Statuslines (Recommended for Simplicity)
+**All statuslines are now managed through the unified `ccm` CLI!**
 
 ```bash
 # Install CCM
 npm install -g claude-code-manager
 
-# Use CCM commands
-ccm statusline init              # Install default statusline
-ccm statusline list              # List all available
-ccm statusline select <name>     # Switch statusline (vibe-genius, minimal, etc.)
-ccm statusline enable            # Activate in Claude Code
-ccm statusline test -n <name>    # Test with mock data
-```
+# List all available statuslines (bash + ccstatusline)
+ccm statusline list
 
-### Option 2: ccstatusline (Recommended for Customization)
+# Select any statusline
+ccm statusline select vibe-genius      # Bash statusline
+ccm statusline select ccstatusline     # Advanced TUI configurator
+ccm statusline select minimal          # Minimal bash statusline
 
-```bash
-# Run interactive TUI configurator
-npx ccstatusline@latest
+# Configure ccstatusline (opens interactive TUI)
+ccm statusline config                  # Same as: npx ccstatusline@latest
+ccm statusline config --bun            # Use bunx (faster)
 
-# Or with Bun (faster)
-bunx ccstatusline@latest
+# Check current status
+ccm statusline status
 
-# The TUI allows you to:
-# - Add/remove/reorder widgets visually
-# - Customize colors and styling
-# - Enable Powerline mode
-# - Install directly to Claude Code settings
+# Other commands
+ccm statusline init                    # Install default statusline
+ccm statusline enable                  # Activate in Claude Code
+ccm statusline test -n <name>          # Test with mock data
 ```
 
 ## Switching Between Statuslines
 
-### Method 1: Using CCM (for Bash statuslines)
+### Recommended: Using CCM (Unified API)
 
 ```bash
-# Switch to vibe-genius
-ccm statusline select vibe-genius
+# Switch to any statusline with one command
+ccm statusline select vibe-genius      # Bash: Full-featured with context viz
+ccm statusline select minimal          # Bash: Lightweight
+ccm statusline select ccstatusline     # Advanced: TUI configurator
 
-# Switch to minimal
-ccm statusline select minimal
+# Check what's currently active
+ccm statusline status
 ```
 
-### Method 2: Manual Configuration (for ccstatusline or custom)
+### Alternative: Manual Configuration
 
 Edit `~/.claude/settings.json`:
 
@@ -90,9 +89,17 @@ Or for bash statuslines:
 }
 ```
 
-### Method 3: Using ccstatusline TUI
+### Customize ccstatusline
 
-Run `npx ccstatusline@latest` and select **"Install to Claude Code"** from the menu to automatically update your settings.
+After selecting ccstatusline, customize it:
+
+```bash
+# Open TUI configurator
+ccm statusline config
+
+# Or directly
+npx ccstatusline@latest  # Select "Install to Claude Code" when done
+```
 
 ## Comparison: Bash vs ccstatusline
 
@@ -167,9 +174,8 @@ ccm statusline select your-name
 ### Example 1: Quick Setup with vibe-genius
 
 ```bash
-# Install and activate vibe-genius
+# One command to select and activate
 ccm statusline select vibe-genius
-ccm statusline enable
 
 # Result:
 # 💥 10:20:43 (today: $6.93) │ project (main) │ ⏱ 45s 💰 $0.123 📊 +156/-23 │ 🧠 [⛁⛁▓▓░░] 62% (123k/200k) │ [Opus]
@@ -178,8 +184,11 @@ ccm statusline enable
 ### Example 2: Configure ccstatusline with Powerline
 
 ```bash
-# Launch TUI
-npx ccstatusline@latest
+# Select ccstatusline
+ccm statusline select ccstatusline
+
+# Open configurator
+ccm statusline config
 
 # In the TUI:
 # 1. Press 'p' to enable Powerline mode
@@ -191,33 +200,7 @@ npx ccstatusline@latest
 # ⚡ Claude 3.5 Sonnet ❯ main ❯ Ctx: 18.6k ❯ $1.23
 ```
 
-### Example 3: Create Custom Hybrid
-
-Combine bash statusline with ccstatusline widgets:
-
-```json
-{
-  "statusLine": "~/.claude/my-custom.sh"
-}
-```
-
-In `my-custom.sh`, call ccstatusline for specific widgets:
-
-```bash
-#!/bin/bash
-input=$(cat)
-
-# Use ccstatusline for context widget
-CONTEXT=$(echo "$input" | npx ccstatusline@latest --widget context-percentage)
-
-# Use bash for custom parts
-TIME=$(date +"%H:%M:%S")
-MODEL=$(echo "$input" | jq -r '.model.display_name')
-
-echo "⚡ $TIME │ $MODEL │ $CONTEXT"
-```
-
-### Example 4: Switch Between Configurations
+### Example 3: Switch Between Configurations
 
 ```bash
 # Morning: Use minimal for focus
@@ -227,7 +210,25 @@ ccm statusline select minimal
 ccm statusline select vibe-genius
 
 # Evening: Try ccstatusline with Powerline theme
-npx ccstatusline@latest  # Configure and install
+ccm statusline select ccstatusline
+ccm statusline config  # Customize in TUI
+```
+
+### Example 4: Check Current Statusline
+
+```bash
+# See what's active and available
+ccm statusline status
+
+# Output:
+# ✓ Active: vibe-genius
+#   Type: Bash Script
+#   Path: /path/to/vibe-genius.sh
+#
+# 📚 Available statuslines:
+#   - ccstatusline (advanced)
+#   - vibe-genius (bash)
+#   - minimal (bash)
 ```
 
 ## Related Projects
