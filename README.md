@@ -1,6 +1,6 @@
-# Claude Code Manager (CCM)
-
 <div align="center">
+
+# Claude Code Manager (CCM)
 
 [![NPM Version](https://img.shields.io/npm/v/claude-code-manager)](https://www.npmjs.com/package/claude-code-manager)
 [![License](https://img.shields.io/npm/l/claude-code-manager)](LICENSE)
