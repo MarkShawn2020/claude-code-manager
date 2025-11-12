@@ -5,25 +5,25 @@
 # =============================================================================
 # Author: Mark Shawn (https://github.com/markshawn2020)
 # Community: Vibe Genius
-# Version: 1.2.0
-# Date: 2025-11-12
+# Version: 1.3.0
+# Date: 2025-11-13
 # 
 # Description:
 #   A comprehensive statusline for Claude Code that displays:
-#   - Current time and daily cost tracking
+#   - Current time and cost tracking (session, daily, monthly)
 #   - Working directory and git branch
-#   - Session metrics (duration, cost, code changes)
 #   - Context window usage with progress bars
+#   - Thinking mode status
 #   - Model information
 #
 # Features:
-#   ✓ Real-time session cost and duration tracking
-#   ✓ Daily cost accumulation with automatic reset
+#   ✓ Multi-level cost tracking (session, daily, monthly)
 #   ✓ Git branch awareness
 #   ✓ Code changes statistics (lines added/removed)
 #   ✓ Stacked context visualization (like /context command)
 #   ✓ Context breakdown: System, Memory, Messages, Free space
 #   ✓ Color-coded context warnings (green/yellow/red)
+#   ✓ Thinking mode indicator (💭 when enabled)
 #   ✓ Beautiful ANSI color formatting
 #
 # Installation:
@@ -52,6 +52,13 @@ SESSION_ID=$(echo "$input" | jq -r '.session_id // ""')
 LINES_ADDED=$(echo "$input" | jq -r '.cost.total_lines_added // 0')
 LINES_REMOVED=$(echo "$input" | jq -r '.cost.total_lines_removed // 0')
 TRANSCRIPT_PATH=$(echo "$input" | jq -r '.transcript_path // ""')
+
+# Check if thinking mode is enabled by reading settings.json
+SETTINGS_FILE="$HOME/.claude/settings.json"
+THINKING_ENABLED="false"
+if [ -f "$SETTINGS_FILE" ]; then
+    THINKING_ENABLED=$(jq -r '.alwaysThinkingEnabled // false' "$SETTINGS_FILE" 2>/dev/null || echo "false")
+fi
 
 # Get current time
 CURRENT_TIME=$(date +"%H:%M:%S")
@@ -100,8 +107,17 @@ else
     DAILY_COST="0"
 fi
 
-# Format daily cost
+# Calculate monthly cost (current month)
+CURRENT_MONTH=$(date +"%Y-%m")
+MONTHLY_COST="0"
+if [ -f "$COST_FILE" ]; then
+    MONTHLY_COST=$(grep "^$CURRENT_MONTH" "$COST_FILE" 2>/dev/null | cut -d: -f2 | awk '{sum+=$1} END {print sum}' || echo "0")
+fi
+
+# Format costs
+SESSION_COST_STR=$(printf "$%.2f" $COST_USD 2>/dev/null || echo "$0.00")
 DAILY_COST_STR=$(printf "$%.2f" $DAILY_COST 2>/dev/null || echo "$0.00")
+MONTHLY_COST_STR=$(printf "$%.2f" $MONTHLY_COST 2>/dev/null || echo "$0.00")
 
 # Get directory name (basename)
 DIR_NAME=$(basename "$CURRENT_DIR")
@@ -180,7 +196,7 @@ generate_stacked_context_bar() {
     local memory=$3
     local messages=$4
     local limit=200000
-    local bar_width=20
+    local bar_width=10
 
     # Calculate free space
     local free=$((limit - total))
@@ -239,7 +255,7 @@ generate_stacked_context_bar() {
     fi
 
     # Return formatted bar with stats
-    printf "%s ${pct_color}%d%%\033[0m \033[90m(%dk/200k)\033[0m" "$bar" "$percentage" "$total_k"
+    printf "%s ${pct_color}%d%%\033[0m \033[90m(200k)\033[0m" "$bar" "$percentage"
 }
 
 # Format duration (convert ms to human-readable)
@@ -286,13 +302,23 @@ if [ -n "$TRANSCRIPT_PATH" ] && [ -f "$TRANSCRIPT_PATH" ]; then
     CONTEXT_BAR=$(generate_stacked_context_bar "$TOTAL_CONTEXT" "$SYSTEM_TOKENS" "$MEMORY_TOKENS" "$MESSAGE_TOKENS")
 
     # Format context display
-    CONTEXT_STR=" \033[36m│\033[0m 🧠 $CONTEXT_BAR"
+    CONTEXT_STR=" $CONTEXT_BAR"
+fi
+
+# Format thinking mode indicator (placed after model)
+if [ "$THINKING_ENABLED" = "true" ]; then
+    THINKING_STR=" \033[93m💭 THINKING\033[0m"
+else
+    THINKING_STR=" \033[90m💤 NORMAL\033[0m"
 fi
 
 # Output with colors (using ANSI escape codes)
-# Format: 💥 HH:MM:SS (today: $X.XX) │ directory (branch) │ ⏱ Xm Xs 💰 $X.XXX 📊 +X/-X │ 🧠 [⛁⛁▓▓░░] XX% (XXXk/200k) │ [Model]
+# Format: 💥 HH:MM:SS │ directory (branch) │ [Model] │ [⛁▓░░░░] XX% (200k) │ 💭 THINKING / 💤 NORMAL │ S:$X.XX D:$X.XX M:$X.XX
+# S = Session, D = Daily, M = Monthly
 # Context bar: ⛁=System ▓=Memory/Messages ░=Free
-echo -e "💥 \033[37m$CURRENT_TIME\033[0m \033[90m(today: $DAILY_COST_STR)\033[0m \033[36m│\033[0m \033[96m$DIR_NAME\033[0m$GIT_BRANCH \033[36m│\033[0m \033[33m⏱ $DURATION_STR\033[0m \033[32m💰 $COST_STR\033[0m$LINES_STR$CONTEXT_STR \033[36m│\033[0m \033[35m[$MODEL]\033[0m"
+# 💭 THINKING = Thinking mode enabled (bright yellow)
+# 💤 NORMAL = Thinking mode disabled (gray)
+echo -e "💥 \033[37m$CURRENT_TIME\033[0m \033[36m│\033[0m \033[96m$DIR_NAME\033[0m$GIT_BRANCH \033[36m│\033[0m \033[35m[$MODEL]\033[0m \033[36m│\033[0m$CONTEXT_STR \033[36m│\033[0m$THINKING_STR \033[36m│\033[0m \033[90mS:$SESSION_COST_STR D:$DAILY_COST_STR M:$MONTHLY_COST_STR\033[0m"
 
 # End of statusline script
 # Shared with love by Mark Shawn for the Vibe Genius community 💜
