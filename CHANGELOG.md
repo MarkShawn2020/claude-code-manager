@@ -1,3 +1,10 @@
+# [2.12.0](https://github.com/MarkShawn2020/claude-code-manager/compare/v2.11.0...v2.12.0) (2025-11-12)
+
+
+### Features
+
+* **statusline:** add thinking mode indicator and improve cost display ([9273540](https://github.com/MarkShawn2020/claude-code-manager/commit/9273540f799d4ac4890869649537fb8707618b72))
+
 # [2.11.0](https://github.com/MarkShawn2020/claude-code-manager/compare/v2.10.1...v2.11.0) (2025-11-11)
 
 
