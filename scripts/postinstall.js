@@ -30,19 +30,21 @@ function setupAutoTracking() {
       }
     }
     
-    // Check if our tracking hook already exists (check for both old and new formats)
-    const hooksExist = settings.hooks?.PostToolUse?.some(hook => 
-      hook.hooks?.some(h => 
-        h.command === 'npx claude-code-manager track' || 
-        h.command.includes('npx claude-code-manager track')
+    // Check if our tracking hook already exists (check for multiple command formats)
+    const hooksExist = settings.hooks?.PostToolUse?.some(hook =>
+      hook.hooks?.some(h =>
+        h.command === 'claude-code-manager track' ||
+        h.command === 'ccm track' ||
+        h.command === 'npx claude-code-manager track' ||
+        h.command.includes('claude-code-manager track')
       )
     );
-    
+
     if (hooksExist) {
       console.log('✅ Claude Code tracking already configured');
       return;
     }
-    
+
     // Initialize hooks structure if it doesn't exist
     if (!settings.hooks) {
       settings.hooks = {};
@@ -50,14 +52,15 @@ function setupAutoTracking() {
     if (!settings.hooks.PostToolUse) {
       settings.hooks.PostToolUse = [];
     }
-    
-    // Add our tracking hook
+
+    // Add our tracking hook - use direct command instead of npx for better performance
+    // and to avoid npx cache issues
     settings.hooks.PostToolUse.push({
       matcher: '',
       hooks: [
         {
           type: 'command',
-          command: 'npx claude-code-manager track',
+          command: 'claude-code-manager track',
           timeout: 5
         }
       ]

@@ -96,26 +96,29 @@ function setupHooks(): void {
     settings.hooks.PostToolUse = [];
   }
   
-  // Check if our tracking hook already exists (check for both old and new formats)
-  const existingHook = settings.hooks.PostToolUse.find(hook => 
-    hook.hooks?.some(h => 
-      h.command === 'npx claude-code-manager track' || 
-      h.command.includes('npx claude-code-manager track')
+  // Check if our tracking hook already exists (check for all formats)
+  const existingHook = settings.hooks.PostToolUse.find(hook =>
+    hook.hooks?.some(h =>
+      h.command === 'claude-code-manager track' ||
+      h.command === 'ccm track' ||
+      h.command === 'npx claude-code-manager track' ||
+      h.command?.includes('claude-code-manager') && h.command?.includes('track')
     )
   );
-  
+
   if (existingHook) {
     console.log(chalk.yellow('⚠️  Tracking hook already configured'));
+    console.log(chalk.gray(`    Command: ${existingHook.hooks?.[0]?.command}`));
     return;
   }
-  
-  // Add our tracking hook
+
+  // Add our tracking hook - use direct command instead of npx
   settings.hooks.PostToolUse.push({
     matcher: '',
     hooks: [
       {
         type: 'command',
-        command: 'npx claude-code-manager track',
+        command: 'claude-code-manager track',
         timeout: 5
       }
     ]
@@ -134,19 +137,24 @@ function setupHooks(): void {
 
 function checkSetup(): { database: boolean; hooks: boolean } {
   const databaseExists = fs.existsSync(DB_PATH);
-  
+
   let hooksConfigured = false;
   if (fs.existsSync(CLAUDE_SETTINGS_PATH)) {
     try {
       const settings = JSON.parse(fs.readFileSync(CLAUDE_SETTINGS_PATH, 'utf8'));
       hooksConfigured = settings.hooks?.PostToolUse?.some((hook: any) =>
-        hook.hooks?.some((h: any) => h.command === 'npx claude-code-manager track')
+        hook.hooks?.some((h: any) =>
+          h.command === 'claude-code-manager track' ||
+          h.command === 'ccm track' ||
+          h.command === 'npx claude-code-manager track' ||
+          (h.command?.includes('claude-code-manager') && h.command?.includes('track'))
+        )
       ) || false;
     } catch {
       hooksConfigured = false;
     }
   }
-  
+
   return { database: databaseExists, hooks: hooksConfigured };
 }
 

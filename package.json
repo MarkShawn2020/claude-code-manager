@@ -13,7 +13,8 @@
     "start": "node dist/cli.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "postinstall": "node scripts/postinstall.js 2>/dev/null || true",
-    "release": "semantic-release"
+    "release": "semantic-release",
+    "setup:dev-hook": "pnpm build && node scripts/setup-dev-hook.js"
   },
   "keywords": [
     "claude-code",
