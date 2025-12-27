@@ -25,15 +25,10 @@ LovCode is the successor project that includes all features from Claude Code Man
 - Enhanced features and better maintainability
 - Active development continues in the new repository
 
-### Migration Guide
+### Migration
 
-```bash
-# Uninstall old package
-npm uninstall -g claude-code-manager
-
-# Install new package
-npm install -g lovcode
-```
+LovCode is a cross-platform desktop app. Download it from:
+- **[GitHub Releases](https://github.com/markshawn2020/lovcode/releases)**
 
 For any issues, please open them at the [new repository](https://github.com/markshawn2020/lovcode/issues).
 
